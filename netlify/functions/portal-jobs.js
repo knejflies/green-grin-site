@@ -107,6 +107,7 @@ exports.handler = async (event) => {
         service_type: body.service_type || "Service request",
         preferred_date: body.preferred_date || null,
         scheduled_date: scheduledDate,
+        cleanup_reminder_time: body.cleanup_reminder_time || "08:00",
         notes: body.notes || "",
         status: adminCreate ? body.status || (scheduledDate ? "Scheduled" : "New") : "New"
       };
@@ -153,7 +154,8 @@ exports.handler = async (event) => {
 
       const update = {
         status: body.status || "Scheduled",
-        scheduled_date: body.scheduled_date || null
+        scheduled_date: body.scheduled_date || null,
+        cleanup_reminder_time: body.cleanup_reminder_time || "08:00"
       };
       const id = encodeURIComponent(body.id);
       const updated = await supabase(`green_grin_jobs?id=eq.${id}`, {

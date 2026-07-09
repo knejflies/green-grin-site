@@ -1,0 +1,2 @@
+[functions."morning-yard-reminders"]
+  schedule = "*/15 * * * *"

@@ -25,6 +25,8 @@ What works after setup:
   - pick up yard objects
   - job complete
 - Automatic morning cleanup reminders can send on scheduled mow days
+- Owner can choose the morning reminder time while creating or editing a job
+- Customer billing buttons can open secure hosted payment links after payment URLs are added
 
 LIVE URLS
 - Customer portal: /portal/
@@ -61,6 +63,10 @@ TWILIO SETUP
    - Auth Token
    - Twilio phone number
 
+PAYMENT LINK SETUP
+Use hosted payment links from Stripe, GoCardless, Square, your bank, or another provider.
+Do not store bank or card details in this website.
+
 NETLIFY ENVIRONMENT VARIABLES
 In Netlify, go to:
 Site configuration -> Environment variables
@@ -74,6 +80,11 @@ TWILIO_ACCOUNT_SID=your Twilio account SID
 TWILIO_AUTH_TOKEN=your Twilio auth token
 TWILIO_FROM_NUMBER=your Twilio phone number, like +12085551234
 GREEN_GRIN_TIMEZONE=America/Denver
+GREEN_GRIN_PAY_DEFAULT_URL=your default secure payment link
+GREEN_GRIN_PAY_BIWEEKLY_URL=optional bi-weekly mowing payment link
+GREEN_GRIN_PAY_WEEKLY_URL=optional weekly mowing payment link
+GREEN_GRIN_PAY_COMMERCIAL_URL=optional commercial care payment link
+GREEN_GRIN_PAY_INVOICE_URL=optional invoice payment link
 
 Then redeploy the site.
 
@@ -96,8 +107,11 @@ requires Supabase environment variables and the SQL setup.
 
 AUTOMATIC TEXTING NOTE
 The morning cleanup reminder is automatic.
-If a job has a scheduled_date for today, Netlify runs a daily check and sends:
+If a job has a scheduled_date for today, Netlify checks every 15 minutes and sends after the job's saved reminder time:
 "Please pick up toys, hoses, pet waste, and yard objects before we arrive."
+
+The check every 15 minutes is only a quick lookup. It does not text every 15 minutes.
+Each job only receives one automatic cleanup reminder per scheduled day.
 
 There is no "on the way" customer text.
 The "job complete" message is manual, so you click "Text: Done" when the work is done.

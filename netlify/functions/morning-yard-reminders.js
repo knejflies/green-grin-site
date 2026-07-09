@@ -6,7 +6,7 @@ const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
 const TIME_ZONE = process.env.GREEN_GRIN_TIMEZONE || "America/Denver";
 
 exports.config = {
-  schedule: "0 13 * * *"
+  schedule: "*/15 * * * *"
 };
 
 function localDate(date = new Date()) {
@@ -18,6 +18,17 @@ function localDate(date = new Date()) {
   }).formatToParts(date);
   const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${value.year}-${value.month}-${value.day}`;
+}
+
+function localTime(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.hour}:${value.minute}`;
 }
 
 function requireSetup() {
@@ -75,6 +86,7 @@ exports.handler = async () => {
   }
 
   const today = localDate();
+  const nowTime = localTime();
   const start = encodeURIComponent(`${today}T00:00:00`);
   const end = encodeURIComponent(`${today}T23:59:59`);
   const jobs = await supabase(
@@ -85,6 +97,12 @@ exports.handler = async () => {
   let skipped = 0;
 
   for (const job of jobs || []) {
+    const reminderTime = String(job.cleanup_reminder_time || "08:00").slice(0, 5);
+    if (reminderTime > nowTime) {
+      skipped += 1;
+      continue;
+    }
+
     if (!job.phone) {
       skipped += 1;
       continue;
@@ -114,6 +132,8 @@ exports.handler = async () => {
         phone: job.phone,
         template: "objects",
         message,
+        actor_type: "System",
+        actor_name: `Morning reminder ${reminderTime}`,
         twilio_sid: sms.sid || null
       })
     });
@@ -123,6 +143,6 @@ exports.handler = async () => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ date: today, sent, skipped })
+    body: JSON.stringify({ date: today, time: nowTime, sent, skipped })
   };
 };

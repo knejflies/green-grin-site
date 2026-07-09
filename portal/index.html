@@ -980,8 +980,8 @@
     <section id="billing" class="panel">
       <div class="card">
         <h2>Billing and monthly service</h2>
-        <p>This is a preview of how recurring monthly payments could look inside the portal. These buttons do not charge anyone yet.</p>
-        <div class="notice">Best setup: customers approve a secure ACH monthly payment link once, then payment runs at the beginning of each month.</div>
+        <p>Customers can open secure payment links once your payment provider links are added in Netlify.</p>
+        <div class="notice">Best setup: use secure hosted payment links. The website should never store bank or card details.</div>
 
         <div class="plans">
           <div class="plan">
@@ -992,7 +992,7 @@
               <li>Mow, trim, edge, and blowoff</li>
               <li>Monthly auto-pay</li>
             </ul>
-            <button class="button billing-action" data-plan="Bi-weekly Mowing" data-price="$160/month" type="button">Request Billing Setup</button>
+            <button class="button billing-action" data-plan="Bi-weekly Mowing" data-price="$160/month" type="button">Open Pay Link</button>
           </div>
 
           <div class="plan">
@@ -1003,7 +1003,7 @@
               <li>Clean edges and hard-surface blowoff</li>
               <li>Best for growing season</li>
             </ul>
-            <button class="button billing-action" data-plan="Weekly Mowing" data-price="$280/month" type="button">Request Billing Setup</button>
+            <button class="button billing-action" data-plan="Weekly Mowing" data-price="$280/month" type="button">Open Pay Link</button>
           </div>
 
           <div class="plan">
@@ -1014,7 +1014,7 @@
               <li>Custom schedule</li>
               <li>Invoice or ACH option</li>
             </ul>
-            <button class="button billing-action" data-plan="Commercial Care" data-price="custom monthly price" type="button">Request Billing Setup</button>
+            <button class="button billing-action" data-plan="Commercial Care" data-price="custom monthly price" type="button">Open Pay Link</button>
           </div>
         </div>
 
@@ -1028,7 +1028,7 @@
             <div class="invoice-head"><strong>August service plan</strong><span class="badge warn">Due Aug 1</span></div>
             <p class="muted">$280.00 - Weekly mowing plan</p>
             <div class="row-actions">
-              <button class="button small billing-action" data-plan="August service plan" data-price="$280" type="button">Request Pay Link</button>
+              <button class="button small billing-action" data-plan="August service plan" data-price="$280" type="button">Open Pay Link</button>
             </div>
           </div>
           <div class="invoice">
@@ -1133,6 +1133,10 @@
               <div>
                 <label for="owner_job_scheduled_date">Schedule date</label>
                 <input id="owner_job_scheduled_date" type="date" />
+              </div>
+              <div>
+                <label for="owner_job_reminder_time">Morning text time</label>
+                <input id="owner_job_reminder_time" type="time" value="08:00" />
               </div>
             </div>
             <div>
@@ -1496,6 +1500,7 @@
 
     function jobCard(job, admin = false) {
       const scheduled = displayScheduleDate(job.scheduled_date);
+      const reminderTime = job.cleanup_reminder_time ? String(job.cleanup_reminder_time).slice(0, 5) : "08:00";
       return `
         <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
@@ -1503,11 +1508,13 @@
             <span class="badge">${job.status || "New"}</span>
           </div>
           <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
+          <p class="muted">Morning text: ${reminderTime}</p>
           <p>${job.address || ""}</p>
           <p class="muted">${job.notes || ""}</p>
           ${admin ? `
             <div class="two" style="margin-top: 12px;">
               <input type="date" class="schedule-input" />
+              <input type="time" class="reminder-time-input" value="${reminderTime}" />
               <select class="status-input">
                 <option>New</option>
                 <option>Scheduled</option>
@@ -1634,6 +1641,7 @@
             address: $("#owner_job_address").value,
             service_type: $("#owner_job_service_type").value,
             scheduled_date: scheduledDate || null,
+            cleanup_reminder_time: $("#owner_job_reminder_time").value || "08:00",
             notes: $("#owner_job_notes").value,
             status: scheduledDate ? "Scheduled" : "New"
           })
@@ -1693,10 +1701,24 @@
     });
 
     document.querySelectorAll(".billing-action").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const plan = button.dataset.plan;
         const price = button.dataset.price;
-        $("#billing-result").innerHTML = notice(`Billing request noted for ${plan} at ${price}. Green Grin will follow up with payment setup.`);
+        $("#billing-result").innerHTML = notice("Checking payment link...");
+        try {
+          const data = await requestJson("portal-payments", {
+            method: "POST",
+            body: JSON.stringify({ plan, price })
+          });
+          if (data.configured && data.paymentUrl) {
+            window.open(data.paymentUrl, "_blank", "noopener");
+            $("#billing-result").innerHTML = notice(`Opening secure payment link for ${plan}.`);
+          } else {
+            $("#billing-result").innerHTML = notice(data.message || "Payment links are not configured yet.", true);
+          }
+        } catch (error) {
+          $("#billing-result").innerHTML = notice(error.message, true);
+        }
       });
     });
 
@@ -1774,6 +1796,7 @@
       const action = button.dataset.action;
       const customerAction = button.dataset.customerAction;
       const scheduled_date = card.querySelector(".schedule-input")?.value;
+      const cleanup_reminder_time = card.querySelector(".reminder-time-input")?.value;
       const status = card.querySelector(".status-input")?.value;
       button.disabled = true;
       try {
@@ -1793,7 +1816,7 @@
           await requestJson("portal-jobs", {
             method: "PATCH",
             headers: { "x-admin-pin": pin },
-            body: JSON.stringify({ id, scheduled_date, status })
+            body: JSON.stringify({ id, scheduled_date, cleanup_reminder_time, status })
           });
         } else {
           await requestJson("portal-message", {
