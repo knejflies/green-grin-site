@@ -668,16 +668,29 @@
   <section id="auth-gate" class="wrap auth-gate active">
     <div class="auth-shell">
       <div class="auth-card">
-        <h2>Sign in to your account</h2>
-        <p class="muted">Customers enter their email and get a private sign-in link. No password to remember.</p>
+        <h2>Customer sign in</h2>
+        <p class="muted">Enter your email and we will send a secure login link. No password needed.</p>
         <form id="auth-form">
           <div>
             <label for="auth-email">Email</label>
             <input id="auth-email" type="email" required placeholder="you@example.com" />
           </div>
-          <button class="button" type="submit">Email Me A Sign-In Link</button>
+          <button class="button" type="submit">Sign In</button>
         </form>
         <div id="auth-result" aria-live="polite"></div>
+      </div>
+
+      <div class="auth-card">
+        <h2>Owner login</h2>
+        <p class="muted">Use your admin PIN to schedule jobs, manage customers, approve employees, and send completed-service texts.</p>
+        <form id="owner-login-form">
+          <div>
+            <label for="owner-login-pin">Admin PIN</label>
+            <input id="owner-login-pin" type="password" required placeholder="Admin PIN" />
+          </div>
+          <button class="button secondary" type="submit">Open Owner Dashboard</button>
+        </form>
+        <div id="owner-login-result" aria-live="polite"></div>
       </div>
 
       <div class="auth-card">
@@ -726,7 +739,7 @@
       <button class="tab" data-tab="messages" type="button">Messages</button>
       <button class="tab" data-tab="billing" type="button">Billing</button>
       <button class="tab" data-tab="property" type="button">Property</button>
-      <button class="tab" data-tab="owner" type="button">Owner</button>
+      <button class="tab" data-tab="owner" type="button">Owner / Staff</button>
     </div>
 
     <section id="dashboard" class="panel active">
@@ -1014,7 +1027,7 @@
       <div class="grid">
         <div class="card owner-only">
           <h2>Owner dashboard</h2>
-          <p>Use this to schedule jobs and send customer text updates. Keep your PIN private.</p>
+          <p>Load customer jobs, schedule service, send cleanup reminders, and mark work done.</p>
           <div class="admin-bar">
             <input id="admin-pin" type="password" placeholder="Admin PIN" />
             <button id="load-admin" class="button secondary" type="button">Load Jobs</button>
@@ -1024,7 +1037,7 @@
 
         <div class="card">
           <h2>Employee job list</h2>
-          <p>Employees can see scheduled work and mark a job done. Pricing and billing stay hidden.</p>
+          <p>Employees only see the work list and a Done button. Pricing and billing stay hidden.</p>
           <div class="admin-bar">
             <input id="employee-pin" type="password" placeholder="Backup employee PIN, optional if signed in" />
             <button id="load-employee" class="button secondary" type="button">Load Employee Jobs</button>
@@ -1078,6 +1091,15 @@
       setSignedIn({ id: "employee", email: employee.email || "Employee" });
       openTab("owner");
       await loadEmployeeJobs();
+    }
+
+    async function setOwnerSignedIn(pin) {
+      setSignedIn({ id: "owner", email: "Owner" });
+      $("#admin-pin").value = pin;
+      $("#employee-admin-pin").value = pin;
+      openTab("owner");
+      await loadAdminJobs();
+      await loadEmployees();
     }
 
     function setSignedOut() {
@@ -1170,6 +1192,19 @@
       $("#auth-result").innerHTML = error
         ? notice(error.message, true)
         : notice("Check your email for the Green Grin sign-in link.");
+    });
+
+    $("#owner-login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const pin = $("#owner-login-pin").value;
+      $("#owner-login-result").innerHTML = notice("Opening owner dashboard...");
+      try {
+        await setOwnerSignedIn(pin);
+        $("#owner-login-result").innerHTML = "";
+      } catch (error) {
+        setSignedOut();
+        $("#owner-login-result").innerHTML = notice(error.message, true);
+      }
     });
 
     $("#employee-request-form").addEventListener("submit", async (event) => {
