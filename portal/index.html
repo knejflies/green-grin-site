@@ -1027,11 +1027,57 @@
       <div class="grid">
         <div class="card owner-only">
           <h2>Owner dashboard</h2>
-          <p>Load customer jobs, schedule service, send cleanup reminders, and mark work done.</p>
+          <p>Add jobs, schedule service, send cleanup reminders, and mark work done.</p>
           <div class="admin-bar">
             <input id="admin-pin" type="password" placeholder="Admin PIN" />
             <button id="load-admin" class="button secondary" type="button">Load Jobs</button>
           </div>
+          <form id="owner-create-form">
+            <h3>Create a job</h3>
+            <div class="two">
+              <div>
+                <label for="owner_job_customer_name">Customer name</label>
+                <input id="owner_job_customer_name" required placeholder="Customer name" />
+              </div>
+              <div>
+                <label for="owner_job_phone">Phone</label>
+                <input id="owner_job_phone" required type="tel" placeholder="(208) 555-0199" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="owner_job_email">Email</label>
+                <input id="owner_job_email" type="email" placeholder="Optional" />
+              </div>
+              <div>
+                <label for="owner_job_service_type">Service</label>
+                <select id="owner_job_service_type">
+                  <option>Weekly mowing</option>
+                  <option>Bi-weekly mowing</option>
+                  <option>One-time mowing</option>
+                  <option>Landscape project</option>
+                  <option>Cleanup</option>
+                  <option>Commercial maintenance</option>
+                </select>
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="owner_job_address">Address</label>
+                <input id="owner_job_address" placeholder="Service address" />
+              </div>
+              <div>
+                <label for="owner_job_scheduled_date">Schedule date and time</label>
+                <input id="owner_job_scheduled_date" type="datetime-local" />
+              </div>
+            </div>
+            <div>
+              <label for="owner_job_notes">Job notes</label>
+              <textarea id="owner_job_notes" placeholder="Gate code, pets, backyard notes, project details"></textarea>
+            </div>
+            <button class="button" type="submit">Create Job</button>
+          </form>
+          <div id="owner-create-result" aria-live="polite"></div>
           <div id="admin-result" class="status-box" aria-live="polite"></div>
         </div>
 
@@ -1399,6 +1445,34 @@
         await loadAccountData();
       } catch (error) {
         $("#request-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#owner-create-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const pin = $("#admin-pin").value || $("#owner-login-pin").value;
+      const scheduledDate = $("#owner_job_scheduled_date").value;
+      $("#owner-create-result").innerHTML = notice("Creating job...");
+      try {
+        await requestJson("portal-jobs", {
+          method: "POST",
+          headers: { "x-admin-pin": pin },
+          body: JSON.stringify({
+            customer_name: $("#owner_job_customer_name").value,
+            phone: $("#owner_job_phone").value,
+            email: $("#owner_job_email").value,
+            address: $("#owner_job_address").value,
+            service_type: $("#owner_job_service_type").value,
+            scheduled_date: scheduledDate || null,
+            notes: $("#owner_job_notes").value,
+            status: scheduledDate ? "Scheduled" : "New"
+          })
+        });
+        event.currentTarget.reset();
+        $("#owner-create-result").innerHTML = notice("Job created. It is now in the job list below.");
+        await loadAdminJobs();
+      } catch (error) {
+        $("#owner-create-result").innerHTML = notice(error.message, true);
       }
     });
 

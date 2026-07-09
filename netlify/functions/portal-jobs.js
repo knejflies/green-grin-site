@@ -93,7 +93,11 @@ exports.handler = async (event) => {
   try {
     if (event.httpMethod === "POST") {
       const body = JSON.parse(event.body || "{}");
-      const user = await optionalUser(event);
+      const adminCreate = Boolean(event.headers["x-admin-pin"]);
+      const adminError = adminCreate ? requireAdmin(event) : null;
+      if (adminError) return json(401, { error: adminError });
+      const user = adminCreate ? null : await optionalUser(event);
+      const scheduledDate = adminCreate ? body.scheduled_date || null : null;
       const job = {
         customer_user_id: user?.id || null,
         customer_name: body.customer_name || "",
@@ -102,8 +106,9 @@ exports.handler = async (event) => {
         address: body.address || "",
         service_type: body.service_type || "Service request",
         preferred_date: body.preferred_date || null,
+        scheduled_date: scheduledDate,
         notes: body.notes || "",
-        status: "New"
+        status: adminCreate ? body.status || (scheduledDate ? "Scheduled" : "New") : "New"
       };
 
       if (!job.customer_name || !job.phone) {

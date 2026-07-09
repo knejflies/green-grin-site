@@ -10,6 +10,7 @@ What works after setup:
 - Customers can request service at /portal/
 - Customers can check status by phone number
 - Owner dashboard can view requests
+- Owner can create jobs directly in the portal
 - Owner can schedule a job
 - Employees can log in with an employee PIN
 - Employees can request their own account access from the portal
