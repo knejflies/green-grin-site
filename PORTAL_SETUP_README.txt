@@ -36,8 +36,10 @@ SUPABASE SETUP
    - Project URL
    - anon public key
    - service_role key
-6. Go to Authentication -> URL Configuration.
-7. Add your Netlify site URL as an allowed redirect URL.
+6. Go to Authentication -> Providers.
+7. Make sure Email is enabled.
+8. Go to Authentication -> URL Configuration.
+9. Add your Netlify site URL as an allowed redirect URL.
 
 TWILIO SETUP
 1. Create a Twilio account.
@@ -69,9 +71,9 @@ Do not share your service_role key, Twilio auth token, or admin PIN.
 The SUPABASE_ANON_KEY is okay to use in the browser. The service_role key is private.
 
 CUSTOMER ACCOUNTS NOTE
-The portal uses Supabase email magic links for customer accounts.
-Customers do not need passwords. They enter their email, click the sign-in link,
-then land back on the portal.
+The portal uses Supabase email + password accounts for customers.
+Customers can create an account, then sign in later with the same email and password.
+If Supabase email confirmation is turned on, they may need to confirm their email once.
 
 After sign-in, the portal loads:
 - customer profile

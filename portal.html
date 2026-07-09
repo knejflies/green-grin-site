@@ -669,13 +669,20 @@
     <div class="auth-shell">
       <div class="auth-card">
         <h2>Customer sign in</h2>
-        <p class="muted">Enter your email and we will send a secure login link. No password needed.</p>
+        <p class="muted">Customers can create an account with email and password, then sign in anytime.</p>
         <form id="auth-form">
           <div>
             <label for="auth-email">Email</label>
             <input id="auth-email" type="email" required placeholder="you@example.com" />
           </div>
-          <button class="button" type="submit">Sign In</button>
+          <div>
+            <label for="auth-password">Password</label>
+            <input id="auth-password" type="password" required minlength="6" placeholder="At least 6 characters" />
+          </div>
+          <div class="two">
+            <button class="button" type="submit" data-auth-action="signin">Sign In</button>
+            <button class="button ghost" type="submit" data-auth-action="signup">Create Account</button>
+          </div>
         </form>
         <div id="auth-result" aria-live="polite"></div>
       </div>
@@ -1226,18 +1233,27 @@
       event.preventDefault();
       localStorage.removeItem("greenGrinEmployeeLogin");
       const email = $("#auth-email").value.trim();
-      $("#auth-result").innerHTML = notice("Preparing sign-in link...");
+      const password = $("#auth-password").value;
+      const action = event.submitter?.dataset.authAction || "signin";
+      $("#auth-result").innerHTML = notice(action === "signup" ? "Creating account..." : "Signing in...");
       if (!supabaseClient) {
         $("#auth-result").innerHTML = notice("Account sign-in is not available yet. Please try again later.", true);
         return;
       }
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.href.split("#")[0] }
-      });
-      $("#auth-result").innerHTML = error
-        ? notice(error.message, true)
-        : notice("Check your email for the Green Grin sign-in link.");
+
+      const result = action === "signup"
+        ? await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: window.location.href.split("#")[0] }
+          })
+        : await supabaseClient.auth.signInWithPassword({ email, password });
+
+      $("#auth-result").innerHTML = result.error
+        ? notice(result.error.message, true)
+        : notice(action === "signup"
+            ? "Account created. If Supabase asks for email confirmation, check your email once, then sign in here."
+            : "Signed in.");
     });
 
     $("#owner-login-form").addEventListener("submit", async (event) => {
@@ -1450,6 +1466,7 @@
 
     $("#owner-create-form").addEventListener("submit", async (event) => {
       event.preventDefault();
+      const form = event.currentTarget;
       const pin = $("#admin-pin").value || $("#owner-login-pin").value;
       const scheduledDate = $("#owner_job_scheduled_date").value;
       $("#owner-create-result").innerHTML = notice("Creating job...");
@@ -1468,7 +1485,7 @@
             status: scheduledDate ? "Scheduled" : "New"
           })
         });
-        event.currentTarget.reset();
+        form.reset();
         $("#owner-create-result").innerHTML = notice("Job created. It is now in the job list below.");
         await loadAdminJobs();
       } catch (error) {
