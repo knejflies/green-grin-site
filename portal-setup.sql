@@ -57,8 +57,12 @@ create table if not exists public.green_grin_employees (
   email text not null unique,
   phone text,
   status text not null default 'Pending',
+  employee_pin text,
   role text not null default 'Crew'
 );
+
+alter table public.green_grin_employees
+  add column if not exists employee_pin text;
 
 create table if not exists public.green_grin_message_log (
   id uuid primary key default gen_random_uuid(),
@@ -67,8 +71,20 @@ create table if not exists public.green_grin_message_log (
   phone text not null,
   template text not null,
   message text not null,
+  actor_type text,
+  actor_name text,
+  actor_employee_id uuid references public.green_grin_employees(id) on delete set null,
   twilio_sid text
 );
+
+alter table public.green_grin_message_log
+  add column if not exists actor_type text;
+
+alter table public.green_grin_message_log
+  add column if not exists actor_name text;
+
+alter table public.green_grin_message_log
+  add column if not exists actor_employee_id uuid references public.green_grin_employees(id) on delete set null;
 
 alter table public.green_grin_customers enable row level security;
 alter table public.green_grin_properties enable row level security;
@@ -118,3 +134,5 @@ create index if not exists green_grin_properties_customer_user_idx on public.gre
 create index if not exists green_grin_employees_user_id_idx on public.green_grin_employees(user_id);
 create index if not exists green_grin_employees_email_idx on public.green_grin_employees(email);
 create index if not exists green_grin_employees_status_idx on public.green_grin_employees(status);
+create index if not exists green_grin_employees_pin_idx on public.green_grin_employees(employee_pin);
+create index if not exists green_grin_message_log_created_at_idx on public.green_grin_message_log(created_at desc);

@@ -2,7 +2,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PIN = process.env.GREEN_GRIN_ADMIN_PIN;
-const EMPLOYEE_PIN = process.env.GREEN_GRIN_EMPLOYEE_PIN;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
@@ -11,7 +10,7 @@ const headers = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type, x-admin-pin, x-employee-pin, Authorization",
-  "Access-Control-Allow-Methods": "POST, OPTIONS"
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
 };
 
 function json(statusCode, body) {
@@ -22,10 +21,6 @@ function requireAdmin(event) {
   if (!ADMIN_PIN) return "Admin PIN is not configured yet. Add GREEN_GRIN_ADMIN_PIN in Netlify.";
   if (event.headers["x-admin-pin"] !== ADMIN_PIN) return "Wrong admin PIN.";
   return null;
-}
-
-function hasEmployeeDoneAccess(event, template) {
-  return template === "completed" && EMPLOYEE_PIN && event.headers["x-employee-pin"] === EMPLOYEE_PIN;
 }
 
 async function supabase(path, options = {}) {
@@ -58,10 +53,9 @@ async function optionalUser(event) {
   return response.ok && user?.id ? user : null;
 }
 
-async function hasEmployeeAccountDoneAccess(event, template) {
-  if (template !== "completed") return false;
+async function employeeAccountForEvent(event) {
   const user = await optionalUser(event);
-  if (!user) return false;
+  if (!user) return null;
   const email = encodeURIComponent((user.email || "").toLowerCase());
   let rows = await supabase(`green_grin_employees?select=*&user_id=eq.${encodeURIComponent(user.id)}&status=eq.Active&limit=1`);
   if (!rows?.length && email) {
@@ -73,11 +67,27 @@ async function hasEmployeeAccountDoneAccess(event, template) {
       });
     }
   }
-  return Boolean(rows?.[0]);
+  return rows?.[0] || null;
 }
 
-function requireSetup() {
+async function employeePinForEvent(event) {
+  const pin = event.headers["x-employee-pin"];
+  if (!pin) return null;
+  const rows = await supabase(`green_grin_employees?select=*&employee_pin=eq.${encodeURIComponent(pin)}&status=eq.Active&limit=1`);
+  return rows?.[0] || null;
+}
+
+async function employeeDoneActor(event, template) {
+  if (template !== "completed") return null;
+  return await employeeAccountForEvent(event) || await employeePinForEvent(event);
+}
+
+function requireSupabaseSetup() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return "Supabase is not configured yet.";
+  return null;
+}
+
+function requireTwilioSetup() {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) return "Twilio is not configured yet.";
   return null;
 }
@@ -116,16 +126,28 @@ async function sendSms(to, body) {
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
-  if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed." });
 
-  const setupError = requireSetup();
+  const setupError = requireSupabaseSetup();
   if (setupError) return json(500, { error: setupError });
 
   try {
+    if (event.httpMethod === "GET") {
+      const params = new URLSearchParams(event.rawQuery || "");
+      if (params.get("admin") !== "1") return json(400, { error: "Admin log view is required." });
+      const adminError = requireAdmin(event);
+      if (adminError) return json(401, { error: adminError });
+      const logs = await supabase("green_grin_message_log?select=*,green_grin_jobs(customer_name,address,service_type)&order=created_at.desc&limit=80");
+      return json(200, { logs });
+    }
+
+    if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed." });
+    const twilioError = requireTwilioSetup();
+    if (twilioError) return json(500, { error: twilioError });
+
     const body = JSON.parse(event.body || "{}");
     if (!body.id || !body.template) return json(400, { error: "Job id and template are required." });
-    const employeeDone = hasEmployeeDoneAccess(event, body.template) || await hasEmployeeAccountDoneAccess(event, body.template);
-    const adminError = employeeDone ? null : requireAdmin(event);
+    const employeeActor = await employeeDoneActor(event, body.template);
+    const adminError = employeeActor ? null : requireAdmin(event);
     if (adminError) return json(401, { error: adminError });
 
     const id = encodeURIComponent(body.id);
@@ -154,6 +176,9 @@ exports.handler = async (event) => {
         phone: job.phone,
         template: body.template,
         message,
+        actor_type: employeeActor ? "Employee" : "Owner",
+        actor_name: employeeActor ? employeeActor.full_name || employeeActor.email : "Owner",
+        actor_employee_id: employeeActor?.id || null,
         twilio_sid: sms.sid || null
       })
     });

@@ -15,8 +15,10 @@ What works after setup:
 - Employees can log in with an employee PIN
 - Employees can request their own account access from the portal
 - Owner can approve, deactivate, or reactivate employee accounts
+- Owner can set each employee's PIN inside the portal
 - Employees can view scheduled jobs without billing/pricing
 - Employees can click Done to send the completed-service text
+- Owner can view an activity log showing who clicked Done
 - Owner can send text messages:
   - pick up yard objects
   - job complete
@@ -58,7 +60,6 @@ SUPABASE_URL=your Supabase project URL
 SUPABASE_ANON_KEY=your Supabase anon public key
 SUPABASE_SERVICE_ROLE_KEY=your Supabase service_role key
 GREEN_GRIN_ADMIN_PIN=make up a private PIN
-GREEN_GRIN_EMPLOYEE_PIN=optional backup employee PIN
 TWILIO_ACCOUNT_SID=your Twilio account SID
 TWILIO_AUTH_TOKEN=your Twilio auth token
 TWILIO_FROM_NUMBER=your Twilio phone number, like +12085551234
@@ -93,7 +94,10 @@ The "job complete" message is manual, so you click "Text: Done" when the work is
 
 EMPLOYEE ACCOUNTS NOTE
 Employees can request access on the portal.
-Owner opens the Owner tab, loads Employee Access with the admin PIN, then approves or deactivates employees.
-Active employees sign in by email and can only see the employee job list and the Done button.
+Owner opens the Owner tab, loads Employee Access with the admin PIN, then approves employees and sets each employee's PIN.
+Active employees can sign in by email or use the PIN you set. They can only see the employee job list and the Done button.
 Deactivated employees cannot load jobs or mark jobs done.
-The backup employee PIN can still be used if you want a simple shared crew PIN, but employee accounts are better for hiring/firing.
+
+IMPORTANT UPDATE NOTE
+If you already ran portal-setup.sql before this version, run it again in Supabase SQL Editor.
+It safely adds the employee PIN and activity log columns without deleting your data.

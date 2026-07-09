@@ -2,7 +2,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PIN = process.env.GREEN_GRIN_ADMIN_PIN;
-const EMPLOYEE_PIN = process.env.GREEN_GRIN_EMPLOYEE_PIN;
 
 const headers = {
   "Content-Type": "application/json",
@@ -25,12 +24,6 @@ function requireSetup() {
 function requireAdmin(event) {
   if (!ADMIN_PIN) return "Admin PIN is not configured yet. Add GREEN_GRIN_ADMIN_PIN in Netlify.";
   if (event.headers["x-admin-pin"] !== ADMIN_PIN) return "Wrong admin PIN.";
-  return null;
-}
-
-function requireEmployee(event) {
-  if (!EMPLOYEE_PIN) return "Employee PIN is not configured yet. Add GREEN_GRIN_EMPLOYEE_PIN in Netlify.";
-  if (event.headers["x-employee-pin"] !== EMPLOYEE_PIN) return "Wrong employee PIN.";
   return null;
 }
 
@@ -84,6 +77,13 @@ async function activeEmployee(event) {
   return rows?.[0] || null;
 }
 
+async function activeEmployeeByPin(event) {
+  const pin = event.headers["x-employee-pin"];
+  if (!pin) return null;
+  const rows = await supabase(`green_grin_employees?select=*&employee_pin=eq.${encodeURIComponent(pin)}&status=eq.Active&limit=1`);
+  return rows?.[0] || null;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
 
@@ -132,9 +132,8 @@ exports.handler = async (event) => {
       }
 
       if (params.get("employee") === "1") {
-        const employee = await activeEmployee(event);
-        const employeeError = employee ? null : requireEmployee(event);
-        if (employeeError) return json(401, { error: employeeError });
+        const employee = await activeEmployee(event) || await activeEmployeeByPin(event);
+        if (!employee) return json(401, { error: "Employee access was not found. Sign in or use the PIN the owner set for you." });
         const jobs = await supabase("green_grin_jobs?select=id,customer_name,address,service_type,scheduled_date,status,notes&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80");
         return json(200, { jobs });
       }

@@ -738,7 +738,7 @@
 
       <div class="auth-card">
         <h2>Staff access</h2>
-        <p class="muted">Employees can request access, sign in by email, and mark jobs done without seeing billing.</p>
+        <p class="muted">Employees can request access. After approval, the owner sets their PIN for job access.</p>
         <form id="employee-request-form">
           <div class="two">
             <div>
@@ -765,10 +765,10 @@
         </form>
         <form id="staff-login-form">
           <div>
-            <label for="staff-pin">Backup employee PIN</label>
-            <input id="staff-pin" type="password" placeholder="Employee PIN" />
+            <label for="staff-pin">Employee PIN</label>
+            <input id="staff-pin" type="password" placeholder="PIN from owner" />
           </div>
-          <button class="button ghost" type="submit">Use Backup PIN</button>
+          <button class="button ghost" type="submit">Use Employee PIN</button>
         </form>
         <div id="staff-login-result" aria-live="polite"></div>
       </div>
@@ -1114,8 +1114,8 @@
                 <input id="owner_job_address" placeholder="Service address" />
               </div>
               <div>
-                <label for="owner_job_scheduled_date">Schedule date and time</label>
-                <input id="owner_job_scheduled_date" type="datetime-local" />
+                <label for="owner_job_scheduled_date">Schedule date</label>
+                <input id="owner_job_scheduled_date" type="date" />
               </div>
             </div>
             <div>
@@ -1132,7 +1132,7 @@
           <h2>Employee job list</h2>
           <p>Employees only see the work list and a Done button. Pricing and billing stay hidden.</p>
           <div class="admin-bar">
-            <input id="employee-pin" type="password" placeholder="Backup employee PIN, optional if signed in" />
+            <input id="employee-pin" type="password" placeholder="Employee PIN, optional if signed in" />
             <button id="load-employee" class="button secondary" type="button">Load Employee Jobs</button>
           </div>
           <div id="employee-result" class="status-box" aria-live="polite"></div>
@@ -1140,12 +1140,22 @@
 
         <div class="card owner-only">
           <h2>Employee access</h2>
-          <p>Approve employees, deactivate fired employees, or reactivate them later.</p>
+          <p>Approve employees, set their PIN, deactivate fired employees, or reactivate them later.</p>
           <div class="admin-bar">
             <input id="employee-admin-pin" type="password" placeholder="Admin PIN" />
             <button id="load-employees" class="button secondary" type="button">Load Employees</button>
           </div>
           <div id="employees-result" class="status-box" aria-live="polite"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Activity log</h2>
+          <p>See recent customer texts and who clicked Done.</p>
+          <div class="admin-bar">
+            <input id="activity-admin-pin" type="password" placeholder="Admin PIN" />
+            <button id="load-activity" class="button secondary" type="button">Load Activity</button>
+          </div>
+          <div id="activity-result" class="status-box" aria-live="polite"></div>
         </div>
 
         <div class="card setup owner-only">
@@ -1190,9 +1200,11 @@
       setSignedIn({ id: "owner", email: "Owner" });
       $("#admin-pin").value = pin;
       $("#employee-admin-pin").value = pin;
+      $("#activity-admin-pin").value = pin;
       openTab("owner");
       await loadAdminJobs();
       await loadEmployees();
+      await loadActivity();
     }
 
     function setSignedOut() {
@@ -1425,8 +1437,24 @@
       }
     }
 
+    function displayScheduleDate(value) {
+      if (!value) return "Not scheduled yet";
+      const datePart = String(value).split("T")[0];
+      const pieces = datePart.split("-").map(Number);
+      if (pieces.length === 3 && pieces.every(Boolean)) {
+        const date = new Date(pieces[0], pieces[1] - 1, pieces[2]);
+        return date.toLocaleDateString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        });
+      }
+      return new Date(value).toLocaleDateString();
+    }
+
     function jobCard(job, admin = false) {
-      const scheduled = job.scheduled_date ? new Date(job.scheduled_date).toLocaleString() : "Not scheduled yet";
+      const scheduled = displayScheduleDate(job.scheduled_date);
       return `
         <div class="job" data-id="${job.id}">
           <div class="job-head">
@@ -1438,7 +1466,7 @@
           <p class="muted">${job.notes || ""}</p>
           ${admin ? `
             <div class="two" style="margin-top: 12px;">
-              <input type="datetime-local" class="schedule-input" />
+              <input type="date" class="schedule-input" />
               <select class="status-input">
                 <option>New</option>
                 <option>Scheduled</option>
@@ -1457,7 +1485,7 @@
     }
 
     function employeeJobCard(job) {
-      const scheduled = job.scheduled_date ? new Date(job.scheduled_date).toLocaleString() : "Not scheduled yet";
+      const scheduled = displayScheduleDate(job.scheduled_date);
       return `
         <div class="job" data-id="${job.id}">
           <div class="job-head">
@@ -1483,10 +1511,32 @@
           </div>
           <p class="muted">${employee.email}</p>
           <p class="muted">${employee.phone || ""}</p>
+          <div class="two" style="margin-top: 12px;">
+            <input class="employee-pin-input" type="password" value="${employee.employee_pin || ""}" placeholder="Set employee PIN" />
+            <button class="button small" data-employee-pin="1" type="button">Save PIN</button>
+          </div>
           <div class="admin-actions">
             <button class="button small secondary" data-employee-status="Active" type="button">Approve / Reactivate</button>
             <button class="button small ghost" data-employee-status="Inactive" type="button">Deactivate</button>
           </div>
+        </div>
+      `;
+    }
+
+    function activityCard(log) {
+      const when = log.created_at ? new Date(log.created_at).toLocaleString() : "";
+      const job = log.green_grin_jobs || {};
+      const actor = log.actor_name || log.actor_type || "System";
+      const action = log.template === "completed" ? "clicked Done / sent complete text" : `sent ${log.template} text`;
+      return `
+        <div class="message">
+          <div class="message-head">
+            <strong>${actor}</strong>
+            <span class="badge">${log.actor_type || "System"}</span>
+          </div>
+          <p>${action}</p>
+          <p class="muted">${job.customer_name || "Customer"} - ${job.address || log.phone || ""}</p>
+          <p class="muted">${when}</p>
         </div>
       `;
     }
@@ -1616,6 +1666,7 @@
     $("#load-admin").addEventListener("click", loadAdminJobs);
     $("#load-employee").addEventListener("click", loadEmployeeJobs);
     $("#load-employees").addEventListener("click", loadEmployees);
+    $("#load-activity").addEventListener("click", loadActivity);
 
     async function loadAdminJobs() {
       const pin = $("#admin-pin").value;
@@ -1654,6 +1705,19 @@
           : notice("No employee requests yet.");
       } catch (error) {
         $("#employees-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    async function loadActivity() {
+      const pin = $("#activity-admin-pin").value || $("#admin-pin").value;
+      $("#activity-result").innerHTML = notice("Loading activity...");
+      try {
+        const data = await requestJson("portal-message?admin=1", { headers: { "x-admin-pin": pin } });
+        $("#activity-result").innerHTML = data.logs.length
+          ? data.logs.map((log) => activityCard(log)).join("")
+          : notice("No activity yet.");
+      } catch (error) {
+        $("#activity-result").innerHTML = notice(error.message, true);
       }
     }
 
@@ -1712,17 +1776,20 @@
     });
 
     $("#employees-result").addEventListener("click", async (event) => {
-      const button = event.target.closest("button[data-employee-status]");
+      const button = event.target.closest("button[data-employee-status], button[data-employee-pin]");
       if (!button) return;
       const card = button.closest(".job");
       const id = card.dataset.id;
       const pin = $("#employee-admin-pin").value;
       button.disabled = true;
       try {
+        const payload = button.dataset.employeePin
+          ? { id, employee_pin: card.querySelector(".employee-pin-input")?.value || "" }
+          : { id, status: button.dataset.employeeStatus };
         await requestJson("portal-employees", {
           method: "PATCH",
           headers: { "x-admin-pin": pin },
-          body: JSON.stringify({ id, status: button.dataset.employeeStatus })
+          body: JSON.stringify(payload)
         });
         await loadEmployees();
       } catch (error) {

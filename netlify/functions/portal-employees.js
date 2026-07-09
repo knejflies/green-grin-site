@@ -118,10 +118,14 @@ exports.handler = async (event) => {
       const adminError = requireAdmin(event);
       if (adminError) return json(401, { error: adminError });
       const body = JSON.parse(event.body || "{}");
-      if (!body.id || !body.status) return json(400, { error: "Employee id and status are required." });
+      if (!body.id) return json(400, { error: "Employee id is required." });
+      const update = {};
+      if (body.status) update.status = body.status;
+      if (Object.prototype.hasOwnProperty.call(body, "employee_pin")) update.employee_pin = body.employee_pin || null;
+      if (!Object.keys(update).length) return json(400, { error: "Nothing to update." });
       const rows = await supabase(`green_grin_employees?id=eq.${encodeURIComponent(body.id)}`, {
         method: "PATCH",
-        body: JSON.stringify({ status: body.status })
+        body: JSON.stringify(update)
       });
       return json(200, { employee: rows?.[0] });
     }
