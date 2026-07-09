@@ -1,0 +1,1264 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Green Grin Lawn & Landscape provides mowing, edging, cleanups, mulch, shrub trimming, and commercial property care across Caldwell and the Treasure Valley." />
+  <title>Green Grin Lawn & Landscape | Caldwell & Treasure Valley Lawn Care</title>
+  <style>
+    :root {
+      --pine: #123324;
+      --pine-2: #1f4d35;
+      --leaf: #77bf54;
+      --mint: #dff0d2;
+      --sun: #f4c752;
+      --soil: #735f3c;
+      --ink: #18221c;
+      --muted: #66726a;
+      --paper: #fbfbf6;
+      --white: #ffffff;
+      --line: #dfe6dd;
+      --shadow: 0 18px 44px rgba(18, 51, 36, 0.14);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .wrap {
+      width: min(1140px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: 16px;
+      top: -80px;
+      z-index: 20;
+      background: var(--sun);
+      color: var(--ink);
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-weight: 800;
+      transition: top 0.2s ease;
+    }
+
+    .skip-link:focus {
+      top: 16px;
+    }
+
+    .topbar {
+      background: var(--pine);
+      color: var(--white);
+      font-size: 0.92rem;
+    }
+
+    .topbar .wrap {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .topbar a {
+      color: var(--mint);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(251, 251, 246, 0.94);
+      border-bottom: 1px solid rgba(18, 51, 36, 0.12);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav .wrap {
+      min-height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      min-width: max-content;
+    }
+
+    .brand-logo {
+      width: 248px;
+      height: auto;
+      display: block;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--pine);
+      color: var(--sun);
+      box-shadow: inset 0 0 0 3px rgba(244, 199, 82, 0.22);
+    }
+
+    .brand svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .brand-name {
+      display: block;
+      color: var(--pine);
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.05;
+    }
+
+    .brand-sub {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--pine);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus {
+      color: var(--leaf);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 48px;
+      padding: 13px 18px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--leaf);
+      color: #0b2114;
+      cursor: pointer;
+      font-weight: 900;
+      text-decoration: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .button:hover,
+    .button:focus {
+      background: var(--sun);
+      box-shadow: 0 10px 24px rgba(115, 95, 60, 0.22);
+      transform: translateY(-2px);
+    }
+
+    .button.secondary {
+      background: rgba(255, 255, 255, 0.13);
+      color: var(--white);
+      border: 1px solid rgba(255, 255, 255, 0.38);
+    }
+
+    .button.secondary:hover,
+    .button.secondary:focus {
+      background: var(--white);
+      color: var(--pine);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 760px;
+      display: grid;
+      align-items: end;
+      overflow: hidden;
+      color: var(--white);
+      background:
+        linear-gradient(90deg, rgba(13, 36, 24, 0.93), rgba(13, 36, 24, 0.68) 47%, rgba(13, 36, 24, 0.22)),
+        url("assets/green-grin-striped-lawn.jpg") center / cover no-repeat;
+      background-attachment: fixed;
+    }
+
+    .hero .wrap {
+      position: relative;
+      z-index: 1;
+      padding: 108px 0 42px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 680px) minmax(280px, 1fr);
+      gap: 42px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: var(--mint);
+      font-size: 0.85rem;
+      font-weight: 900;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 3px;
+      background: var(--sun);
+      border-radius: 999px;
+    }
+
+    h1 {
+      max-width: 760px;
+      font-size: clamp(3.1rem, 7vw, 6.8rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+      font-weight: 950;
+    }
+
+    .hero-copy {
+      max-width: 620px;
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: clamp(1.05rem, 2vw, 1.26rem);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .quote-panel {
+      align-self: end;
+      background: rgba(251, 251, 246, 0.96);
+      color: var(--ink);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .quote-panel strong {
+      color: var(--pine);
+      font-size: 1.08rem;
+    }
+
+    .quote-panel p {
+      margin-top: 6px;
+      color: var(--muted);
+    }
+
+    .quick-form {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 34px;
+      align-items: stretch;
+    }
+
+    .project-photo {
+      min-height: 420px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .project-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-panel {
+      display: grid;
+      align-content: center;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .project-list {
+      display: grid;
+      gap: 14px;
+      margin: 24px 0 28px;
+      list-style: none;
+    }
+
+    .project-list li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .project-list li::before {
+      content: "+";
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--mint);
+      color: var(--pine);
+      font-weight: 950;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      min-height: 48px;
+      padding: 12px 13px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 4px rgba(119, 191, 84, 0.18);
+    }
+
+    .stats {
+      transform: translateY(50%);
+      position: relative;
+      z-index: 2;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: rgba(18, 51, 36, 0.16);
+      box-shadow: var(--shadow);
+    }
+
+    .stat {
+      background: var(--white);
+      padding: 24px;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--pine);
+      font-size: 1.9rem;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    section {
+      padding: 112px 0;
+    }
+
+    .image-break {
+      position: relative;
+      overflow: hidden;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: var(--white);
+      min-height: 72vh;
+      display: grid;
+      align-items: end;
+      border-top: 10px solid var(--paper);
+      border-bottom: 10px solid var(--paper);
+    }
+
+    .image-break::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(11, 28, 18, 0.7), rgba(11, 28, 18, 0.08) 58%);
+      pointer-events: none;
+    }
+
+    .image-break > .wrap {
+      position: relative;
+      z-index: 1;
+      padding: 0 0 48px;
+    }
+
+    .image-break h2 {
+      max-width: 760px;
+      color: var(--white);
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      text-shadow: 0 3px 18px rgba(0, 0, 0, 0.34);
+    }
+
+    .image-break p {
+      max-width: 620px;
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 1.1rem;
+      font-weight: 750;
+    }
+
+    .image-break.striped {
+      background-image: url("assets/green-grin-striped-lawn.jpg");
+    }
+
+    .image-break.residential {
+      background-image: url("assets/green-grin-residential-lawn.jpg");
+    }
+
+    .image-break.commercial {
+      background-image: url("assets/green-grin-commercial-beds.jpg");
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 42px;
+    }
+
+    .section-head.center {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+
+    .section-kicker {
+      color: var(--leaf);
+      font-size: 0.84rem;
+      font-weight: 950;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin-top: 8px;
+      color: var(--pine);
+      font-size: clamp(2.05rem, 4vw, 3.55rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+      font-weight: 950;
+    }
+
+    .section-head p {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .services {
+      padding-top: 164px;
+      background: var(--paper);
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .service-card {
+      min-height: 258px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .service-card:hover {
+      border-color: rgba(119, 191, 84, 0.65);
+      box-shadow: 0 16px 36px rgba(18, 51, 36, 0.1);
+      transform: translateY(-4px);
+    }
+
+    .icon {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+      border-radius: var(--radius);
+      background: var(--mint);
+      color: var(--pine);
+    }
+
+    .icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .service-card h3 {
+      color: var(--pine);
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .service-card p {
+      color: var(--muted);
+    }
+
+    .split {
+      background: var(--white);
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 58px;
+      align-items: center;
+    }
+
+    .photo-stack {
+      display: grid;
+      grid-template-columns: 0.74fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .photo-stack img {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .photo-stack img:first-child {
+      margin-top: 52px;
+      min-height: 360px;
+    }
+
+    .checks {
+      display: grid;
+      gap: 14px;
+      margin: 26px 0 30px;
+      list-style: none;
+    }
+
+    .checks li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .checks li::before {
+      content: "âœ“";
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--mint);
+      color: var(--pine);
+      font-weight: 950;
+    }
+
+    .gallery {
+      background: #edf5e9;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 320px;
+      gap: 16px;
+    }
+
+    .gallery-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--pine);
+    }
+
+    .gallery-item.large {
+      grid-row: span 1;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.55s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.06);
+    }
+
+    .gallery-label {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: rgba(18, 51, 36, 0.86);
+      color: var(--white);
+      font-weight: 900;
+    }
+
+    .reviews {
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    .reviews h2 {
+      color: var(--white);
+    }
+
+    .reviews .section-head p {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .review {
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .review h3 {
+      color: var(--white);
+      font-size: 1.18rem;
+      margin-bottom: 12px;
+    }
+
+    .review p {
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 1.03rem;
+    }
+
+    .contact {
+      background: var(--paper);
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .contact-card,
+    .contact-form {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .contact-card {
+      overflow: hidden;
+    }
+
+    .contact-card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+    }
+
+    .contact-info {
+      padding: 28px;
+    }
+
+    .contact-card h2,
+    .contact-card .section-head h2 {
+      color: var(--pine);
+      text-shadow: none;
+    }
+
+    .contact-card .section-head p {
+      color: var(--muted);
+    }
+
+    .contact-method {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .contact-method:last-child {
+      border-bottom: 0;
+    }
+
+    .contact-method b {
+      display: block;
+      color: var(--pine);
+    }
+
+    .contact-method a,
+    .contact-method span {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 750;
+    }
+
+    .contact-form {
+      padding: 30px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--pine);
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .form-row {
+      margin-bottom: 16px;
+    }
+
+    textarea {
+      min-height: 136px;
+      resize: vertical;
+    }
+
+    .areas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .tag {
+      padding: 8px 11px;
+      border-radius: var(--radius);
+      background: var(--mint);
+      color: var(--pine);
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    footer {
+      background: #0c2016;
+      color: rgba(255, 255, 255, 0.72);
+      padding: 34px 0;
+    }
+
+    footer .wrap {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    footer strong {
+      color: var(--white);
+    }
+
+    @media (max-width: 980px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        min-height: auto;
+        background-attachment: scroll;
+      }
+
+      .image-break {
+        background-attachment: scroll;
+      }
+
+      .hero-grid,
+      .split-grid,
+      .project-grid,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .quote-panel {
+        max-width: 560px;
+      }
+
+      .stats {
+        transform: none;
+        margin-top: 0;
+        background: var(--paper);
+      }
+
+      .stats .wrap {
+        width: 100%;
+      }
+
+      .stats-grid {
+        border-radius: 0;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .services {
+        padding-top: 92px;
+      }
+
+      .services-grid,
+      .review-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .gallery-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .wrap {
+        width: min(100% - 28px, 1140px);
+      }
+
+      .topbar .wrap {
+        min-height: 58px;
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      .nav .wrap {
+        min-height: 78px;
+      }
+
+      .brand-logo {
+        width: 178px;
+      }
+
+      .nav .button {
+        min-height: 42px;
+        padding: 10px 12px;
+        font-size: 0.88rem;
+      }
+
+      .hero .wrap {
+        padding-top: 78px;
+      }
+
+      h1 {
+        font-size: 3rem;
+      }
+
+      section {
+        padding: 74px 0;
+      }
+
+      .stats-grid,
+      .services-grid,
+      .review-grid,
+      .gallery-grid,
+      .field-grid,
+      .project-grid,
+      .photo-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .photo-stack img,
+      .photo-stack img:first-child {
+        min-height: 280px;
+        margin-top: 0;
+      }
+
+      .gallery-grid {
+        grid-auto-rows: 260px;
+      }
+
+      .gallery-item.large {
+        grid-row: span 1;
+      }
+
+      footer .wrap {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="topbar">
+    <div class="wrap">
+      <span>Caldwell-based lawn care for homes, rentals, HOAs, and storefronts</span>
+      <a href="tel:12087408837">(208) 740-8837</a>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="wrap">
+      <a class="brand" href="#top" aria-label="Green Grin Lawn and Landscape home">
+        <img class="brand-logo" src="assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
+      </a>
+      <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#gallery">Work</a></li>
+        <li><a href="#reviews">Why Us</a></li>
+        <li><a href="portal.html">Portal</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <a class="button" href="portal.html">Customer Portal</a>
+    </div>
+  </nav>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <h1>Sharp cuts. Clean edges. Lawns that grin back.</h1>
+            <p class="hero-copy">Green Grin Lawn & Landscape keeps Caldwell and Treasure Valley properties crisp with dependable mowing, trimming, seasonal cleanups, mulch, and commercial maintenance.</p>
+            <div class="hero-actions">
+              <a class="button" href="tel:12087408837">Call or Text Now</a>
+              <a class="button secondary" href="portal.html">Customer Portal</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="stats" aria-label="Service highlights">
+      <div class="wrap">
+        <div class="stats-grid">
+          <div class="stat"><b>6</b><span>Core yard services</span></div>
+          <div class="stat"><b>8+</b><span>Service-area cities</span></div>
+          <div class="stat"><b>0</b><span>Mess left behind</span></div>
+          <div class="stat"><b>208</b><span>Local phone, local crew</span></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="services" id="services">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="section-kicker">What We Handle</span>
+          <h2>Maintenance that makes the whole property look intentional.</h2>
+          <p>From weekly mowing to seasonal reset work, every visit is built around clean lines, careful trimming, and a finished look from curb to fence.</p>
+        </div>
+
+        <div class="services-grid">
+          <article class="service-card">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17h16M5 17l2-7h7l2 7M8 10V7h3v3M17 17l-1-5h3l1 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <h3>Lawn Mowing</h3>
+            <p>Consistent cuts, stripe-friendly passes, clean trimming, and hard-surface blowoff after every visit.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 19c7-1 11.7-5.7 14-14-8.3 2.3-13 7-14 14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 19c3.8-.2 7.1-1.5 10-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <h3>Spring & Fall Cleanups</h3>
+            <p>Leaf removal, branch pickup, bed cleanup, and yard reset work before or after the growing season.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21V8M7 13c-2.7 0-4-1.8-4-4.8C6.8 8.2 9 9.8 9 13H7ZM17 11c2.7 0 4-1.8 4-4.8C17.2 6.2 15 7.8 15 11h2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+            <h3>Weed Control</h3>
+            <p>Bed and border attention that keeps weeds from taking over the clean work you already paid for.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M6 18c0-4 2.5-7 6-7s6 3 6 7M9 11V6h6v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <h3>Landscaping & Mulch</h3>
+            <p>Fresh mulch, bed edging, small landscape refreshes, and curb appeal upgrades that look finished fast.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 6 16 12M20 6 4 18M7 8a2 2 0 1 0-3 2.6M17 8a2 2 0 1 1 3 2.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <h3>Hedge & Shrub Trimming</h3>
+            <p>Balanced shaping, thoughtful pruning, and cleanup that keeps shrubs neat without butchering them.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V5h10v16M14 9h6v12M8 9h2M8 13h2M8 17h2M17 13h1M17 17h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <h3>Commercial Yard Maintenance</h3>
+            <p>Reliable property presentation for storefronts, offices, rental homes, HOAs, and high-visibility corners.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="image-break residential" aria-label="Residential lawn care photo">
+      <div class="wrap">
+        <h2>Residential lawns with curb appeal.</h2>
+        <p>Clean mowing, careful beds, and a finished look from the street.</p>
+      </div>
+    </section>
+
+    <section class="split" id="about">
+      <div class="wrap split-grid">
+        <div class="photo-stack" aria-label="Lawn care photography">
+          <img src="assets/green-grin-residential-lawn.jpg" alt="Green Grin maintained residential lawn and landscape beds" />
+          <img src="assets/green-grin-striped-lawn.jpg" alt="Fresh Green Grin mowing stripes across a large lawn" />
+        </div>
+        <div>
+          <div class="section-head">
+            <span class="section-kicker">The Green Grin Standard</span>
+            <h2>Small-business care with a professional finish.</h2>
+            <p>Green Grin is built for homeowners and property managers who want the lawn handled without chasing callbacks, missed details, or mystery scheduling.</p>
+          </div>
+          <ul class="checks">
+            <li>Clean edges around sidewalks, driveways, curbs, fences, and beds.</li>
+            <li>Dependable communication for regular maintenance and one-time projects.</li>
+            <li>Service built around Caldwell, Nampa, Meridian, Boise, and the wider Treasure Valley.</li>
+          </ul>
+          <a class="button" href="#contact">Book Your Spot</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="image-break commercial" aria-label="Commercial landscape maintenance photo">
+      <div class="wrap">
+        <h2>Commercial beds kept presentable.</h2>
+        <p>Rock beds, shrubs, flowers, and frontage areas kept sharp for customers, tenants, and visitors.</p>
+      </div>
+    </section>
+
+    <section class="projects" id="projects">
+      <div class="wrap project-grid">
+        <div class="project-photo">
+          <img src="assets/green-grin-landscape-project.jpg" alt="Landscape project with fire pit, stonework, beds, and lawn maintained by Green Grin" />
+        </div>
+        <div class="project-panel">
+          <div class="section-head">
+            <span class="section-kicker">Landscape Projects</span>
+            <h2>Refreshes, cleanups, and curb appeal upgrades.</h2>
+            <p>Green Grin handles small landscape projects that make a property look cared for without turning it into a huge construction job.</p>
+          </div>
+          <ul class="project-list">
+            <li>Rock bed and mulch refreshes</li>
+            <li>Flower bed cleanup and weed removal</li>
+            <li>Shrub shaping and plant-area cleanup</li>
+            <li>Rental, commercial, and residential curb appeal projects</li>
+          </ul>
+          <a class="button" href="#contact">Ask About a Project</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" id="gallery">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="section-kicker">Finished Looks</span>
+          <h2>Photos that feel like the work: crisp, green, and cleaned up.</h2>
+          <p>Real project photos from Green Grin mowing, residential lawn care, and commercial landscape maintenance.</p>
+        </div>
+
+        <div class="gallery-grid">
+          <figure class="gallery-item large">
+            <img src="assets/green-grin-striped-lawn.jpg" alt="Striped green lawn maintained by Green Grin" />
+            <figcaption class="gallery-label">Weekly mowing and striping</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="assets/green-grin-residential-lawn.jpg" alt="Residential lawn and landscape beds maintained by Green Grin" />
+            <figcaption class="gallery-label">Residential lawn care</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="assets/green-grin-commercial-beds.jpg" alt="Commercial flower and rock beds maintained by Green Grin" />
+            <figcaption class="gallery-label">Commercial yard maintenance</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="image-break striped" aria-label="Striped mowing photo">
+      <div class="wrap">
+        <h2>Stripe work that stands out.</h2>
+        <p>Big open lawns, sharp passes, and a professional finish.</p>
+      </div>
+    </section>
+
+    <section class="reviews" id="reviews">
+      <div class="wrap">
+        <div class="section-head center">
+          <span class="section-kicker">Why Green Grin</span>
+          <h2>Reliable yard care without the guesswork.</h2>
+          <p>Professional maintenance for homeowners, rentals, commercial properties, and busy schedules.</p>
+        </div>
+
+        <div class="review-grid">
+          <article class="review">
+            <h3>Clean every visit</h3>
+            <p>Edges, walkways, driveways, and visible details are cleaned up before the job is finished.</p>
+          </article>
+          <article class="review">
+            <h3>Easy communication</h3>
+            <p>Call, text, or send a request online and get straightforward follow-up about your property.</p>
+          </article>
+          <article class="review">
+            <h3>Built for the Valley</h3>
+            <p>Local service for Caldwell, Nampa, Meridian, Boise, Eagle, Kuna, Star, and Middleton.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="image-break residential" aria-label="Finished lawn photo">
+      <div class="wrap">
+        <h2>Ready for a cleaner yard?</h2>
+        <p>Send a quick request and we will follow up with availability.</p>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="wrap contact-grid">
+        <aside class="contact-card">
+          <img src="assets/green-grin-residential-lawn.jpg" alt="Freshly maintained residential lawn by Green Grin" />
+          <div class="contact-info">
+            <div class="section-head">
+              <span class="section-kicker">Letâ€™s Talk</span>
+              <h2>Tell us what your yard needs.</h2>
+              <p>Call, text, or send the form. Add a few details about your property and the service you want.</p>
+            </div>
+            <div class="contact-method">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 4h4l2 5-2.5 1.5a12 12 0 0 0 5.5 5.5L17 13.5l5 2v4c0 1.1-.9 2-2 2C10.6 21.5 2.5 13.4 2.5 4c0-1.1.9-2 2-2h2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+              <div><b>Call or text</b><a href="tel:12087408837">(208) 740-8837</a></div>
+            </div>
+            <div class="contact-method">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4V6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div><b>Email</b><a href="mailto:ken@greengrinlawns.com">ken@greengrinlawns.com</a></div>
+            </div>
+            <div class="contact-method">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.4 7-12a7 7 0 1 0-14 0c0 6.6 7 12 7 12Z" stroke="currentColor" stroke-width="2"/><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="2"/></svg></span>
+              <div><b>Service area</b><span>Caldwell and the Treasure Valley</span></div>
+            </div>
+            <div class="areas" aria-label="Service areas">
+              <span class="tag">Caldwell</span>
+              <span class="tag">Nampa</span>
+              <span class="tag">Meridian</span>
+              <span class="tag">Boise</span>
+              <span class="tag">Eagle</span>
+              <span class="tag">Kuna</span>
+              <span class="tag">Star</span>
+              <span class="tag">Middleton</span>
+            </div>
+          </div>
+        </aside>
+
+        <form class="contact-form" action="https://formspree.io/f/mpqeqjeb" method="POST">
+          <input type="hidden" name="form_source" value="Main contact form" />
+          <div class="field-grid">
+            <div class="form-row">
+              <label for="name">Name</label>
+              <input id="name" name="name" required placeholder="Your name" />
+            </div>
+            <div class="form-row">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" required type="tel" placeholder="(208) 555-0199" />
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="form-row">
+              <label for="city">City</label>
+              <input id="city" name="city" placeholder="Caldwell" />
+            </div>
+            <div class="form-row">
+              <label for="service">Service</label>
+              <select id="service" name="service">
+                <option>Weekly mowing</option>
+                <option>Bi-weekly mowing</option>
+                <option>Spring or fall cleanup</option>
+                <option>Mulch and landscaping</option>
+                <option>Shrub trimming</option>
+                <option>Commercial maintenance</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="message">Property details</label>
+            <textarea id="message" name="message" placeholder="Tell us the lawn size, current condition, gate access, pets, or anything else useful."></textarea>
+          </div>
+          <button class="button" type="submit">Send Request</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p><strong>Green Grin Lawn & Landscape</strong> &copy; 2026</p>
+      <p>Caldwell, Idaho - Treasure Valley Lawn Care</p>
+    </div>
+  </footer>
+</body>
+</html>
+

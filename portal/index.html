@@ -1,0 +1,1555 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Portal | Green Grin Lawn & Landscape</title>
+  <style>
+    :root {
+      --pine: #123324;
+      --leaf: #78c653;
+      --leaf-dark: #4d9f35;
+      --mint: #e5f4dc;
+      --sun: #f4c752;
+      --ink: #17231c;
+      --muted: #66726a;
+      --paper: #f6f7f1;
+      --white: #ffffff;
+      --line: #dce5da;
+      --soft: #fbfdf8;
+      --warn: #fff6d7;
+      --danger: #fff1e8;
+      --shadow: 0 18px 44px rgba(18, 51, 36, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand img {
+      width: 210px;
+      height: auto;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .account-pill {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--pine);
+      padding: 8px 12px;
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .account-pill.active {
+      display: inline-flex;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 11px 15px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--leaf);
+      color: #0b2114;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+      text-decoration: none;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .button:hover {
+      background: #8dd66b;
+      transform: translateY(-1px);
+    }
+
+    .button.secondary {
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    .button.ghost {
+      background: var(--white);
+      color: var(--pine);
+      border: 1px solid var(--line);
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+      transform: none;
+    }
+
+    .hero {
+      padding: 52px 0 30px;
+      background:
+        linear-gradient(90deg, rgba(18, 51, 36, 0.94), rgba(18, 51, 36, 0.68)),
+        url("../assets/green-grin-striped-lawn.jpg") center / cover;
+      color: var(--white);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 24px;
+      align-items: end;
+    }
+
+    h1 {
+      max-width: 760px;
+      font-size: clamp(2.35rem, 5.5vw, 4.6rem);
+      line-height: 0.98;
+      font-weight: 950;
+    }
+
+    .hero p {
+      max-width: 660px;
+      margin-top: 16px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 1.05rem;
+    }
+
+    .portal-card {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.12);
+      padding: 18px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.16);
+    }
+
+    .portal-card strong {
+      display: block;
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+
+    .portal-card span {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.94rem;
+    }
+
+    .auth-gate {
+      display: none;
+      padding: 28px 0 80px;
+    }
+
+    .auth-gate.active {
+      display: block;
+    }
+
+    .auth-shell {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .auth-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .auth-card h2 {
+      color: var(--pine);
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+      line-height: 1.04;
+      margin-bottom: 10px;
+    }
+
+    .account-preview {
+      display: grid;
+      gap: 12px;
+    }
+
+    .account-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 14px;
+    }
+
+    .account-icon {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--mint);
+      color: var(--pine);
+      font-weight: 950;
+    }
+
+    .portal-app {
+      display: none;
+    }
+
+    .portal-app.active {
+      display: block;
+    }
+
+    .employee-mode #portal-app .tabs .tab:not([data-tab="owner"]),
+    .employee-mode .owner-only {
+      display: none;
+    }
+
+    main {
+      padding: 28px 0 80px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--pine);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+      padding: 11px 13px;
+    }
+
+    .tab.active {
+      background: var(--pine);
+      color: var(--white);
+      border-color: var(--pine);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .three {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .card + .card {
+      margin-top: 18px;
+    }
+
+    .card h2 {
+      color: var(--pine);
+      font-size: clamp(1.45rem, 3vw, 2rem);
+      line-height: 1.05;
+      margin-bottom: 9px;
+    }
+
+    .card h3 {
+      color: var(--pine);
+      font-size: 1.1rem;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--muted);
+    }
+
+    .metric {
+      display: grid;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 16px;
+      min-height: 118px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      color: var(--pine);
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .step,
+    .job,
+    .invoice,
+    .message,
+    .property-note {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 16px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: var(--leaf);
+      box-shadow: 0 0 0 5px var(--mint);
+    }
+
+    .step strong,
+    .job strong,
+    .invoice strong,
+    .message strong {
+      color: var(--pine);
+    }
+
+    .badge {
+      display: inline-flex;
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--pine);
+      font-size: 0.8rem;
+      font-weight: 950;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .badge.warn {
+      background: var(--warn);
+    }
+
+    .badge.dark {
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    label {
+      display: block;
+      color: var(--pine);
+      font-size: 0.9rem;
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      min-height: 46px;
+      padding: 11px 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 4px rgba(119, 191, 84, 0.18);
+    }
+
+    .status-box {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .job-head,
+    .invoice-head,
+    .message-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .admin-bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .admin-actions,
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .small {
+      min-height: 38px;
+      padding: 8px 11px;
+      font-size: 0.88rem;
+    }
+
+    .notice {
+      margin-top: 14px;
+      border-left: 4px solid var(--leaf);
+      background: #f4fbef;
+      color: var(--pine);
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      font-weight: 750;
+    }
+
+    .error {
+      border-left-color: #c2410c;
+      background: var(--danger);
+      color: #7c2d12;
+    }
+
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .plan {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .plan strong {
+      color: var(--pine);
+      font-size: 1.15rem;
+    }
+
+    .price {
+      color: var(--pine);
+      font-size: 2rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .price span {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .clean-list {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      list-style: none;
+    }
+
+    .clean-list li::before {
+      content: "+ ";
+      color: var(--leaf-dark);
+      font-weight: 950;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 9px;
+      align-items: start;
+      color: var(--muted);
+    }
+
+    .check input {
+      width: 18px;
+      min-height: 18px;
+      margin-top: 3px;
+      accent-color: var(--leaf-dark);
+    }
+
+    .setup {
+      background: #fffdf2;
+      border: 1px solid #f3e6a6;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid,
+      .auth-shell,
+      .grid,
+      .three,
+      .two,
+      .plans,
+      .admin-bar,
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .brand img {
+        width: 160px;
+      }
+
+      .nav {
+        min-height: 70px;
+      }
+
+      .account-pill {
+        display: none !important;
+      }
+
+      .step {
+        grid-template-columns: auto 1fr;
+      }
+
+      .step .badge {
+        grid-column: 2;
+        justify-self: start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="../">
+        <img src="../assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
+      </a>
+      <div class="nav-actions">
+        <span id="account-pill" class="account-pill">Signed in</span>
+        <button id="sign-out" class="button ghost" type="button" hidden>Sign Out</button>
+        <a class="button ghost" href="../">Main Site</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <h1>Customer Portal</h1>
+        <p>Customers can request service, check their next visit, see messages, view billing, and keep yard notes in one place.</p>
+      </div>
+      <div class="portal-card">
+        <strong>Customer accounts</strong>
+        <span>Email sign-in, property notes, service requests, message settings, and billing in one place.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="auth-gate" class="wrap auth-gate active">
+    <div class="auth-shell">
+      <div class="auth-card">
+        <h2>Sign in to your account</h2>
+        <p class="muted">Customers enter their email and get a private sign-in link. No password to remember.</p>
+        <form id="auth-form">
+          <div>
+            <label for="auth-email">Email</label>
+            <input id="auth-email" type="email" required placeholder="you@example.com" />
+          </div>
+          <button class="button" type="submit">Email Me A Sign-In Link</button>
+        </form>
+        <div id="auth-result" aria-live="polite"></div>
+      </div>
+
+      <div class="auth-card">
+        <h2>Staff access</h2>
+        <p class="muted">Employees can request access, sign in by email, and mark jobs done without seeing billing.</p>
+        <form id="employee-request-form">
+          <div class="two">
+            <div>
+              <label for="employee-name">Name</label>
+              <input id="employee-name" required placeholder="Employee name" />
+            </div>
+            <div>
+              <label for="employee-phone">Phone</label>
+              <input id="employee-phone" placeholder="Optional" />
+            </div>
+          </div>
+          <div>
+            <label for="employee-request-email">Email</label>
+            <input id="employee-request-email" type="email" required placeholder="employee@example.com" />
+          </div>
+          <button class="button" type="submit">Request Employee Access</button>
+        </form>
+        <form id="staff-email-form">
+          <div>
+            <label for="staff-email">Employee email</label>
+            <input id="staff-email" type="email" placeholder="employee@example.com" />
+          </div>
+          <button class="button secondary" type="submit">Email Employee Sign-In Link</button>
+        </form>
+        <form id="staff-login-form">
+          <div>
+            <label for="staff-pin">Backup employee PIN</label>
+            <input id="staff-pin" type="password" placeholder="Employee PIN" />
+          </div>
+          <button class="button ghost" type="submit">Use Backup PIN</button>
+        </form>
+        <div id="staff-login-result" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <main id="portal-app" class="wrap portal-app">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="dashboard" type="button">Dashboard</button>
+      <button class="tab" data-tab="schedule" type="button">Schedule</button>
+      <button class="tab" data-tab="messages" type="button">Messages</button>
+      <button class="tab" data-tab="billing" type="button">Billing</button>
+      <button class="tab" data-tab="property" type="button">Property</button>
+      <button class="tab" data-tab="owner" type="button">Owner</button>
+    </div>
+
+    <section id="dashboard" class="panel active">
+      <div class="three">
+        <div class="metric">
+          <span>Next Visit</span>
+          <strong>Friday</strong>
+          <p class="muted">Mow, trim, edge, and blowoff.</p>
+        </div>
+        <div class="metric">
+          <span>Monthly Plan</span>
+          <strong>Weekly</strong>
+          <p class="muted">$280 due at the beginning of the month.</p>
+        </div>
+        <div class="metric">
+          <span>Service Status</span>
+          <strong>Scheduled</strong>
+          <p class="muted">Reminder text ready to send.</p>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top: 20px;">
+        <div class="card">
+          <h2>Upcoming service</h2>
+          <p>This gives the customer a clear view of what is happening next.</p>
+          <div class="timeline">
+            <div class="step">
+              <span class="dot"></span>
+              <div>
+                <strong>Morning reminder</strong>
+                <p class="muted">If service is scheduled today, the customer gets a cleanup reminder in the morning.</p>
+              </div>
+              <span class="badge warn">Automatic</span>
+            </div>
+            <div class="step">
+              <span class="dot"></span>
+              <div>
+                <strong>Completed</strong>
+                <p class="muted">Customer gets a finished notice after the yard is done.</p>
+              </div>
+              <span class="badge dark">Done</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Quick actions</h2>
+          <p>Common customer tasks are right up front.</p>
+          <div class="quick-actions">
+            <button class="button go-tab" data-go="schedule" type="button">Request Service</button>
+            <button class="button ghost go-tab" data-go="billing" type="button">View Billing</button>
+            <button class="button ghost go-tab" data-go="property" type="button">Update Yard Notes</button>
+            <button class="button secondary go-tab" data-go="messages" type="button">Message Green Grin</button>
+          </div>
+          <div class="notice">For live use, customers would sign in by phone number or a private link.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="schedule" class="panel">
+      <div class="grid">
+        <div class="card">
+          <h2>Request mowing or project work</h2>
+          <p>Customers send the basics and Green Grin follows up to confirm schedule and details.</p>
+          <form id="request-form">
+            <div class="two">
+              <div>
+                <label for="customer_name">Name</label>
+                <input id="customer_name" name="customer_name" required placeholder="Your name" />
+              </div>
+              <div>
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" required type="tel" placeholder="(208) 555-0199" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="service_type">Service</label>
+                <select id="service_type" name="service_type">
+                  <option>Weekly mowing</option>
+                  <option>Bi-weekly mowing</option>
+                  <option>One-time mowing</option>
+                  <option>Landscape project</option>
+                  <option>Cleanup</option>
+                  <option>Commercial maintenance</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="address">Property address</label>
+              <input id="address" name="address" placeholder="Street, city" />
+            </div>
+            <div>
+              <label for="preferred_date">Preferred date</label>
+              <input id="preferred_date" name="preferred_date" type="date" />
+            </div>
+            <div>
+              <label for="notes">Notes</label>
+              <textarea id="notes" name="notes" placeholder="Gate code, pets, yard objects, project details, etc."></textarea>
+            </div>
+            <button class="button" type="submit">Send Request</button>
+          </form>
+          <div id="request-result" aria-live="polite"></div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h2>Check request status</h2>
+            <p>Enter the phone number used on the request.</p>
+            <form id="lookup-form">
+              <div>
+                <label for="lookup_phone">Phone</label>
+                <input id="lookup_phone" name="phone" required type="tel" placeholder="(208) 555-0199" />
+              </div>
+              <button class="button secondary" type="submit">Check Status</button>
+            </form>
+            <div id="lookup-result" class="status-box" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <h2>Sample schedule</h2>
+            <div class="status-box">
+              <div class="job">
+                <div class="job-head"><strong>Friday morning</strong><span class="badge">Scheduled</span></div>
+                <p class="muted">Weekly mowing - mow, trim, edge, and blowoff.</p>
+              </div>
+              <div class="job">
+                <div class="job-head"><strong>Next month</strong><span class="badge warn">Project</span></div>
+                <p class="muted">Landscape refresh estimate and planting ideas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="messages" class="panel">
+      <div class="grid">
+        <div class="card">
+          <h2>Customer messages</h2>
+          <p>These are the kinds of texts customers can receive automatically.</p>
+          <div class="status-box">
+            <div class="message">
+              <div class="message-head"><strong>Morning cleanup reminder</strong><span class="badge warn">Automatic</span></div>
+              <p class="muted">"Green Grin is scheduled for your yard today. Please pick up toys, hoses, pet waste, and yard objects before we arrive."</p>
+            </div>
+            <div class="message">
+              <div class="message-head"><strong>Job complete</strong><span class="badge dark">Done</span></div>
+              <p class="muted">"Green Grin finished your yard today. Thanks for choosing us."</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Message preferences</h2>
+          <p>A real customer account can let customers choose what they want to receive.</p>
+          <div class="checklist">
+            <label class="check"><input type="checkbox" checked /> Text me the morning of scheduled service.</label>
+            <label class="check"><input type="checkbox" checked /> Text me when service is finished.</label>
+            <label class="check"><input type="checkbox" /> Email me monthly receipts.</label>
+          </div>
+          <div class="row-actions">
+            <button class="button portal-action" data-message="Message preferences saved." type="button">Save Preferences</button>
+          </div>
+          <div id="message-result" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="billing" class="panel">
+      <div class="card">
+        <h2>Billing and monthly service</h2>
+        <p>This is a preview of how recurring monthly payments could look inside the portal. These buttons do not charge anyone yet.</p>
+        <div class="notice">Best setup: customers approve a secure ACH monthly payment link once, then payment runs at the beginning of each month.</div>
+
+        <div class="plans">
+          <div class="plan">
+            <strong>Bi-weekly Mowing</strong>
+            <div class="price">$160 <span>/ month</span></div>
+            <ul class="clean-list">
+              <li>2 visits per month</li>
+              <li>Mow, trim, edge, and blowoff</li>
+              <li>Monthly auto-pay</li>
+            </ul>
+            <button class="button billing-action" data-plan="Bi-weekly Mowing" data-price="$160/month" type="button">Request Billing Setup</button>
+          </div>
+
+          <div class="plan">
+            <strong>Weekly Mowing</strong>
+            <div class="price">$280 <span>/ month</span></div>
+            <ul class="clean-list">
+              <li>Weekly lawn service</li>
+              <li>Clean edges and hard-surface blowoff</li>
+              <li>Best for growing season</li>
+            </ul>
+            <button class="button billing-action" data-plan="Weekly Mowing" data-price="$280/month" type="button">Request Billing Setup</button>
+          </div>
+
+          <div class="plan">
+            <strong>Commercial Care</strong>
+            <div class="price">Quote <span>/ month</span></div>
+            <ul class="clean-list">
+              <li>Recurring property maintenance</li>
+              <li>Custom schedule</li>
+              <li>Invoice or ACH option</li>
+            </ul>
+            <button class="button billing-action" data-plan="Commercial Care" data-price="custom monthly price" type="button">Request Billing Setup</button>
+          </div>
+        </div>
+
+        <div id="billing-result" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h2>Invoice preview</h2>
+        <div class="status-box">
+          <div class="invoice">
+            <div class="invoice-head"><strong>August service plan</strong><span class="badge warn">Due Aug 1</span></div>
+            <p class="muted">$280.00 - Weekly mowing plan</p>
+            <div class="row-actions">
+              <button class="button small billing-action" data-plan="August service plan" data-price="$280" type="button">Request Pay Link</button>
+            </div>
+          </div>
+          <div class="invoice">
+            <div class="invoice-head"><strong>July service plan</strong><span class="badge">Paid</span></div>
+            <p class="muted">$280.00 - Paid by bank transfer.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="property" class="panel">
+      <div class="grid">
+        <div class="card">
+          <h2>Property details</h2>
+          <p>Useful customer notes for gates, pets, parking, and lawn preferences.</p>
+          <form id="property-form">
+            <div class="two">
+              <div>
+                <label for="property_address">Property address</label>
+                <input id="property_address" placeholder="Street, city" />
+              </div>
+              <div>
+                <label for="gate_code">Gate code</label>
+                <input id="gate_code" placeholder="Optional" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="pets">Pets</label>
+                <input id="pets" placeholder="Dog in backyard, etc." />
+              </div>
+            </div>
+            <div>
+              <label for="yard_notes">Yard notes</label>
+              <textarea id="yard_notes" placeholder="Sprinkler heads, soft spots, preferred mowing direction, locked gates, etc."></textarea>
+            </div>
+            <button class="button" type="submit">Save Yard Notes</button>
+          </form>
+          <div id="property-result" aria-live="polite"></div>
+        </div>
+
+        <div class="card">
+          <h2>Before service checklist</h2>
+          <div class="checklist">
+            <label class="check"><input type="checkbox" /> Toys picked up</label>
+            <label class="check"><input type="checkbox" /> Hoses moved</label>
+            <label class="check"><input type="checkbox" /> Pet waste picked up</label>
+            <label class="check"><input type="checkbox" /> Gate unlocked</label>
+            <label class="check"><input type="checkbox" /> Vehicles moved away from lawn edges</label>
+          </div>
+          <div class="property-note" style="margin-top: 18px;">
+            <strong>Why this helps</strong>
+            <p class="muted">A clean yard lets the crew mow faster, avoid damage, and leave sharper lines.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="owner" class="panel">
+      <div class="grid">
+        <div class="card owner-only">
+          <h2>Owner dashboard</h2>
+          <p>Use this to schedule jobs and send customer text updates. Keep your PIN private.</p>
+          <div class="admin-bar">
+            <input id="admin-pin" type="password" placeholder="Admin PIN" />
+            <button id="load-admin" class="button secondary" type="button">Load Jobs</button>
+          </div>
+          <div id="admin-result" class="status-box" aria-live="polite"></div>
+        </div>
+
+        <div class="card">
+          <h2>Employee job list</h2>
+          <p>Employees can see scheduled work and mark a job done. Pricing and billing stay hidden.</p>
+          <div class="admin-bar">
+            <input id="employee-pin" type="password" placeholder="Backup employee PIN, optional if signed in" />
+            <button id="load-employee" class="button secondary" type="button">Load Employee Jobs</button>
+          </div>
+          <div id="employee-result" class="status-box" aria-live="polite"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Employee access</h2>
+          <p>Approve employees, deactivate fired employees, or reactivate them later.</p>
+          <div class="admin-bar">
+            <input id="employee-admin-pin" type="password" placeholder="Admin PIN" />
+            <button id="load-employees" class="button secondary" type="button">Load Employees</button>
+          </div>
+          <div id="employees-result" class="status-box" aria-live="polite"></div>
+        </div>
+
+        <div class="card setup owner-only">
+          <h2>System notes</h2>
+          <p>Owner tools use the private admin PIN. Keep employee access current as your crew changes.</p>
+          <ul class="clean-list" style="margin-top: 14px;">
+            <li>Supabase stores requests and job status.</li>
+            <li>Twilio sends customer texts.</li>
+            <li>Stripe or GoCardless can handle secure ACH later.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const api = (path) => `/.netlify/functions/${path}`;
+    let supabaseClient = null;
+    let activeAccount = null;
+    let accountData = null;
+
+    function setSignedIn(account) {
+      activeAccount = account;
+      document.body.classList.toggle("employee-mode", account.id === "employee");
+      $("#auth-gate").classList.remove("active");
+      $("#portal-app").classList.add("active");
+      $("#account-pill").textContent = account.email || "Customer account";
+      $("#account-pill").classList.add("active");
+      $("#sign-out").hidden = false;
+      loadAccountData();
+    }
+
+    async function setEmployeeSignedIn(employee) {
+      setSignedIn({ id: "employee", email: employee.email || "Employee" });
+      openTab("owner");
+      await loadEmployeeJobs();
+    }
+
+    function setSignedOut() {
+      activeAccount = null;
+      document.body.classList.remove("employee-mode");
+      $("#auth-gate").classList.add("active");
+      $("#portal-app").classList.remove("active");
+      $("#account-pill").classList.remove("active");
+      $("#sign-out").hidden = true;
+      accountData = null;
+    }
+
+    async function loadSupabaseAuth() {
+      try {
+        const response = await fetch(api("portal-config"));
+        if (!response.ok) return;
+        const config = await response.json();
+        if (!config.supabaseUrl || !config.supabaseAnonKey || !window.supabase) return;
+        supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+        const { data } = await supabaseClient.auth.getSession();
+        if (data.session?.user) {
+          const employee = await loadCurrentEmployee();
+          if (employee) await setEmployeeSignedIn(employee);
+          else if (localStorage.getItem("greenGrinEmployeeLogin") === "1") {
+            await supabaseClient.auth.signOut();
+            localStorage.removeItem("greenGrinEmployeeLogin");
+            $("#auth-result").innerHTML = notice("Employee access is not active yet. The owner needs to approve this employee first.", true);
+          }
+          else setSignedIn(data.session.user);
+        }
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          if (session?.user) {
+            loadCurrentEmployee().then((employee) => {
+              if (employee) setEmployeeSignedIn(employee);
+              else if (localStorage.getItem("greenGrinEmployeeLogin") === "1") {
+                supabaseClient.auth.signOut();
+                localStorage.removeItem("greenGrinEmployeeLogin");
+                $("#auth-result").innerHTML = notice("Employee access is not active yet. The owner needs to approve this employee first.", true);
+              }
+              else setSignedIn(session.user);
+            });
+          } else {
+            setSignedOut();
+          }
+        });
+      } catch (_error) {
+        supabaseClient = null;
+      }
+    }
+
+    function openTab(tabId) {
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.tab === tabId);
+      });
+      document.querySelectorAll(".panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === tabId);
+      });
+    }
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => openTab(button.dataset.tab));
+    });
+
+    document.querySelectorAll(".go-tab").forEach((button) => {
+      button.addEventListener("click", () => openTab(button.dataset.go));
+    });
+
+    async function loadCurrentEmployee() {
+      try {
+        const data = await requestJson("portal-employees");
+        return data.employee || null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    $("#auth-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      localStorage.removeItem("greenGrinEmployeeLogin");
+      const email = $("#auth-email").value.trim();
+      $("#auth-result").innerHTML = notice("Preparing sign-in link...");
+      if (!supabaseClient) {
+        $("#auth-result").innerHTML = notice("Account sign-in is not available yet. Please try again later.", true);
+        return;
+      }
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href.split("#")[0] }
+      });
+      $("#auth-result").innerHTML = error
+        ? notice(error.message, true)
+        : notice("Check your email for the Green Grin sign-in link.");
+    });
+
+    $("#employee-request-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("#staff-login-result").innerHTML = notice("Sending employee access request...");
+      try {
+        await requestJson("portal-employees", {
+          method: "POST",
+          body: JSON.stringify({
+            full_name: $("#employee-name").value,
+            phone: $("#employee-phone").value,
+            email: $("#employee-request-email").value
+          })
+        });
+        event.currentTarget.reset();
+        $("#staff-login-result").innerHTML = notice("Access request sent. The owner must approve it before this employee can sign in.");
+      } catch (error) {
+        $("#staff-login-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#staff-email-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = $("#staff-email").value.trim();
+      localStorage.setItem("greenGrinEmployeeLogin", "1");
+      $("#staff-login-result").innerHTML = notice("Preparing employee sign-in link...");
+      if (!supabaseClient) {
+        $("#staff-login-result").innerHTML = notice("Employee sign-in is not available yet. Please try again later.", true);
+        return;
+      }
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href.split("#")[0] }
+      });
+      $("#staff-login-result").innerHTML = error
+        ? notice(error.message, true)
+        : notice("Check that employee email for the sign-in link.");
+    });
+
+    $("#sign-out").addEventListener("click", async () => {
+      if (supabaseClient) await supabaseClient.auth.signOut();
+      setSignedOut();
+    });
+
+    $("#staff-login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const pin = $("#staff-pin").value;
+      $("#staff-login-result").innerHTML = notice("Checking employee PIN...");
+      try {
+        const data = await requestJson("portal-jobs?employee=1", { headers: { "x-employee-pin": pin } });
+        setSignedIn({ id: "employee", email: "Employee" });
+        $("#employee-pin").value = pin;
+        openTab("owner");
+        $("#employee-result").innerHTML = data.jobs.length
+          ? data.jobs.map((job) => employeeJobCard(job)).join("")
+          : notice("No employee jobs ready.");
+        $("#staff-login-result").innerHTML = "";
+      } catch (error) {
+        $("#staff-login-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    function notice(message, error = false) {
+      return `<div class="notice ${error ? "error" : ""}">${message}</div>`;
+    }
+
+    function renderAccount(data) {
+      accountData = data;
+      const customer = data.customer || {};
+      const property = data.property || {};
+      const jobs = data.jobs || [];
+
+      $("#customer_name").value = customer.full_name || activeAccount?.user_metadata?.name || "";
+      $("#phone").value = customer.phone || "";
+      $("#email").value = customer.email || activeAccount?.email || "";
+      $("#address").value = property.address || "";
+      $("#property_address").value = property.address || "";
+      $("#gate_code").value = property.gate_code || "";
+      $("#pets").value = property.pets || "";
+      $("#yard_notes").value = property.yard_notes || "";
+
+      $("#lookup-result").innerHTML = jobs.length
+        ? jobs.map((job) => jobCard(job)).join("")
+        : notice("No account requests yet.");
+    }
+
+    async function loadAccountData() {
+      if (!activeAccount) return;
+      if (activeAccount.id === "employee") return;
+      if (!supabaseClient) return;
+
+      try {
+        const data = await requestJson("portal-account");
+        renderAccount(data);
+      } catch (error) {
+        $("#auth-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    function jobCard(job, admin = false) {
+      const scheduled = job.scheduled_date ? new Date(job.scheduled_date).toLocaleString() : "Not scheduled yet";
+      return `
+        <div class="job" data-id="${job.id}">
+          <div class="job-head">
+            <strong>${job.customer_name || "Customer"}</strong>
+            <span class="badge">${job.status || "New"}</span>
+          </div>
+          <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
+          <p>${job.address || ""}</p>
+          <p class="muted">${job.notes || ""}</p>
+          ${admin ? `
+            <div class="two" style="margin-top: 12px;">
+              <input type="datetime-local" class="schedule-input" />
+              <select class="status-input">
+                <option>New</option>
+                <option>Scheduled</option>
+                <option>Completed</option>
+                <option>Needs Follow Up</option>
+              </select>
+            </div>
+            <div class="admin-actions">
+              <button class="button small ghost" data-action="schedule" type="button">Save Schedule</button>
+              <button class="button small" data-action="objects" type="button">Text: Pick Up Yard Objects</button>
+              <button class="button small secondary" data-action="completed" type="button">Text: Done</button>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function employeeJobCard(job) {
+      const scheduled = job.scheduled_date ? new Date(job.scheduled_date).toLocaleString() : "Not scheduled yet";
+      return `
+        <div class="job" data-id="${job.id}">
+          <div class="job-head">
+            <strong>${job.customer_name || "Customer"}</strong>
+            <span class="badge">${job.status || "Scheduled"}</span>
+          </div>
+          <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
+          <p>${job.address || ""}</p>
+          <p class="muted">${job.notes || ""}</p>
+          <div class="admin-actions">
+            <button class="button small secondary" data-employee-action="completed" type="button">Done</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function employeeAccessCard(employee) {
+      return `
+        <div class="job" data-id="${employee.id}">
+          <div class="job-head">
+            <strong>${employee.full_name || employee.email}</strong>
+            <span class="badge">${employee.status}</span>
+          </div>
+          <p class="muted">${employee.email}</p>
+          <p class="muted">${employee.phone || ""}</p>
+          <div class="admin-actions">
+            <button class="button small secondary" data-employee-status="Active" type="button">Approve / Reactivate</button>
+            <button class="button small ghost" data-employee-status="Inactive" type="button">Deactivate</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function requestJson(path, options = {}) {
+      const nextHeaders = { "Content-Type": "application/json", ...(options.headers || {}) };
+      if (supabaseClient && !nextHeaders.Authorization) {
+        const { data } = await supabaseClient.auth.getSession();
+        if (data.session?.access_token) {
+          nextHeaders.Authorization = `Bearer ${data.session.access_token}`;
+        }
+      }
+      const response = await fetch(api(path), {
+        headers: nextHeaders,
+        ...options
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Something went wrong.");
+      return data;
+    }
+
+    $("#request-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const payload = Object.fromEntries(form.entries());
+      $("#request-result").innerHTML = notice("Sending request...");
+      try {
+        await requestJson("portal-jobs", { method: "POST", body: JSON.stringify(payload) });
+        event.currentTarget.reset();
+        $("#request-result").innerHTML = notice("Request sent. Green Grin will follow up soon.");
+        await loadAccountData();
+      } catch (error) {
+        $("#request-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#lookup-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const phone = new FormData(event.currentTarget).get("phone");
+      $("#lookup-result").innerHTML = notice("Looking up requests...");
+      try {
+        const data = await requestJson(`portal-jobs?phone=${encodeURIComponent(phone)}`);
+        $("#lookup-result").innerHTML = data.jobs.length
+          ? data.jobs.map((job) => jobCard(job)).join("")
+          : notice("No requests found for that phone number.");
+      } catch (error) {
+        $("#lookup-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#property-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!supabaseClient) {
+        $("#property-result").innerHTML = notice("Account saving is not available yet. Please try again later.", true);
+        return;
+      }
+
+      $("#property-result").innerHTML = notice("Saving property notes...");
+      try {
+        const data = await requestJson("portal-account", {
+          method: "PATCH",
+          body: JSON.stringify({
+            profile: {
+              full_name: $("#customer_name").value,
+              phone: $("#phone").value
+            },
+            property: {
+              id: accountData?.property?.id,
+              address: $("#property_address").value || $("#address").value,
+              gate_code: $("#gate_code").value,
+              pets: $("#pets").value,
+              yard_notes: $("#yard_notes").value
+            }
+          })
+        });
+        renderAccount(data);
+        $("#property-result").innerHTML = notice("Saved to this customer account.");
+      } catch (error) {
+        $("#property-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    document.querySelectorAll(".billing-action").forEach((button) => {
+      button.addEventListener("click", () => {
+        const plan = button.dataset.plan;
+        const price = button.dataset.price;
+        $("#billing-result").innerHTML = notice(`Billing request noted for ${plan} at ${price}. Green Grin will follow up with payment setup.`);
+      });
+    });
+
+    document.querySelectorAll(".portal-action").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.closest(".card").querySelector("[aria-live='polite']") || $("#billing-result");
+        target.innerHTML = notice(button.dataset.message || "Saved.");
+      });
+    });
+
+    $("#load-admin").addEventListener("click", loadAdminJobs);
+    $("#load-employee").addEventListener("click", loadEmployeeJobs);
+    $("#load-employees").addEventListener("click", loadEmployees);
+
+    async function loadAdminJobs() {
+      const pin = $("#admin-pin").value;
+      $("#admin-result").innerHTML = notice("Loading jobs...");
+      try {
+        const data = await requestJson("portal-jobs?admin=1", { headers: { "x-admin-pin": pin } });
+        $("#admin-result").innerHTML = data.jobs.length
+          ? data.jobs.map((job) => jobCard(job, true)).join("")
+          : notice("No jobs yet.");
+      } catch (error) {
+        $("#admin-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    async function loadEmployeeJobs() {
+      const pin = $("#employee-pin").value;
+      $("#employee-result").innerHTML = notice("Loading employee jobs...");
+      try {
+        const headers = pin ? { "x-employee-pin": pin } : {};
+        const data = await requestJson("portal-jobs?employee=1", { headers });
+        $("#employee-result").innerHTML = data.jobs.length
+          ? data.jobs.map((job) => employeeJobCard(job)).join("")
+          : notice("No employee jobs ready.");
+      } catch (error) {
+        $("#employee-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    async function loadEmployees() {
+      const pin = $("#employee-admin-pin").value;
+      $("#employees-result").innerHTML = notice("Loading employees...");
+      try {
+        const data = await requestJson("portal-employees?admin=1", { headers: { "x-admin-pin": pin } });
+        $("#employees-result").innerHTML = data.employees.length
+          ? data.employees.map((employee) => employeeAccessCard(employee)).join("")
+          : notice("No employee requests yet.");
+      } catch (error) {
+        $("#employees-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    $("#admin-result").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const card = button.closest(".job");
+      const id = card.dataset.id;
+      const pin = $("#admin-pin").value;
+      const action = button.dataset.action;
+      const scheduled_date = card.querySelector(".schedule-input")?.value;
+      const status = card.querySelector(".status-input")?.value;
+      button.disabled = true;
+      try {
+        if (action === "schedule") {
+          await requestJson("portal-jobs", {
+            method: "PATCH",
+            headers: { "x-admin-pin": pin },
+            body: JSON.stringify({ id, scheduled_date, status })
+          });
+        } else {
+          await requestJson("portal-message", {
+            method: "POST",
+            headers: { "x-admin-pin": pin },
+            body: JSON.stringify({ id, template: action })
+          });
+        }
+        await loadAdminJobs();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("#employee-result").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-employee-action]");
+      if (!button) return;
+      const card = button.closest(".job");
+      const id = card.dataset.id;
+      const pin = $("#employee-pin").value;
+      button.disabled = true;
+      try {
+        const headers = pin ? { "x-employee-pin": pin } : {};
+        await requestJson("portal-message", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ id, template: "completed" })
+        });
+        await loadEmployeeJobs();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("#employees-result").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-employee-status]");
+      if (!button) return;
+      const card = button.closest(".job");
+      const id = card.dataset.id;
+      const pin = $("#employee-admin-pin").value;
+      button.disabled = true;
+      try {
+        await requestJson("portal-employees", {
+          method: "PATCH",
+          headers: { "x-admin-pin": pin },
+          body: JSON.stringify({ id, status: button.dataset.employeeStatus })
+        });
+        await loadEmployees();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    loadSupabaseAuth();
+  </script>
+</body>
+</html>
+
+

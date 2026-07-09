@@ -1,0 +1,96 @@
+GREEN GRIN CUSTOMER PORTAL SETUP
+
+This portal is built for Netlify + Supabase + Twilio.
+
+What works after setup:
+- Customers can sign in with an email link
+- Customer profiles are created/loaded automatically
+- Customers can save property notes to their account
+- New service requests attach to the signed-in customer
+- Customers can request service at /portal/
+- Customers can check status by phone number
+- Owner dashboard can view requests
+- Owner can schedule a job
+- Employees can log in with an employee PIN
+- Employees can request their own account access from the portal
+- Owner can approve, deactivate, or reactivate employee accounts
+- Employees can view scheduled jobs without billing/pricing
+- Employees can click Done to send the completed-service text
+- Owner can send text messages:
+  - pick up yard objects
+  - job complete
+- Automatic morning cleanup reminders can send on scheduled mow days
+
+What you need:
+1. Netlify site
+2. Supabase project
+3. Twilio account and phone number
+
+SUPABASE SETUP
+1. Create a Supabase project.
+2. Go to SQL Editor.
+3. Paste and run the SQL from portal-setup.sql.
+4. Go to Project Settings -> API.
+5. Copy:
+   - Project URL
+   - anon public key
+   - service_role key
+6. Go to Authentication -> URL Configuration.
+7. Add your Netlify site URL as an allowed redirect URL.
+
+TWILIO SETUP
+1. Create a Twilio account.
+2. Get a Twilio phone number that can send SMS.
+3. Copy:
+   - Account SID
+   - Auth Token
+   - Twilio phone number
+
+NETLIFY ENVIRONMENT VARIABLES
+In Netlify, go to:
+Site configuration -> Environment variables
+
+Add these:
+SUPABASE_URL=your Supabase project URL
+SUPABASE_ANON_KEY=your Supabase anon public key
+SUPABASE_SERVICE_ROLE_KEY=your Supabase service_role key
+GREEN_GRIN_ADMIN_PIN=make up a private PIN
+GREEN_GRIN_EMPLOYEE_PIN=optional backup employee PIN
+TWILIO_ACCOUNT_SID=your Twilio account SID
+TWILIO_AUTH_TOKEN=your Twilio auth token
+TWILIO_FROM_NUMBER=your Twilio phone number, like +12085551234
+GREEN_GRIN_TIMEZONE=America/Denver
+
+Then redeploy the site.
+
+IMPORTANT
+Do not share your service_role key, Twilio auth token, or admin PIN.
+The SUPABASE_ANON_KEY is okay to use in the browser. The service_role key is private.
+
+CUSTOMER ACCOUNTS NOTE
+The portal uses Supabase email magic links for customer accounts.
+Customers do not need passwords. They enter their email, click the sign-in link,
+then land back on the portal.
+
+After sign-in, the portal loads:
+- customer profile
+- property notes
+- customer service requests
+
+The "Preview Demo Account" button only shows a fake local preview. Real saved data
+requires Supabase environment variables and the SQL setup.
+
+AUTOMATIC TEXTING NOTE
+The morning cleanup reminder is automatic.
+If a job has a scheduled_date for today, Netlify runs a daily check and sends:
+"Please pick up toys, hoses, pet waste, and yard objects before we arrive."
+
+There is no "on the way" customer text.
+The "job complete" message is manual, so you click "Text: Done" when the work is done.
+
+EMPLOYEE ACCOUNTS NOTE
+Employees can request access on the portal.
+Owner opens the Owner tab, loads Employee Access with the admin PIN, then approves or deactivates employees.
+Active employees sign in by email and can only see the employee job list and the Done button.
+Deactivated employees cannot load jobs or mark jobs done.
+The backup employee PIN can still be used if you want a simple shared crew PIN, but employee accounts are better for hiring/firing.
