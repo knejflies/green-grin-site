@@ -70,6 +70,9 @@ async function ensureCustomer(user) {
 
 async function loadAccount(user) {
   const customer = await ensureCustomer(user);
+  if (customer.active === false) {
+    throw new Error("This customer account is inactive. Please contact Green Grin.");
+  }
   let properties = await supabase(`green_grin_properties?select=*&customer_user_id=eq.${encodeURIComponent(user.id)}&active=eq.true&order=created_at.asc&limit=1`);
 
   if (!properties?.length) {

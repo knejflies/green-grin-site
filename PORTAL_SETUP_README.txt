@@ -3,7 +3,7 @@ GREEN GRIN CUSTOMER PORTAL SETUP
 This portal is built for Netlify + Supabase + Twilio.
 
 What works after setup:
-- Customers can sign in with an email link
+- Customers can sign in with email and password
 - Customer profiles are created/loaded automatically
 - Customers can save property notes to their account
 - New service requests attach to the signed-in customer
@@ -19,10 +19,20 @@ What works after setup:
 - Employees can view scheduled jobs without billing/pricing
 - Employees can click Done to send the completed-service text
 - Owner can view an activity log showing who clicked Done
+- Owner can deactivate or delete customers from the admin job list
+- Owner can deactivate or delete employees from Employee Access
 - Owner can send text messages:
   - pick up yard objects
   - job complete
 - Automatic morning cleanup reminders can send on scheduled mow days
+
+LIVE URLS
+- Customer portal: /portal/
+- Employee portal: /employee/
+- Admin portal: /admin/
+
+The homepage links customers to /portal/.
+Keep /admin/ and /employee/ for you and your crew.
 
 What you need:
 1. Netlify site
@@ -101,3 +111,4 @@ Deactivated employees cannot load jobs or mark jobs done.
 IMPORTANT UPDATE NOTE
 If you already ran portal-setup.sql before this version, run it again in Supabase SQL Editor.
 It safely adds the employee PIN and activity log columns without deleting your data.
+This version also adds a customer active/inactive column.

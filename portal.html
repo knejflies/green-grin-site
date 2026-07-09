@@ -249,6 +249,23 @@
       color: var(--pine);
     }
 
+    body.customer-site .team-access,
+    body.customer-site .portal-footer,
+    body.admin-site .customer-login-card,
+    body.admin-site .staff-login-card,
+    body.admin-site .portal-footer,
+    body.employee-site .customer-login-card,
+    body.employee-site .owner-login-card,
+    body.employee-site .portal-footer {
+      display: none;
+    }
+
+    body.admin-site .team-access,
+    body.employee-site .team-access {
+      grid-template-columns: minmax(0, 520px);
+      justify-content: center;
+    }
+
     .account-preview {
       display: grid;
       gap: 12px;
@@ -690,8 +707,8 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
-        <h1>Customer Portal</h1>
-        <p>Customers can request service, check their next visit, see messages, view billing, and keep yard notes in one place.</p>
+        <h1 id="portal-title">Customer Portal</h1>
+        <p id="portal-subtitle">Customers can request service, check their next visit, see messages, view billing, and keep yard notes in one place.</p>
       </div>
       <div class="portal-card">
         <strong>Customer accounts</strong>
@@ -702,7 +719,7 @@
 
   <section id="auth-gate" class="wrap auth-gate active">
     <div class="auth-shell">
-      <div class="auth-card">
+      <div class="auth-card customer-login-card">
         <h2>Customer sign in</h2>
         <p class="muted">Customers can create an account with email and password, then sign in anytime.</p>
         <form id="auth-form">
@@ -723,7 +740,7 @@
       </div>
 
       <div id="team-access" class="team-access" hidden>
-        <div class="auth-card">
+        <div class="auth-card owner-login-card">
         <h2>Owner login</h2>
         <p class="muted">Use your admin PIN to schedule jobs, manage customers, approve employees, and send completed-service texts.</p>
         <form id="owner-login-form">
@@ -736,7 +753,7 @@
         <div id="owner-login-result" aria-live="polite"></div>
       </div>
 
-      <div class="auth-card">
+      <div class="auth-card staff-login-card">
         <h2>Staff access</h2>
         <p class="muted">Employees can request access. After approval, the owner sets their PIN for job access.</p>
         <form id="employee-request-form">
@@ -1179,6 +1196,30 @@
     let activeAccount = null;
     let accountData = null;
 
+    function portalMode() {
+      const path = window.location.pathname.toLowerCase();
+      if (path.includes("/admin")) return "admin";
+      if (path.includes("/employee")) return "employee";
+      return "customer";
+    }
+
+    function applyPortalMode() {
+      const mode = portalMode();
+      document.body.classList.add(`${mode}-site`);
+      if (mode === "admin") {
+        document.title = "Admin Portal | Green Grin Lawn & Landscape";
+        $("#portal-title").textContent = "Admin Portal";
+        $("#portal-subtitle").textContent = "Owner tools for jobs, scheduling, employee access, and activity logs.";
+        $("#team-access").hidden = false;
+      }
+      if (mode === "employee") {
+        document.title = "Employee Portal | Green Grin Lawn & Landscape";
+        $("#portal-title").textContent = "Employee Portal";
+        $("#portal-subtitle").textContent = "Crew access for assigned jobs and Done updates.";
+        $("#team-access").hidden = false;
+      }
+    }
+
     function setSignedIn(account = {}) {
       activeAccount = account || {};
       document.body.classList.toggle("employee-mode", activeAccount.id === "employee");
@@ -1456,7 +1497,7 @@
     function jobCard(job, admin = false) {
       const scheduled = displayScheduleDate(job.scheduled_date);
       return `
-        <div class="job" data-id="${job.id}">
+        <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
             <strong>${job.customer_name || "Customer"}</strong>
             <span class="badge">${job.status || "New"}</span>
@@ -1478,6 +1519,8 @@
               <button class="button small ghost" data-action="schedule" type="button">Save Schedule</button>
               <button class="button small" data-action="objects" type="button">Text: Pick Up Yard Objects</button>
               <button class="button small secondary" data-action="completed" type="button">Text: Done</button>
+              <button class="button small ghost" data-customer-action="deactivate" type="button">Deactivate Customer</button>
+              <button class="button small ghost" data-customer-action="delete" type="button">Delete Customer</button>
             </div>
           ` : ""}
         </div>
@@ -1518,6 +1561,7 @@
           <div class="admin-actions">
             <button class="button small secondary" data-employee-status="Active" type="button">Approve / Reactivate</button>
             <button class="button small ghost" data-employee-status="Inactive" type="button">Deactivate</button>
+            <button class="button small ghost" data-employee-delete="1" type="button">Delete Employee</button>
           </div>
         </div>
       `;
@@ -1722,17 +1766,30 @@
     }
 
     $("#admin-result").addEventListener("click", async (event) => {
-      const button = event.target.closest("button[data-action]");
+      const button = event.target.closest("button[data-action], button[data-customer-action]");
       if (!button) return;
       const card = button.closest(".job");
       const id = card.dataset.id;
       const pin = $("#admin-pin").value;
       const action = button.dataset.action;
+      const customerAction = button.dataset.customerAction;
       const scheduled_date = card.querySelector(".schedule-input")?.value;
       const status = card.querySelector(".status-input")?.value;
       button.disabled = true;
       try {
-        if (action === "schedule") {
+        if (customerAction) {
+          const payload = {
+            customer_user_id: card.dataset.customerUserId || "",
+            phone: card.dataset.phone || "",
+            email: card.dataset.email || ""
+          };
+          if (customerAction === "delete" && !confirm("Delete this customer and their saved jobs? This cannot be undone.")) return;
+          await requestJson("portal-customers", {
+            method: customerAction === "delete" ? "DELETE" : "PATCH",
+            headers: { "x-admin-pin": pin },
+            body: JSON.stringify(payload)
+          });
+        } else if (action === "schedule") {
           await requestJson("portal-jobs", {
             method: "PATCH",
             headers: { "x-admin-pin": pin },
@@ -1776,21 +1833,30 @@
     });
 
     $("#employees-result").addEventListener("click", async (event) => {
-      const button = event.target.closest("button[data-employee-status], button[data-employee-pin]");
+      const button = event.target.closest("button[data-employee-status], button[data-employee-pin], button[data-employee-delete]");
       if (!button) return;
       const card = button.closest(".job");
       const id = card.dataset.id;
       const pin = $("#employee-admin-pin").value;
       button.disabled = true;
       try {
-        const payload = button.dataset.employeePin
-          ? { id, employee_pin: card.querySelector(".employee-pin-input")?.value || "" }
-          : { id, status: button.dataset.employeeStatus };
-        await requestJson("portal-employees", {
-          method: "PATCH",
-          headers: { "x-admin-pin": pin },
-          body: JSON.stringify(payload)
-        });
+        if (button.dataset.employeeDelete) {
+          if (!confirm("Delete this employee access record? This cannot be undone.")) return;
+          await requestJson("portal-employees", {
+            method: "DELETE",
+            headers: { "x-admin-pin": pin },
+            body: JSON.stringify({ id })
+          });
+        } else {
+          const payload = button.dataset.employeePin
+            ? { id, employee_pin: card.querySelector(".employee-pin-input")?.value || "" }
+            : { id, status: button.dataset.employeeStatus };
+          await requestJson("portal-employees", {
+            method: "PATCH",
+            headers: { "x-admin-pin": pin },
+            body: JSON.stringify(payload)
+          });
+        }
         await loadEmployees();
       } catch (error) {
         alert(error.message);
@@ -1799,6 +1865,7 @@
       }
     });
 
+    applyPortalMode();
     loadSupabaseAuth();
   </script>
 </body>

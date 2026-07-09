@@ -30,12 +30,16 @@ create table if not exists public.green_grin_customers (
   full_name text,
   phone text,
   email text,
+  active boolean not null default true,
   billing_plan text,
   billing_status text not null default 'Not connected',
   monthly_price numeric(10, 2),
   stripe_customer_id text,
   gocardless_customer_id text
 );
+
+alter table public.green_grin_customers
+  add column if not exists active boolean not null default true;
 
 create table if not exists public.green_grin_properties (
   id uuid primary key default gen_random_uuid(),
@@ -136,3 +140,5 @@ create index if not exists green_grin_employees_email_idx on public.green_grin_e
 create index if not exists green_grin_employees_status_idx on public.green_grin_employees(status);
 create index if not exists green_grin_employees_pin_idx on public.green_grin_employees(employee_pin);
 create index if not exists green_grin_message_log_created_at_idx on public.green_grin_message_log(created_at desc);
+
+notify pgrst, 'reload schema';

@@ -7,7 +7,7 @@ const headers = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-pin",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS"
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS"
 };
 
 function json(statusCode, body) {
@@ -130,8 +130,20 @@ exports.handler = async (event) => {
       return json(200, { employee: rows?.[0] });
     }
 
+    if (event.httpMethod === "DELETE") {
+      const adminError = requireAdmin(event);
+      if (adminError) return json(401, { error: adminError });
+      const body = JSON.parse(event.body || "{}");
+      if (!body.id) return json(400, { error: "Employee id is required." });
+      await supabase(`green_grin_employees?id=eq.${encodeURIComponent(body.id)}`, { method: "DELETE" });
+      return json(200, { ok: true });
+    }
+
     return json(405, { error: "Method not allowed." });
   } catch (error) {
+    if (error.message.includes("employee_pin") && error.message.includes("schema cache")) {
+      return json(500, { error: "Employee PIN column is not ready in Supabase yet. Run portal-setup.sql again, then wait about 30 seconds and try again." });
+    }
     return json(500, { error: error.message });
   }
 };
