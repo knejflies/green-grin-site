@@ -1914,10 +1914,10 @@
             <strong>${job.customer_name || "Customer"}</strong>
             <span class="badge">${job.customer_code || "No ID"}</span>
           </div>
-          <p class="muted">Status: ${job.status || "New"}</p>
-          <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
           ${admin ? `<div class="row-actions"><button class="button small secondary" data-action="toggle-job" type="button">Expand</button></div>` : ""}
           <div class="${admin ? "job-collapse" : ""}" ${admin ? "hidden" : ""}>
+            <p class="muted">Status: ${job.status || "New"}</p>
+            <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
             <p class="muted">Morning text: ${reminderTime}</p>
             ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
             <p>${job.address || ""}</p>
