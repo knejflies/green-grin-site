@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customer Portal | Green Grin Lawn & Landscape</title>
-  <link rel="icon" href="/assets/green-grin-logo.png" type="image/png" />
+  <title>Employee Portal | Green Grin Lawn & Landscape</title>
+  <link rel="icon" href="/assets/green-grin-tab-icon.png" type="image/png" />
   <style>
     :root {
       --pine: #123324;
@@ -33,7 +33,7 @@
     body {
       background: var(--paper);
       color: var(--ink);
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
       line-height: 1.55;
     }
 
@@ -302,7 +302,7 @@
       display: block;
     }
 
-    .employee-mode #portal-app .tabs .tab:not([data-tab="owner"]),
+    .employee-mode #portal-app .tabs .tab:not([data-tab="employee-work"]),
     .employee-mode .owner-only {
       display: none;
     }
@@ -311,11 +311,25 @@
       padding: 28px 0 80px;
     }
 
+    .portal-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
     .tabs {
+      position: sticky;
+      top: 96px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 10px;
-      margin-bottom: 22px;
+      margin-bottom: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
     }
 
     .tab {
@@ -327,6 +341,7 @@
       font: inherit;
       font-weight: 900;
       padding: 11px 13px;
+      text-align: left;
     }
 
     .tab.active {
@@ -341,6 +356,23 @@
 
     .panel.active {
       display: block;
+    }
+
+    .tab.owner-only,
+    .tab.employee-only {
+      display: none;
+    }
+
+    body.admin-site .tab.owner-only,
+    body.employee-site .tab.employee-only {
+      display: block;
+    }
+
+    body.admin-site .customer-only,
+    body.employee-site .customer-only,
+    body.customer-site .owner-only,
+    body.customer-site .employee-only {
+      display: none !important;
     }
 
     .grid {
@@ -659,6 +691,7 @@
       .hero-grid,
       .auth-shell,
       .team-access,
+      .portal-layout,
       .grid,
       .three,
       .two,
@@ -719,6 +752,10 @@
         min-height: 48px;
       }
 
+      .tabs {
+        position: static;
+      }
+
       body.admin-site .admin-actions,
       body.employee-site .admin-actions,
       body.admin-site .row-actions,
@@ -747,13 +784,13 @@
 <body>
   <header>
     <div class="wrap nav">
-      <a class="brand" href="../">
+      <a class="brand" href="index.html">
         <img src="../assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
       </a>
       <div class="nav-actions">
         <span id="account-pill" class="account-pill">Signed in</span>
         <button id="sign-out" class="button ghost" type="button" hidden>Sign Out</button>
-        <a class="button ghost" href="../">Main Site</a>
+        <a class="button ghost" href="index.html">Main Site</a>
       </div>
     </div>
   </header>
@@ -855,13 +892,19 @@
   </section>
 
   <main id="portal-app" class="wrap portal-app">
+    <div class="portal-layout">
     <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="dashboard" type="button">Dashboard</button>
-      <button class="tab" data-tab="messages" type="button">Messages</button>
-      <button class="tab" data-tab="billing" type="button">Billing</button>
-      <button class="tab" data-tab="property" type="button">Property</button>
-      <button class="tab" data-tab="owner" type="button">Owner / Staff</button>
+      <button class="tab active customer-only" data-tab="dashboard" type="button">Dashboard</button>
+      <button class="tab customer-only" data-tab="messages" type="button">Messages</button>
+      <button class="tab customer-only" data-tab="billing" type="button">Billing</button>
+      <button class="tab customer-only" data-tab="property" type="button">Property</button>
+      <button class="tab owner-only" data-tab="owner" type="button">Jobs</button>
+      <button class="tab owner-only" data-tab="employee-admin" type="button">Employees</button>
+      <button class="tab owner-only" data-tab="invoices" type="button">Invoices</button>
+      <button class="tab owner-only" data-tab="activity" type="button">Activity</button>
+      <button class="tab employee-only" data-tab="employee-work" type="button">My Jobs</button>
     </div>
+    <div class="portal-content">
 
     <section id="dashboard" class="panel active">
       <div class="three">
@@ -983,7 +1026,7 @@
           </div>
 
           <div class="card">
-            <h2>Sample schedule</h2>
+            <h2>Your schedule</h2>
             <div class="status-box">
               <div class="job">
                 <div class="job-head"><strong>Friday morning</strong><span class="badge">Scheduled</span></div>
@@ -1207,7 +1250,11 @@
           <div id="owner-create-result" aria-live="polite"></div>
           <div id="admin-result" class="status-box" aria-live="polite"></div>
         </div>
+      </div>
+    </section>
 
+    <section id="employee-work" class="panel">
+      <div class="grid">
         <div class="card">
           <h2>Employee job list</h2>
           <p>Employees only see the work list and a Done button. Pricing and billing stay hidden.</p>
@@ -1217,7 +1264,11 @@
           </div>
           <div id="employee-result" class="status-box" aria-live="polite"></div>
         </div>
+      </div>
+    </section>
 
+    <section id="employee-admin" class="panel">
+      <div class="grid">
         <div class="card owner-only">
           <h2>Employee access</h2>
           <p>Approve employees, set their PIN, deactivate fired employees, or reactivate them later.</p>
@@ -1227,7 +1278,11 @@
           </div>
           <div id="employees-result" class="status-box" aria-live="polite"></div>
         </div>
+      </div>
+    </section>
 
+    <section id="activity" class="panel">
+      <div class="grid">
         <div class="card owner-only">
           <h2>Activity log</h2>
           <p>See recent customer texts and who clicked Done.</p>
@@ -1236,6 +1291,59 @@
             <button id="load-activity" class="button secondary" type="button">Load Activity</button>
           </div>
           <div id="activity-result" class="status-box" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="invoices" class="panel">
+      <div class="grid">
+        <div class="card owner-only">
+          <h2>Invoice center</h2>
+          <p>Create invoice notes, track prices, and open hosted payment links when your payment provider is connected.</p>
+          <form id="invoice-form">
+            <div class="two">
+              <div>
+                <label for="invoice_customer">Customer</label>
+                <input id="invoice_customer" placeholder="Customer name" />
+              </div>
+              <div>
+                <label for="invoice_amount">Amount</label>
+                <input id="invoice_amount" type="number" min="0" step="0.01" placeholder="Invoice amount" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="invoice_due">Due date</label>
+                <input id="invoice_due" type="date" />
+              </div>
+              <div>
+                <label for="invoice_status">Status</label>
+                <select id="invoice_status">
+                  <option>Draft</option>
+                  <option>Sent</option>
+                  <option>Paid</option>
+                  <option>Overdue</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="invoice_notes">Notes</label>
+              <textarea id="invoice_notes" placeholder="Monthly mowing, cleanup, landscape project, payment note"></textarea>
+            </div>
+            <button class="button" type="submit">Add Invoice Note</button>
+          </form>
+          <div id="invoice-result" aria-live="polite"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Invoice list</h2>
+          <p>Local invoice notes for planning. Secure payment links still open through the Billing buttons.</p>
+          <div id="invoice-list" class="status-box">
+            <div class="invoice">
+              <div class="invoice-head"><strong>No invoice notes yet</strong><span class="badge warn">Draft</span></div>
+              <p class="muted">Add one from the form to stage billing before sending a payment link.</p>
+            </div>
+          </div>
         </div>
 
         <div class="card setup owner-only">
@@ -1249,6 +1357,8 @@
         </div>
       </div>
     </section>
+    </div>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1296,7 +1406,7 @@
 
     async function setEmployeeSignedIn(employee) {
       setSignedIn({ id: "employee", email: employee.email || "Employee" });
-      openTab("owner");
+      openTab("employee-work");
       await loadEmployeeJobs();
     }
 
@@ -1498,7 +1608,7 @@
         const data = await requestJson("portal-jobs?employee=1", { headers: { "x-employee-pin": pin } });
         setSignedIn({ id: "employee", email: "Employee" });
         $("#employee-pin").value = pin;
-        openTab("owner");
+        openTab("employee-work");
         $("#employee-result").innerHTML = data.jobs.length
           ? data.jobs.map((job) => employeeJobCard(job)).join("")
           : notice("No employee jobs ready.");
@@ -1794,6 +1904,24 @@
         const target = button.closest(".card").querySelector("[aria-live='polite']") || $("#billing-result");
         target.innerHTML = notice(button.dataset.message || "Saved.");
       });
+    });
+
+    $("#invoice-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const customer = $("#invoice_customer").value || "Customer";
+      const amount = $("#invoice_amount").value ? `$${Number($("#invoice_amount").value).toFixed(2)}` : "Amount not set";
+      const due = $("#invoice_due").value || "No due date";
+      const status = $("#invoice_status").value;
+      const notes = $("#invoice_notes").value || "No notes";
+      $("#invoice-list").innerHTML = `
+        <div class="invoice">
+          <div class="invoice-head"><strong>${customer}</strong><span class="badge">${status}</span></div>
+          <p class="muted">${amount} - Due ${due}</p>
+          <p>${notes}</p>
+        </div>
+      ` + $("#invoice-list").innerHTML;
+      $("#invoice-result").innerHTML = notice("Invoice note added locally. Payment links still come from your payment provider.");
+      event.currentTarget.reset();
     });
 
     $("#load-admin").addEventListener("click", loadAdminJobs);
