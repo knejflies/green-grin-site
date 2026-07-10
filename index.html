@@ -222,7 +222,7 @@
       color: var(--white);
       background:
         linear-gradient(90deg, rgba(13, 36, 24, 0.93), rgba(13, 36, 24, 0.68) 47%, rgba(13, 36, 24, 0.22)),
-        url("assets/green-grin-striped-lawn.jpg") center / cover no-repeat;
+        url("assets/green-grin-hero-stripes.jpg") center / cover no-repeat;
       background-attachment: fixed;
     }
 
@@ -468,15 +468,20 @@
     }
 
     .image-break.striped {
-      background-image: url("assets/green-grin-striped-lawn.jpg");
+      background-image: url("assets/green-grin-hero-stripes.jpg");
     }
 
     .image-break.residential {
-      background-image: url("assets/green-grin-residential-lawn.jpg");
+      background-image: url("assets/green-grin-lake-lawn.jpg");
     }
 
     .image-break.commercial {
       background-image: url("assets/green-grin-commercial-beds.jpg");
+    }
+
+    .image-break.edging {
+      background-image: url("assets/green-grin-edging-detail.jpg");
+      background-position: center 58%;
     }
 
     .section-head {
@@ -613,7 +618,7 @@
     }
 
     .checks li::before {
-      content: "âœ“";
+      content: "+";
       display: grid;
       place-items: center;
       width: 24px;
@@ -1068,8 +1073,8 @@
     <section class="split" id="about">
       <div class="wrap split-grid">
         <div class="photo-stack" aria-label="Lawn care photography">
-          <img src="assets/green-grin-residential-lawn.jpg" alt="Green Grin maintained residential lawn and landscape beds" />
-          <img src="assets/green-grin-striped-lawn.jpg" alt="Fresh Green Grin mowing stripes across a large lawn" />
+          <img src="assets/green-grin-lake-lawn.jpg" alt="Green Grin maintained lawn with clean stripes near a pond" />
+          <img src="assets/green-grin-edging-detail.jpg" alt="Clean edging detail along concrete curb and landscape rock" />
         </div>
         <div>
           <div class="section-head">
@@ -1078,7 +1083,7 @@
             <p>Green Grin is built for homeowners and property managers who want the lawn handled without chasing callbacks, missed details, or mystery scheduling.</p>
           </div>
           <ul class="checks">
-            <li>Clean edges around sidewalks, driveways, curbs, fences, and beds.</li>
+            <li>Crisp edging around sidewalks, driveways, curbs, fences, and beds.</li>
             <li>Dependable communication for regular maintenance and one-time projects.</li>
             <li>Service built around Caldwell, Nampa, Meridian, Boise, and the wider Treasure Valley.</li>
           </ul>
@@ -1126,12 +1131,24 @@
 
         <div class="gallery-grid">
           <figure class="gallery-item large">
-            <img src="assets/green-grin-striped-lawn.jpg" alt="Striped green lawn maintained by Green Grin" />
-            <figcaption class="gallery-label">Weekly mowing and striping</figcaption>
+            <img src="assets/green-grin-hero-stripes.jpg" alt="Large striped green lawn maintained by Green Grin" />
+            <figcaption class="gallery-label">Wide lawn striping</figcaption>
           </figure>
           <figure class="gallery-item">
-            <img src="assets/green-grin-residential-lawn.jpg" alt="Residential lawn and landscape beds maintained by Green Grin" />
-            <figcaption class="gallery-label">Residential lawn care</figcaption>
+            <img src="assets/green-grin-lake-lawn.jpg" alt="Residential lawn with stripes and landscape bed maintained by Green Grin" />
+            <figcaption class="gallery-label">Residential finish</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="assets/green-grin-edging-detail.jpg" alt="Fresh edging detail beside grass and concrete curbing" />
+            <figcaption class="gallery-label">Crisp edging</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="assets/green-grin-neighborhood-lawn.jpg" alt="Neighborhood front lawn with fresh mowing lines by Green Grin" />
+            <figcaption class="gallery-label">Neighborhood mowing</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="assets/green-grin-landscape-project.jpg" alt="Fire pit landscape project with lawn and planting beds" />
+            <figcaption class="gallery-label">Landscape projects</figcaption>
           </figure>
           <figure class="gallery-item">
             <img src="assets/green-grin-commercial-beds.jpg" alt="Commercial flower and rock beds maintained by Green Grin" />
@@ -1173,7 +1190,7 @@
       </div>
     </section>
 
-    <section class="image-break residential" aria-label="Finished lawn photo">
+    <section class="image-break edging" aria-label="Clean lawn edging photo">
       <div class="wrap">
         <h2>Ready for a cleaner yard?</h2>
         <p>Send a quick request and we will follow up with availability.</p>
@@ -1183,10 +1200,10 @@
     <section class="contact" id="contact">
       <div class="wrap contact-grid">
         <aside class="contact-card">
-          <img src="assets/green-grin-residential-lawn.jpg" alt="Freshly maintained residential lawn by Green Grin" />
+          <img src="assets/green-grin-neighborhood-lawn.jpg" alt="Freshly maintained neighborhood lawn by Green Grin" />
           <div class="contact-info">
             <div class="section-head">
-              <span class="section-kicker">Letâ€™s Talk</span>
+              <span class="section-kicker">Let's Talk</span>
               <h2>Tell us what your yard needs.</h2>
               <p>Call, text, or send the form. Add a few details about your property and the service you want.</p>
             </div>
