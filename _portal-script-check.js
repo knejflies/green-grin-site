@@ -629,7 +629,7 @@
       const scheduleStart = String(job.schedule_start_date || job.scheduled_date || "").split("T")[0];
       const scheduleEnd = String(job.schedule_end_date || "").split("T")[0];
       return `
-        <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
+        <div class="${admin ? "job admin-job collapsed-job" : "job"}" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
             <strong>${job.customer_name || "Customer"}</strong>
             <span class="job-head-actions">
@@ -1203,6 +1203,7 @@
         panels.forEach((panel) => {
           panel.hidden = isOpen;
         });
+        card.classList.toggle("collapsed-job", isOpen);
         button.textContent = isOpen ? ">" : "v";
         button.setAttribute("aria-expanded", String(!isOpen));
         button.setAttribute("aria-label", isOpen ? "Expand job" : "Collapse job");
