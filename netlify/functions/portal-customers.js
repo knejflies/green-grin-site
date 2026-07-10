@@ -58,6 +58,7 @@ async function archiveForCustomer({ customerUserId, phone, email }) {
     customer: null,
     properties: [],
     jobs: [],
+    invoices: [],
     message_logs: []
   };
 
@@ -73,6 +74,7 @@ async function archiveForCustomer({ customerUserId, phone, email }) {
   if (email) jobMatches.push(`email.eq.${encodeURIComponent(email)}`);
   if (jobMatches.length) {
     archive.jobs = await supabase(`green_grin_jobs?select=*&or=(${jobMatches.join(",")})&order=created_at.desc`);
+    archive.invoices = await supabase(`green_grin_invoices?select=*&or=(${jobMatches.join(",")})&order=created_at.desc`);
   }
 
   const jobIds = archive.jobs.map((job) => job.id).filter(Boolean);
@@ -99,19 +101,41 @@ exports.handler = async (event) => {
   try {
     if (event.httpMethod === "GET") {
       const customers = await supabase("green_grin_customers?select=*&active=eq.true&order=customer_code.asc.nullslast,created_at.desc&limit=300");
-      const jobs = await supabase("green_grin_jobs?select=customer_code,customer_name,phone,email,address,service_type,monthly_price,annual_price&order=created_at.desc&limit=300");
+      const properties = await supabase("green_grin_properties?select=*&active=eq.true&order=created_at.desc&limit=500");
+      const jobs = await supabase("green_grin_jobs?select=*&order=created_at.desc&limit=500");
+      const propertyByUser = new Map();
+      for (const property of properties || []) {
+        if (!propertyByUser.has(property.customer_user_id)) propertyByUser.set(property.customer_user_id, property);
+      }
       const byKey = new Map();
 
       for (const customer of customers || []) {
         const key = customer.customer_code || customer.id || customer.email || customer.phone;
+        const property = propertyByUser.get(customer.id) || {};
+        const customerJobs = (jobs || []).filter((job) =>
+          (customer.id && job.customer_user_id === customer.id) ||
+          (customer.customer_code && job.customer_code === customer.customer_code) ||
+          (customer.email && job.email === customer.email) ||
+          (customer.phone && job.phone === customer.phone)
+        );
+        const newestJob = customerJobs[0] || {};
         byKey.set(key, {
+          id: customer.id || "",
+          customer_user_id: customer.id || "",
           customer_code: customer.customer_code || "",
           name: customer.full_name || customer.email || customer.phone || "Customer",
           phone: customer.phone || "",
           email: customer.email || "",
-          plan: customer.billing_plan || "",
-          monthly_price: customer.monthly_price || null,
-          annual_price: customer.annual_price || null
+          active: customer.active !== false,
+          plan: customer.billing_plan || newestJob.service_type || "",
+          billing_status: customer.billing_status || "",
+          monthly_price: customer.monthly_price || newestJob.monthly_price || null,
+          annual_price: customer.annual_price || newestJob.annual_price || null,
+          text_cleanup_reminders: customer.text_cleanup_reminders !== false,
+          text_done_messages: customer.text_done_messages !== false,
+          email_monthly_receipts: customer.email_monthly_receipts === true,
+          property,
+          jobs: customerJobs.slice(0, 12)
         });
       }
 
@@ -119,13 +143,22 @@ exports.handler = async (event) => {
         const key = job.customer_code || job.email || job.phone || job.customer_name;
         if (!key || byKey.has(key)) continue;
         byKey.set(key, {
+          id: "",
+          customer_user_id: job.customer_user_id || "",
           customer_code: job.customer_code || "",
           name: job.customer_name || job.email || job.phone || "Customer",
           phone: job.phone || "",
           email: job.email || "",
+          active: true,
           plan: job.service_type || "",
+          billing_status: job.status || "",
           monthly_price: job.monthly_price || null,
-          annual_price: job.annual_price || null
+          annual_price: job.annual_price || null,
+          text_cleanup_reminders: true,
+          text_done_messages: true,
+          email_monthly_receipts: false,
+          property: { address: job.address || "", yard_notes: job.notes || "" },
+          jobs: [job]
         });
       }
 
@@ -160,8 +193,11 @@ exports.handler = async (event) => {
       if (customerUserId) {
         await supabase(`green_grin_properties?customer_user_id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
         await supabase(`green_grin_jobs?customer_user_id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
+        await supabase(`green_grin_invoices?customer_user_id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
         if (phone) await supabase(`green_grin_jobs?phone=eq.${encodeURIComponent(phone)}`, { method: "DELETE" });
         if (email) await supabase(`green_grin_jobs?email=eq.${encodeURIComponent(email)}`, { method: "DELETE" });
+        if (phone) await supabase(`green_grin_invoices?phone=eq.${encodeURIComponent(phone)}`, { method: "DELETE" });
+        if (email) await supabase(`green_grin_invoices?email=eq.${encodeURIComponent(email)}`, { method: "DELETE" });
         await supabase(`green_grin_customers?id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
         const authDeleted = await deleteAuthUser(customerUserId);
         return json(200, { ok: true, authDeleted, archive });
@@ -169,9 +205,11 @@ exports.handler = async (event) => {
 
       if (phone) {
         await supabase(`green_grin_jobs?phone=eq.${encodeURIComponent(phone)}`, { method: "DELETE" });
+        await supabase(`green_grin_invoices?phone=eq.${encodeURIComponent(phone)}`, { method: "DELETE" });
       }
       if (email) {
         await supabase(`green_grin_jobs?email=eq.${encodeURIComponent(email)}`, { method: "DELETE" });
+        await supabase(`green_grin_invoices?email=eq.${encodeURIComponent(email)}`, { method: "DELETE" });
       }
       return json(200, { ok: true, authDeleted: false, archive });
     }

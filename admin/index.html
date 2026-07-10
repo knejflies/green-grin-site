@@ -139,7 +139,7 @@
       padding: 52px 0 30px;
       background:
         linear-gradient(90deg, rgba(18, 51, 36, 0.94), rgba(18, 51, 36, 0.68)),
-        url("../assets/green-grin-striped-lawn.jpg") center / cover;
+        url("../assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg") center / cover;
       color: var(--white);
     }
 
@@ -867,6 +867,7 @@
       <button class="tab customer-only" data-tab="messages" type="button">Messages</button>
       <button class="tab customer-only" data-tab="billing" type="button">Billing</button>
       <button class="tab customer-only" data-tab="property" type="button">Property</button>
+      <button class="tab owner-only" data-tab="customers" type="button">Customers</button>
       <button class="tab owner-only" data-tab="owner" type="button">Jobs</button>
       <button class="tab owner-only" data-tab="employee-admin" type="button">Employees</button>
       <button class="tab owner-only" data-tab="invoices" type="button">Invoices</button>
@@ -997,14 +998,16 @@
 
         <div class="card">
           <h2>Message preferences</h2>
-          <div class="checklist">
-            <label class="check"><input type="checkbox" checked /> Text me the morning of scheduled service.</label>
-            <label class="check"><input type="checkbox" checked /> Text me when service is finished.</label>
-            <label class="check"><input type="checkbox" /> Email me monthly receipts.</label>
-          </div>
-          <div class="row-actions">
-            <button class="button portal-action" data-message="Message preferences saved." type="button">Save Preferences</button>
-          </div>
+          <form id="message-preferences-form">
+            <div class="checklist">
+              <label class="check"><input id="pref_cleanup_text" type="checkbox" checked /> Text me the morning of scheduled service.</label>
+              <label class="check"><input id="pref_done_text" type="checkbox" checked /> Text me when service is finished.</label>
+              <label class="check"><input id="pref_email_receipts" type="checkbox" /> Email me monthly receipts.</label>
+            </div>
+            <div class="row-actions">
+              <button class="button" type="submit">Save Preferences</button>
+            </div>
+          </form>
           <div id="message-result" aria-live="polite"></div>
         </div>
       </div>
@@ -1068,6 +1071,24 @@
           <div class="property-note" style="margin-top: 18px;">
             <strong>Why this helps</strong>
             <p class="muted">A clean yard lets the crew mow faster, avoid damage, and leave sharper lines.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="customers" class="panel">
+      <div class="grid">
+        <div class="card owner-only">
+          <h2>Customers</h2>
+          <div class="admin-bar">
+            <button id="load-customers" class="button secondary" type="button">Load Customers</button>
+          </div>
+          <div id="customers-result" class="status-box" aria-live="polite"></div>
+        </div>
+        <div class="card owner-only">
+          <h2>Customer details</h2>
+          <div id="customer-detail-result" class="status-box">
+            <div class="notice">Select a customer to fill the job form or review their account details.</div>
           </div>
         </div>
       </div>
@@ -1219,8 +1240,16 @@
               </div>
             </div>
             <div>
+              <label for="invoice_custom_service">Custom service line</label>
+              <input id="invoice_custom_service" placeholder="Optional: mulch install, sprinkler repair, spring cleanup, one-time project" />
+            </div>
+            <div>
               <label for="invoice_notes">Notes</label>
               <textarea id="invoice_notes" placeholder="Monthly mowing, cleanup, landscape project, payment note"></textarea>
+            </div>
+            <div>
+              <label for="invoice_payment_url">Pay link</label>
+              <input id="invoice_payment_url" type="url" placeholder="Optional invoice payment link" />
             </div>
             <button id="invoice-submit" class="button" type="submit">Save Invoice</button>
           </form>
@@ -1301,7 +1330,9 @@
       $("#admin-result").innerHTML = jobsData.jobs.length
         ? jobsData.jobs.map((job) => jobCard(job, true)).join("")
         : notice("No jobs yet.");
+      await loadCustomers();
       await loadInvoiceCustomers();
+      await loadInvoices();
       await loadEmployees();
       await loadActivity();
     }
@@ -1367,7 +1398,11 @@
     document.querySelectorAll(".tab").forEach((button) => {
       button.addEventListener("click", () => {
         openTab(button.dataset.tab);
-        if (button.dataset.tab === "invoices") loadInvoiceCustomers();
+        if (button.dataset.tab === "invoices") {
+          loadInvoiceCustomers();
+          loadInvoices();
+        }
+        if (button.dataset.tab === "customers") loadCustomers();
       });
     });
 
@@ -1584,22 +1619,21 @@
             <li>${cleanText(job?.address || "Service address on file")}</li>
             <li>${cleanText(job?.cleanup_reminder_time ? `Morning reminder ${String(job.cleanup_reminder_time).slice(0, 5)}` : "Morning reminder on scheduled service days")}</li>
           </ul>
-          <button class="button billing-action" data-plan="${cleanText(plan)}" data-price="${cleanText(price || "custom monthly price")}" type="button">Open Pay Link</button>
         </div>
       `;
     }
 
-    function invoiceCard(job, customer) {
-      const price = money(job.monthly_price || customer.monthly_price);
-      const annual = money(job.annual_price || customer.annual_price);
+    function invoiceCard(invoice) {
+      const amount = money(invoice.amount);
+      const due = invoice.due_date ? displayScheduleDate(invoice.due_date) : "No due date";
+      const status = invoice.status || "Draft";
       return `
-        <div class="invoice">
-          <div class="invoice-head"><strong>${cleanText(job.service_type || customer.billing_plan || "Service")}</strong><span class="badge">${cleanText(job.status || customer.billing_status || "Active")}</span></div>
-          <p class="muted">${cleanText(price || "Quote")} monthly${annual ? ` - ${cleanText(annual)} yearly` : ""}</p>
-          <p class="muted">${cleanText(job.address || "Property on file")}</p>
-          <div class="row-actions">
-            <button class="button small billing-action" data-plan="${cleanText(job.service_type || "Service")}" data-price="${cleanText(price || "custom monthly price")}" type="button">Open Pay Link</button>
-          </div>
+        <div class="invoice" data-id="${invoice.id}">
+          <div class="invoice-head"><strong>${cleanText(invoice.service_line || invoice.notes || "Green Grin invoice")}</strong><span class="badge">${cleanText(status)}</span></div>
+          <p class="muted">${cleanText(amount || "$0.00")} - Due ${cleanText(due)}</p>
+          <p class="muted">${cleanText(invoice.customer_code || "")}${invoice.customer_code ? " - " : ""}${cleanText(invoice.customer_name || "Customer")}</p>
+          ${invoice.notes ? `<p>${cleanText(invoice.notes)}</p>` : ""}
+          ${status !== "Paid" ? `<div class="row-actions"><button class="button small billing-action" data-invoice-id="${invoice.id}" data-plan="${cleanText(invoice.service_line || invoice.notes || "Invoice")}" data-price="${cleanText(amount || "$0.00")}" type="button">Pay Invoice</button></div>` : ""}
         </div>
       `;
     }
@@ -1611,11 +1645,12 @@
         button.addEventListener("click", async () => {
           const plan = button.dataset.plan;
           const price = button.dataset.price;
+          const invoice_id = button.dataset.invoiceId || "";
           $("#billing-result").innerHTML = notice("Checking payment link...");
           try {
             const data = await requestJson("portal-payments", {
               method: "POST",
-              body: JSON.stringify({ plan, price })
+              body: JSON.stringify({ invoice_id, plan, price })
             });
             if (data.configured && data.paymentUrl) {
               window.open(data.paymentUrl, "_blank", "noopener");
@@ -1634,9 +1669,10 @@
       $("#invoice-list").innerHTML = invoiceDrafts.length
         ? invoiceDrafts.map((invoice) => `
           <div class="invoice" data-id="${invoice.id}">
-            <div class="invoice-head"><strong>${cleanText(invoice.customer)}</strong><span class="badge">${cleanText(invoice.status)}</span></div>
-            <p class="muted">${cleanText(invoice.amount)} - Due ${cleanText(invoice.due)}</p>
-            <p>${cleanText(invoice.notes)}</p>
+            <div class="invoice-head"><strong>${cleanText(invoice.customer_code || "")}${invoice.customer_code ? " - " : ""}${cleanText(invoice.customer_name || "Customer")}</strong><span class="badge">${cleanText(invoice.status)}</span></div>
+            <p class="muted">${cleanText(money(invoice.amount) || "$0.00")} - Due ${cleanText(invoice.due_date ? displayScheduleDate(invoice.due_date) : "No due date")}</p>
+            <p>${cleanText(invoice.service_line || invoice.notes || "")}</p>
+            ${invoice.service_line && invoice.notes ? `<p class="muted">${cleanText(invoice.notes)}</p>` : ""}
             <div class="row-actions">
               <button class="button small ghost" data-invoice-action="edit" type="button">Edit</button>
               <button class="button small ghost" data-invoice-action="delete" type="button">Delete</button>
@@ -1667,6 +1703,86 @@
       }
     }
 
+    async function loadInvoices() {
+      if (!adminPin()) return;
+      $("#invoice-list").innerHTML = notice("Loading invoices...");
+      try {
+        const data = await requestJson("portal-invoices?admin=1", { headers: adminHeaders() });
+        invoiceDrafts = data.invoices || [];
+        renderInvoiceDrafts();
+      } catch (error) {
+        $("#invoice-list").innerHTML = notice(error.message, true);
+      }
+    }
+
+    function preferenceLine(customer) {
+      const prefs = [];
+      prefs.push(customer.text_cleanup_reminders !== false ? "Morning cleanup texts: yes" : "Morning cleanup texts: no");
+      prefs.push(customer.text_done_messages !== false ? "Done texts: yes" : "Done texts: no");
+      prefs.push(customer.email_monthly_receipts ? "Email receipts: yes" : "Email receipts: no");
+      return prefs.join(" | ");
+    }
+
+    function customerDetailHtml(customer) {
+      const property = customer.property || {};
+      const jobs = customer.jobs || [];
+      return `
+        <div class="job">
+          <div class="job-head">
+            <strong>${cleanText(customer.name || "Customer")}</strong>
+            <span class="badge">${cleanText(customer.customer_code || "No ID")}</span>
+          </div>
+          <p class="muted">${cleanText(customer.email || "")}${customer.phone ? ` | ${cleanText(customer.phone)}` : ""}</p>
+          <p><strong>Property:</strong> ${cleanText(property.address || "No address saved yet.")}</p>
+          <p class="muted"><strong>Gate:</strong> ${cleanText(property.gate_code || "None")} | <strong>Pets:</strong> ${cleanText(property.pets || "None listed")}</p>
+          <p class="muted"><strong>Yard notes:</strong> ${cleanText(property.yard_notes || property.service_preferences || "None saved yet.")}</p>
+          <p class="muted"><strong>Messages:</strong> ${cleanText(preferenceLine(customer))}</p>
+          <p class="muted"><strong>Plan:</strong> ${cleanText(customer.plan || "Not set")} ${customer.monthly_price ? `| $${Number(customer.monthly_price).toFixed(2)}/month` : ""}</p>
+          <div class="status-box">
+            ${jobs.length ? jobs.slice(0, 4).map((job) => upcomingStep(job)).join("") : notice("No jobs created for this customer yet.")}
+          </div>
+        </div>
+      `;
+    }
+
+    function adminCustomerCard(customer, index) {
+      const property = customer.property || {};
+      const price = customer.monthly_price ? `$${Number(customer.monthly_price).toFixed(2)}/month` : "No price set";
+      return `
+        <div class="job" data-customer-index="${index}">
+          <div class="job-head">
+            <strong>${cleanText(customer.name || "Customer")}</strong>
+            <span class="badge">${cleanText(customer.customer_code || "No ID")}</span>
+          </div>
+          <p class="muted">${cleanText(customer.email || "")}${customer.phone ? ` | ${cleanText(customer.phone)}` : ""}</p>
+          <p>${cleanText(property.address || "No property address saved yet.")}</p>
+          <p class="muted">${cleanText(customer.plan || "No plan set")} | ${cleanText(price)}</p>
+          <p class="muted">${cleanText(preferenceLine(customer))}</p>
+          <div class="admin-actions">
+            <button class="button small secondary" data-customer-list-action="details" type="button">View Details</button>
+            <button class="button small" data-customer-list-action="fill-job" type="button">Create Booking</button>
+            <button class="button small" data-customer-list-action="invoice" type="button">Create Invoice</button>
+            <button class="button small ghost" data-customer-list-action="delete" type="button">Delete Customer</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadCustomers() {
+      if (!adminPin()) return;
+      $("#customers-result").innerHTML = notice("Loading customers...");
+      try {
+        const data = await requestJson("portal-customers?admin=1", { headers: adminHeaders() });
+        invoiceCustomers = data.customers || [];
+        $("#customers-result").innerHTML = invoiceCustomers.length
+          ? invoiceCustomers.map((customer, index) => adminCustomerCard(customer, index)).join("")
+          : notice("No customer accounts yet.");
+        renderInvoiceCustomerOptions();
+      } catch (error) {
+        $("#customers-result").innerHTML = notice(error.message, true);
+      }
+    }
+
     function downloadArchive(archive) {
       if (!archive) return;
       const code = archive.customer_code || "GG-ARCHIVE";
@@ -1686,6 +1802,7 @@
       const customer = accountData.customer || {};
       const property = accountData.property || {};
       const jobs = accountData.jobs || [];
+      const invoices = accountData.invoices || [];
       const logs = accountData.logs || [];
       const nextJob = nextScheduledJob(jobs);
       const currentJob = nextJob || newestJob(jobs);
@@ -1700,6 +1817,9 @@
       $("#gate_code").value = property.gate_code || "";
       $("#pets").value = property.pets || "";
       $("#yard_notes").value = property.yard_notes || "";
+      $("#pref_cleanup_text").checked = customer.text_cleanup_reminders !== false;
+      $("#pref_done_text").checked = customer.text_done_messages !== false;
+      $("#pref_email_receipts").checked = customer.email_monthly_receipts === true;
 
       $("#dashboard-next-visit").textContent = currentJob ? scheduleLine(currentJob) : "Not scheduled";
       $("#dashboard-next-service").textContent = currentJob?.service_type || "Your next service will appear here.";
@@ -1720,8 +1840,8 @@
         ? `${currentPrice} monthly for ${customer.billing_plan || currentJob?.service_type || "service"}.`
         : "No monthly price is set on this account yet.";
       $("#customer-billing-plans").innerHTML = billingPlanCard(currentJob, customer);
-      $("#customer-invoice-list").innerHTML = jobs.length
-        ? jobs.filter((job) => job.monthly_price || customer.monthly_price).slice(0, 6).map((job) => invoiceCard(job, customer)).join("")
+      $("#customer-invoice-list").innerHTML = invoices.length
+        ? invoices.map((invoice) => invoiceCard(invoice)).join("")
         : notice("No invoices yet.");
       wireBillingButtons();
 
@@ -1986,28 +2106,6 @@
       }
     });
 
-    document.querySelectorAll(".billing-action").forEach((button) => {
-      button.addEventListener("click", async () => {
-        const plan = button.dataset.plan;
-        const price = button.dataset.price;
-        $("#billing-result").innerHTML = notice("Checking payment link...");
-        try {
-          const data = await requestJson("portal-payments", {
-            method: "POST",
-            body: JSON.stringify({ plan, price })
-          });
-          if (data.configured && data.paymentUrl) {
-            window.open(data.paymentUrl, "_blank", "noopener");
-            $("#billing-result").innerHTML = notice(`Opening secure payment link for ${plan}.`);
-          } else {
-            $("#billing-result").innerHTML = notice(data.message || "Payment links are not configured yet.", true);
-          }
-        } catch (error) {
-          $("#billing-result").innerHTML = notice(error.message, true);
-        }
-      });
-    });
-
     document.querySelectorAll(".portal-action").forEach((button) => {
       button.addEventListener("click", () => {
         const target = button.closest(".card").querySelector("[aria-live='polite']") || $("#billing-result");
@@ -2015,27 +2113,72 @@
       });
     });
 
-    $("#invoice-form").addEventListener("submit", (event) => {
+    $("#message-preferences-form").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const id = $("#invoice_id").value || crypto.randomUUID();
+      if (!supabaseClient) {
+        $("#message-result").innerHTML = notice("Message preference saving is temporarily unavailable.", true);
+        return;
+      }
+
+      $("#message-result").innerHTML = notice("Saving message preferences...");
+      try {
+        const data = await requestJson("portal-account", {
+          method: "PATCH",
+          body: JSON.stringify({
+            profile: {
+              full_name: $("#customer_name").value,
+              phone: $("#phone").value,
+              text_cleanup_reminders: $("#pref_cleanup_text").checked,
+              text_done_messages: $("#pref_done_text").checked,
+              email_monthly_receipts: $("#pref_email_receipts").checked
+            }
+          })
+        });
+        renderAccount(data);
+        $("#message-result").innerHTML = notice("Message preferences saved.");
+      } catch (error) {
+        $("#message-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#invoice-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const id = $("#invoice_id").value;
       const selectedCustomer = invoiceCustomers[Number($("#invoice_customer").value)] || null;
-      const customer = selectedCustomer
-        ? `${selectedCustomer.customer_code ? `${selectedCustomer.customer_code} - ` : ""}${selectedCustomer.name}`
-        : "Customer";
-      const amount = $("#invoice_amount").value ? `$${Number($("#invoice_amount").value).toFixed(2)}` : "Amount not set";
-      const due = $("#invoice_due").value || "No due date";
-      const status = $("#invoice_status").value;
-      const notes = $("#invoice_notes").value || "No notes";
-      const invoice = { id, customer, amount, due, status, notes };
-      const existingIndex = invoiceDrafts.findIndex((item) => item.id === id);
-      if (existingIndex >= 0) invoiceDrafts[existingIndex] = invoice;
-      else invoiceDrafts.unshift(invoice);
-      renderInvoiceDrafts();
-      $("#invoice-result").innerHTML = notice(existingIndex >= 0 ? "Invoice updated." : "Invoice added.");
-      event.currentTarget.reset();
-      $("#invoice_id").value = "";
-      $("#invoice-submit").textContent = "Save Invoice";
-      renderInvoiceCustomerOptions();
+      if (!selectedCustomer) {
+        $("#invoice-result").innerHTML = notice("Choose a customer before saving an invoice.", true);
+        return;
+      }
+      const payload = {
+        id,
+        customer_user_id: selectedCustomer.customer_user_id || selectedCustomer.id || null,
+        customer_code: selectedCustomer.customer_code || "",
+        customer_name: selectedCustomer.name || "Customer",
+        phone: selectedCustomer.phone || "",
+        email: selectedCustomer.email || "",
+        amount: $("#invoice_amount").value || 0,
+        due_date: $("#invoice_due").value || null,
+        status: $("#invoice_status").value,
+        service_line: $("#invoice_custom_service").value || $("#invoice_notes").value || "Monthly service",
+        notes: $("#invoice_notes").value || "Monthly service",
+        payment_url: $("#invoice_payment_url").value || ""
+      };
+      $("#invoice-result").innerHTML = notice(id ? "Updating invoice..." : "Saving invoice...");
+      try {
+        await requestJson("portal-invoices", {
+          method: id ? "PATCH" : "POST",
+          headers: adminHeaders(),
+          body: JSON.stringify(payload)
+        });
+        event.currentTarget.reset();
+        $("#invoice_id").value = "";
+        $("#invoice-submit").textContent = "Save Invoice";
+        renderInvoiceCustomerOptions();
+        await loadInvoices();
+        $("#invoice-result").innerHTML = notice(id ? "Invoice updated." : "Invoice saved to that customer account.");
+      } catch (error) {
+        $("#invoice-result").innerHTML = notice(error.message, true);
+      }
     });
 
     $("#invoice_customer").addEventListener("change", () => {
@@ -2047,6 +2190,9 @@
       if (!$("#invoice_notes").value) {
         $("#invoice_notes").value = selectedCustomer.plan || "Monthly service";
       }
+      if (!$("#invoice_custom_service").value) {
+        $("#invoice_custom_service").value = selectedCustomer.plan || "";
+      }
     });
 
     $("#invoice-list").addEventListener("click", (event) => {
@@ -2056,23 +2202,39 @@
       const invoice = invoiceDrafts.find((item) => item.id === id);
       if (!invoice) return;
       if (button.dataset.invoiceAction === "delete") {
-        invoiceDrafts = invoiceDrafts.filter((item) => item.id !== id);
-        renderInvoiceDrafts();
-        $("#invoice-result").innerHTML = notice("Invoice deleted.");
+        if (!confirm("Delete this invoice forever?")) return;
+        try {
+          await requestJson("portal-invoices", {
+            method: "DELETE",
+            headers: adminHeaders(),
+            body: JSON.stringify({ id })
+          });
+          await loadInvoices();
+          $("#invoice-result").innerHTML = notice("Invoice deleted.");
+        } catch (error) {
+          $("#invoice-result").innerHTML = notice(error.message, true);
+        }
         return;
       }
       $("#invoice_id").value = invoice.id;
-      const index = invoiceCustomers.findIndex((customer) => invoice.customer.includes(customer.customer_code || customer.name));
+      const index = invoiceCustomers.findIndex((customer) =>
+        (invoice.customer_user_id && (customer.customer_user_id || customer.id) === invoice.customer_user_id) ||
+        (invoice.customer_code && customer.customer_code === invoice.customer_code) ||
+        (invoice.email && customer.email === invoice.email)
+      );
       $("#invoice_customer").value = index >= 0 ? String(index) : "";
-      $("#invoice_amount").value = invoice.amount.startsWith("$") ? invoice.amount.slice(1) : "";
-      $("#invoice_due").value = invoice.due === "No due date" ? "" : invoice.due;
+      $("#invoice_amount").value = invoice.amount || "";
+      $("#invoice_due").value = invoice.due_date || "";
       $("#invoice_status").value = invoice.status;
-      $("#invoice_notes").value = invoice.notes === "No notes" ? "" : invoice.notes;
+      $("#invoice_custom_service").value = invoice.service_line || "";
+      $("#invoice_notes").value = invoice.notes || "";
+      $("#invoice_payment_url").value = invoice.payment_url || "";
       $("#invoice-submit").textContent = "Update Invoice";
       $("#invoice-result").innerHTML = notice("Editing invoice.");
     });
 
     $("#load-admin").addEventListener("click", loadAdminJobs);
+    $("#load-customers").addEventListener("click", loadCustomers);
     $("#load-employee").addEventListener("click", loadEmployeeJobs);
     $("#load-employees").addEventListener("click", loadEmployees);
     $("#load-activity").addEventListener("click", loadActivity);
@@ -2082,6 +2244,71 @@
       const card = event.target.closest(".job");
       const monthlyInput = card.querySelector(".price-input");
       monthlyInput.value = monthlyFromAnnual(event.target.value);
+    });
+
+    $("#customers-result").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-customer-list-action]");
+      if (!button) return;
+      const card = button.closest(".job");
+      const customer = invoiceCustomers[Number(card?.dataset.customerIndex)] || null;
+      if (!customer) return;
+      const action = button.dataset.customerListAction;
+
+      if (action === "details") {
+        $("#customer-detail-result").innerHTML = customerDetailHtml(customer);
+        return;
+      }
+
+      if (action === "fill-job") {
+        const property = customer.property || {};
+        $("#owner_job_customer_name").value = customer.name || "";
+        $("#owner_job_phone").value = customer.phone || "";
+        $("#owner_job_email").value = customer.email || "";
+        $("#owner_job_address").value = property.address || customer.jobs?.[0]?.address || "";
+        if (customer.plan) $("#owner_job_service_type").value = customer.plan;
+        $("#owner_job_annual_price").value = customer.annual_price || "";
+        $("#owner_job_monthly_price").value = customer.monthly_price || "";
+        $("#owner_job_notes").value = [property.gate_code ? `Gate code: ${property.gate_code}` : "", property.pets ? `Pets: ${property.pets}` : "", property.yard_notes || property.service_preferences || ""].filter(Boolean).join("\n");
+        $("#customer-detail-result").innerHTML = notice("Customer copied into the booking form. Open Jobs to finish the schedule.");
+        openTab("owner");
+        return;
+      }
+
+      if (action === "invoice") {
+        const index = invoiceCustomers.findIndex((item) => item === customer);
+        $("#invoice_id").value = "";
+        $("#invoice_customer").value = index >= 0 ? String(index) : "";
+        $("#invoice_amount").value = customer.monthly_price ? Number(customer.monthly_price).toFixed(2) : "";
+        $("#invoice_due").value = "";
+        $("#invoice_status").value = "Draft";
+        $("#invoice_custom_service").value = customer.plan || "";
+        $("#invoice_notes").value = customer.plan || "Monthly service";
+        $("#invoice_payment_url").value = "";
+        $("#invoice-submit").textContent = "Save Invoice";
+        openTab("invoices");
+        return;
+      }
+
+      if (action === "delete") {
+        if (!confirm("Delete this customer and their saved jobs? This cannot be undone.")) return;
+        try {
+          const result = await requestJson("portal-customers", {
+            method: "DELETE",
+            headers: adminHeaders(),
+            body: JSON.stringify({
+              customer_user_id: customer.customer_user_id || customer.id || "",
+              phone: customer.phone || "",
+              email: customer.email || ""
+            })
+          });
+          downloadArchive(result.archive);
+          await loadCustomers();
+          await loadAdminJobs();
+          $("#customer-detail-result").innerHTML = notice("Customer deleted and archive downloaded.");
+        } catch (error) {
+          $("#customer-detail-result").innerHTML = notice(error.message, true);
+        }
+      }
     });
 
     async function loadAdminJobs() {

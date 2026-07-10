@@ -88,6 +88,9 @@ create table if not exists public.green_grin_customers (
   billing_status text not null default 'Not connected',
   monthly_price numeric(10, 2),
   annual_price numeric(10, 2),
+  text_cleanup_reminders boolean not null default true,
+  text_done_messages boolean not null default true,
+  email_monthly_receipts boolean not null default false,
   stripe_customer_id text,
   gocardless_customer_id text
 );
@@ -109,6 +112,15 @@ alter table public.green_grin_customers
 
 alter table public.green_grin_customers
   add column if not exists annual_price numeric(10, 2);
+
+alter table public.green_grin_customers
+  add column if not exists text_cleanup_reminders boolean not null default true;
+
+alter table public.green_grin_customers
+  add column if not exists text_done_messages boolean not null default true;
+
+alter table public.green_grin_customers
+  add column if not exists email_monthly_receipts boolean not null default false;
 
 create table if not exists public.green_grin_properties (
   id uuid primary key default gen_random_uuid(),
@@ -163,9 +175,48 @@ alter table public.green_grin_message_log
 alter table public.green_grin_message_log
   add column if not exists actor_employee_id uuid references public.green_grin_employees(id) on delete set null;
 
+create table if not exists public.green_grin_invoices (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  customer_user_id uuid references auth.users(id) on delete cascade,
+  customer_code text,
+  customer_name text not null,
+  phone text,
+  email text,
+  amount numeric(10, 2) not null default 0,
+  due_date date,
+  status text not null default 'Draft',
+  service_line text,
+  notes text,
+  payment_url text,
+  active boolean not null default true
+);
+
+alter table public.green_grin_invoices
+  add column if not exists customer_user_id uuid references auth.users(id) on delete cascade;
+
+alter table public.green_grin_invoices
+  add column if not exists customer_code text;
+
+alter table public.green_grin_invoices
+  add column if not exists phone text;
+
+alter table public.green_grin_invoices
+  add column if not exists email text;
+
+alter table public.green_grin_invoices
+  add column if not exists payment_url text;
+
+alter table public.green_grin_invoices
+  add column if not exists service_line text;
+
+alter table public.green_grin_invoices
+  add column if not exists active boolean not null default true;
+
 alter table public.green_grin_customers enable row level security;
 alter table public.green_grin_properties enable row level security;
 alter table public.green_grin_employees enable row level security;
+alter table public.green_grin_invoices enable row level security;
 
 drop policy if exists "Customers can read own profile" on public.green_grin_customers;
 drop policy if exists "Customers can insert own profile" on public.green_grin_customers;
@@ -174,6 +225,7 @@ drop policy if exists "Customers can read own properties" on public.green_grin_p
 drop policy if exists "Customers can insert own properties" on public.green_grin_properties;
 drop policy if exists "Customers can update own properties" on public.green_grin_properties;
 drop policy if exists "Employees can read own employee profile" on public.green_grin_employees;
+drop policy if exists "Customers can read own invoices" on public.green_grin_invoices;
 
 create policy "Customers can read own profile"
   on public.green_grin_customers for select
@@ -203,6 +255,10 @@ create policy "Employees can read own employee profile"
   on public.green_grin_employees for select
   using (auth.uid() = user_id);
 
+create policy "Customers can read own invoices"
+  on public.green_grin_invoices for select
+  using (auth.uid() = customer_user_id);
+
 create index if not exists green_grin_jobs_phone_idx on public.green_grin_jobs(phone);
 create index if not exists green_grin_jobs_customer_code_idx on public.green_grin_jobs(customer_code);
 create index if not exists green_grin_jobs_customer_user_idx on public.green_grin_jobs(customer_user_id);
@@ -216,6 +272,9 @@ create index if not exists green_grin_employees_status_idx on public.green_grin_
 create index if not exists green_grin_employees_pin_idx on public.green_grin_employees(employee_pin);
 create index if not exists green_grin_message_log_created_at_idx on public.green_grin_message_log(created_at desc);
 create index if not exists green_grin_customers_customer_code_idx on public.green_grin_customers(customer_code);
+create index if not exists green_grin_invoices_customer_user_idx on public.green_grin_invoices(customer_user_id);
+create index if not exists green_grin_invoices_customer_code_idx on public.green_grin_invoices(customer_code);
+create index if not exists green_grin_invoices_status_idx on public.green_grin_invoices(status);
 
 create unique index if not exists green_grin_customers_customer_code_unique
   on public.green_grin_customers(customer_code)

@@ -79,7 +79,10 @@ async function ensureCustomer(user) {
     customer_code: existingCustomer?.customer_code || await nextCustomerCode(),
     email: user.email || "",
     full_name: user.user_metadata?.name || user.email?.split("@")[0] || "",
-    billing_status: "Not connected"
+    billing_status: existingCustomer?.billing_status || "Not connected",
+    text_cleanup_reminders: existingCustomer?.text_cleanup_reminders ?? true,
+    text_done_messages: existingCustomer?.text_done_messages ?? true,
+    email_monthly_receipts: existingCustomer?.email_monthly_receipts ?? false
   };
 
   const rows = await supabase("green_grin_customers?on_conflict=id", {
@@ -116,12 +119,17 @@ async function loadAccount(user) {
   if (customer.phone) matches.push(`phone.eq.${encodeURIComponent(customer.phone)}`);
 
   const jobs = await supabase(`green_grin_jobs?select=*&or=(${matches.join(",")})&order=created_at.desc&limit=40`);
+  const invoiceMatches = [`customer_user_id.eq.${encodeURIComponent(user.id)}`];
+  if (customer.customer_code) invoiceMatches.push(`customer_code.eq.${encodeURIComponent(customer.customer_code)}`);
+  if (user.email) invoiceMatches.push(`email.eq.${encodeURIComponent(user.email)}`);
+  if (customer.phone) invoiceMatches.push(`phone.eq.${encodeURIComponent(customer.phone)}`);
+  const invoices = await supabase(`green_grin_invoices?select=*&active=eq.true&or=(${invoiceMatches.join(",")})&order=created_at.desc&limit=40`);
   const jobIds = jobs.map((job) => job.id).filter(Boolean);
   const logs = jobIds.length
     ? await supabase(`green_grin_message_log?select=*&job_id=in.(${jobIds.join(",")})&order=created_at.desc&limit=30`)
     : [];
 
-  return { user: { id: user.id, email: user.email }, customer, property: properties?.[0] || null, jobs, logs };
+  return { user: { id: user.id, email: user.email }, customer, property: properties?.[0] || null, jobs, invoices, logs };
 }
 
 exports.handler = async (event) => {
@@ -141,13 +149,23 @@ exports.handler = async (event) => {
       const body = JSON.parse(event.body || "{}");
 
       if (body.profile) {
+        const profileUpdate = {
+          full_name: body.profile.full_name || "",
+          phone: body.profile.phone || "",
+          billing_plan: body.profile.billing_plan || null
+        };
+        if (Object.prototype.hasOwnProperty.call(body.profile, "text_cleanup_reminders")) {
+          profileUpdate.text_cleanup_reminders = !!body.profile.text_cleanup_reminders;
+        }
+        if (Object.prototype.hasOwnProperty.call(body.profile, "text_done_messages")) {
+          profileUpdate.text_done_messages = !!body.profile.text_done_messages;
+        }
+        if (Object.prototype.hasOwnProperty.call(body.profile, "email_monthly_receipts")) {
+          profileUpdate.email_monthly_receipts = !!body.profile.email_monthly_receipts;
+        }
         await supabase(`green_grin_customers?id=eq.${encodeURIComponent(user.id)}`, {
           method: "PATCH",
-          body: JSON.stringify({
-            full_name: body.profile.full_name || "",
-            phone: body.profile.phone || "",
-            billing_plan: body.profile.billing_plan || null
-          })
+          body: JSON.stringify(profileUpdate)
         });
       }
 
