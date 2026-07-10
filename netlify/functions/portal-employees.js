@@ -65,14 +65,23 @@ function employeeCodeNumber(code) {
 
 async function nextEmployeeCode() {
   const rows = await supabase("green_grin_employees?select=employee_code&employee_code=not.is.null&order=employee_code.desc&limit=1");
-  const counters = await supabase("green_grin_counters?select=*&name=eq.employee_code&limit=1");
+  let counters = [];
+  try {
+    counters = await supabase("green_grin_counters?select=*&name=eq.employee_code&limit=1");
+  } catch (_error) {
+    counters = [];
+  }
   const current = counters?.[0]?.last_value || 0;
   const next = Math.max(current, employeeCodeNumber(rows?.[0]?.employee_code)) + 1;
-  await supabase("green_grin_counters?on_conflict=name", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify({ name: "employee_code", last_value: next })
-  });
+  try {
+    await supabase("green_grin_counters?on_conflict=name", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify({ name: "employee_code", last_value: next })
+    });
+  } catch (_error) {
+    // The SQL setup creates this counter table. If it is missing, still issue a code from the current max.
+  }
   return `GGE-${String(next).padStart(4, "0")}`;
 }
 

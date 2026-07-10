@@ -40,6 +40,8 @@ create table if not exists public.green_grin_jobs (
   schedule_start_date date,
   schedule_end_date date,
   cleanup_reminder_time time not null default '08:00',
+  assigned_employee_id uuid references public.green_grin_employees(id) on delete set null,
+  assigned_employee_name text,
   monthly_price numeric(10, 2),
   annual_price numeric(10, 2),
   status text not null default 'New',
@@ -60,6 +62,12 @@ alter table public.green_grin_jobs
 
 alter table public.green_grin_jobs
   add column if not exists cleanup_reminder_time time not null default '08:00';
+
+alter table public.green_grin_jobs
+  add column if not exists assigned_employee_id uuid references public.green_grin_employees(id) on delete set null;
+
+alter table public.green_grin_jobs
+  add column if not exists assigned_employee_name text;
 
 alter table public.green_grin_jobs
   add column if not exists monthly_price numeric(10, 2);
@@ -262,6 +270,7 @@ create policy "Customers can read own invoices"
 create index if not exists green_grin_jobs_phone_idx on public.green_grin_jobs(phone);
 create index if not exists green_grin_jobs_customer_code_idx on public.green_grin_jobs(customer_code);
 create index if not exists green_grin_jobs_customer_user_idx on public.green_grin_jobs(customer_user_id);
+create index if not exists green_grin_jobs_assigned_employee_idx on public.green_grin_jobs(assigned_employee_id);
 create index if not exists green_grin_jobs_created_at_idx on public.green_grin_jobs(created_at desc);
 create index if not exists green_grin_jobs_scheduled_date_idx on public.green_grin_jobs(scheduled_date);
 create index if not exists green_grin_properties_customer_user_idx on public.green_grin_properties(customer_user_id);

@@ -92,14 +92,23 @@ function codeNumber(code) {
 async function nextCustomerCode() {
   const customers = await supabase("green_grin_customers?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
   const jobs = await supabase("green_grin_jobs?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
-  const counters = await supabase("green_grin_counters?select=*&name=eq.customer_code&limit=1");
+  let counters = [];
+  try {
+    counters = await supabase("green_grin_counters?select=*&name=eq.customer_code&limit=1");
+  } catch (_error) {
+    counters = [];
+  }
   const current = counters?.[0]?.last_value || 0;
   const next = Math.max(current, codeNumber(customers?.[0]?.customer_code), codeNumber(jobs?.[0]?.customer_code)) + 1;
-  await supabase("green_grin_counters?on_conflict=name", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify({ name: "customer_code", last_value: next })
-  });
+  try {
+    await supabase("green_grin_counters?on_conflict=name", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify({ name: "customer_code", last_value: next })
+    });
+  } catch (_error) {
+    // The SQL setup creates this counter table. If it is missing, still issue a code from the current max.
+  }
   return `GG-${String(next).padStart(4, "0")}`;
 }
 
@@ -181,6 +190,8 @@ exports.handler = async (event) => {
         schedule_start_date: scheduleStartDate,
         schedule_end_date: scheduleEndDate,
         cleanup_reminder_time: body.cleanup_reminder_time || "08:00",
+        assigned_employee_id: body.assigned_employee_id || null,
+        assigned_employee_name: body.assigned_employee_name || null,
         annual_price: body.annual_price || null,
         monthly_price: body.monthly_price || null,
         notes: body.notes || "",
@@ -211,8 +222,8 @@ exports.handler = async (event) => {
       if (params.get("employee") === "1") {
         const employee = await activeEmployee(event) || await activeEmployeeByPin(event);
         if (!employee) return json(401, { error: "Employee access was not found. Sign in or use the PIN the owner set for you." });
-        const jobs = await supabase("green_grin_jobs?select=id,customer_code,customer_name,address,service_type,scheduled_date,recurring_weekly,schedule_start_date,schedule_end_date,status,notes&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80");
-        return json(200, { jobs });
+        const jobs = await supabase(`green_grin_jobs?select=id,customer_code,customer_name,address,service_type,scheduled_date,recurring_weekly,schedule_start_date,schedule_end_date,status,notes,assigned_employee_id,assigned_employee_name&assigned_employee_id=eq.${encodeURIComponent(employee.id)}&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80`);
+        return json(200, { employee, jobs });
       }
 
       const phone = params.get("phone");
@@ -235,6 +246,8 @@ exports.handler = async (event) => {
         schedule_start_date: body.schedule_start_date || body.scheduled_date || null,
         schedule_end_date: body.schedule_end_date || null,
         cleanup_reminder_time: body.cleanup_reminder_time || "08:00",
+        assigned_employee_id: body.assigned_employee_id || null,
+        assigned_employee_name: body.assigned_employee_name || null,
         annual_price: body.annual_price || null,
         monthly_price: body.monthly_price || null
       };

@@ -6,6 +6,7 @@
     let accountData = null;
     let invoiceDrafts = [];
     let invoiceCustomers = [];
+    let employeeDirectory = [];
     let adminSessionPin = "";
 
     function portalMode() {
@@ -44,7 +45,8 @@
     }
 
     async function setEmployeeSignedIn(employee) {
-      setSignedIn({ id: "employee", email: employee.email || "Employee" });
+      setSignedIn({ id: "employee", email: `Welcome, ${employee.full_name || employee.email || "Employee"}` });
+      $("#employee-welcome").textContent = `Welcome, ${employee.full_name || employee.email || "Employee"}.`;
       openTab("employee-work");
       await loadEmployeeJobs();
     }
@@ -54,13 +56,13 @@
       const jobsData = await requestJson("portal-jobs?admin=1", { headers: { "x-admin-pin": pin } });
       setSignedIn({ id: "owner", email: "Owner" });
       openTab("owner");
+      await loadEmployees();
       $("#admin-result").innerHTML = jobsData.jobs.length
         ? jobsData.jobs.map((job) => jobCard(job, true)).join("")
         : notice("No jobs yet.");
       await loadCustomers();
       await loadInvoiceCustomers();
       await loadInvoices();
-      await loadEmployees();
       await loadActivity();
     }
 
@@ -246,7 +248,9 @@
       $("#staff-login-result").innerHTML = notice("Checking employee PIN...");
       try {
         const data = await requestJson("portal-jobs?employee=1", { headers: { "x-employee-pin": pin } });
-        setSignedIn({ id: "employee", email: "Employee" });
+        const employeeName = data.employee?.full_name || data.employee?.email || "Employee";
+        setSignedIn({ id: "employee", email: `Welcome, ${employeeName}` });
+        $("#employee-welcome").textContent = `Welcome, ${employeeName}.`;
         $("#employee-pin").value = pin;
         openTab("employee-work");
         $("#employee-result").innerHTML = data.jobs.length
@@ -613,6 +617,15 @@
       return displayScheduleDate(job.scheduled_date || job.preferred_date);
     }
 
+    function employeeOptions(selectedId = "") {
+      const activeEmployees = employeeDirectory.filter((employee) => employee.status === "Active");
+      return `<option value="">Unassigned</option>` + activeEmployees.map((employee) => {
+        const selected = employee.id === selectedId ? " selected" : "";
+        const label = `${employee.employee_code ? `${employee.employee_code} - ` : ""}${employee.full_name || employee.email}`;
+        return `<option value="${employee.id}" data-name="${cleanText(employee.full_name || employee.email || "")}"${selected}>${cleanText(label)}</option>`;
+      }).join("");
+    }
+
     function jobCard(job, admin = false) {
       const scheduled = scheduleLine(job);
       const reminderTime = job.cleanup_reminder_time ? String(job.cleanup_reminder_time).slice(0, 5) : "08:00";
@@ -632,6 +645,7 @@
           ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
           <p>${job.address || ""}</p>
           <p class="muted">${job.notes || ""}</p>
+          ${admin ? `<p class="muted">Assigned to: ${cleanText(job.assigned_employee_name || "Unassigned")}</p>` : ""}
           ${admin ? `
             <div class="two" style="margin-top: 12px;">
               <input type="date" class="schedule-input" value="${scheduleStart}" />
@@ -644,6 +658,9 @@
                 <option>Scheduled</option>
                 <option>Completed</option>
                 <option>Needs Follow Up</option>
+              </select>
+              <select class="employee-assign-input">
+                ${employeeOptions(job.assigned_employee_id || "")}
               </select>
             </div>
             <div class="admin-actions">
@@ -758,6 +775,7 @@
       const scheduleEndDate = $("#owner_job_end_date").value;
       const annualPrice = $("#owner_job_annual_price").value || null;
       const monthlyPrice = $("#owner_job_monthly_price").value || monthlyFromAnnual(annualPrice) || null;
+      const assignedEmployee = $("#owner_job_employee").selectedOptions[0];
       $("#owner-create-result").innerHTML = notice("Creating job...");
       try {
         await requestJson("portal-jobs", {
@@ -773,6 +791,8 @@
             schedule_start_date: scheduledDate || null,
             schedule_end_date: scheduleEndDate || null,
             cleanup_reminder_time: $("#owner_job_reminder_time").value || "08:00",
+            assigned_employee_id: $("#owner_job_employee").value || null,
+            assigned_employee_name: assignedEmployee?.dataset.name || null,
             annual_price: annualPrice,
             monthly_price: monthlyPrice,
             notes: $("#owner_job_notes").value,
@@ -1056,9 +1076,14 @@
       try {
         const headers = pin ? { "x-employee-pin": pin } : {};
         const data = await requestJson("portal-jobs?employee=1", { headers });
+        if (data.employee) {
+          const employeeName = data.employee.full_name || data.employee.email || "Employee";
+          $("#employee-welcome").textContent = `Welcome, ${employeeName}.`;
+          $("#account-pill").textContent = `Welcome, ${employeeName}`;
+        }
         $("#employee-result").innerHTML = data.jobs.length
           ? data.jobs.map((job) => employeeJobCard(job)).join("")
-          : notice("No employee jobs ready.");
+          : notice("No jobs assigned to you yet.");
       } catch (error) {
         $("#employee-result").innerHTML = notice(error.message, true);
       }
@@ -1066,13 +1091,22 @@
 
     async function loadEmployees() {
       $("#employees-result").innerHTML = notice("Loading employees...");
+      $("#employee-pending-result").innerHTML = notice("Loading pending requests...");
       try {
         const data = await requestJson("portal-employees?admin=1", { headers: adminHeaders() });
-        $("#employees-result").innerHTML = data.employees.length
-          ? data.employees.map((employee) => employeeAccessCard(employee)).join("")
-          : notice("No employee requests yet.");
+        employeeDirectory = data.employees || [];
+        const pending = employeeDirectory.filter((employee) => employee.status !== "Active");
+        const active = employeeDirectory.filter((employee) => employee.status === "Active");
+        if ($("#owner_job_employee")) $("#owner_job_employee").innerHTML = employeeOptions("");
+        $("#employee-pending-result").innerHTML = pending.length
+          ? pending.map((employee) => employeeAccessCard(employee)).join("")
+          : notice("No pending employee requests.");
+        $("#employees-result").innerHTML = active.length
+          ? active.map((employee) => employeeAccessCard(employee)).join("")
+          : notice("No active employees yet.");
       } catch (error) {
         $("#employees-result").innerHTML = notice(error.message, true);
+        $("#employee-pending-result").innerHTML = notice(error.message, true);
       }
     }
 
@@ -1101,6 +1135,9 @@
       const annual_price = card.querySelector(".annual-price-input")?.value || null;
       const monthly_price = card.querySelector(".price-input")?.value || monthlyFromAnnual(annual_price) || null;
       const status = card.querySelector(".status-input")?.value;
+      const employeeSelect = card.querySelector(".employee-assign-input");
+      const assigned_employee_id = employeeSelect?.value || null;
+      const assigned_employee_name = employeeSelect?.selectedOptions?.[0]?.dataset.name || null;
       button.disabled = true;
       try {
         if (customerAction) {
@@ -1127,7 +1164,7 @@
           await requestJson("portal-jobs", {
             method: "PATCH",
             headers: adminHeaders(),
-            body: JSON.stringify({ id, scheduled_date, schedule_start_date: scheduled_date, schedule_end_date, cleanup_reminder_time, annual_price, monthly_price, status })
+            body: JSON.stringify({ id, scheduled_date, schedule_start_date: scheduled_date, schedule_end_date, cleanup_reminder_time, annual_price, monthly_price, status, assigned_employee_id, assigned_employee_name })
           });
         } else {
           await requestJson("portal-message", {
@@ -1166,7 +1203,7 @@
       }
     });
 
-    $("#employees-result").addEventListener("click", async (event) => {
+    async function handleEmployeeAdminClick(event) {
       const button = event.target.closest("button[data-employee-status], button[data-employee-pin], button[data-employee-delete]");
       if (!button) return;
       const card = button.closest(".job");
@@ -1191,12 +1228,16 @@
           });
         }
         await loadEmployees();
+        if (activeAccount?.id === "owner") await loadAdminJobs();
       } catch (error) {
         alert(error.message);
       } finally {
         button.disabled = false;
       }
-    });
+    }
+
+    $("#employees-result").addEventListener("click", handleEmployeeAdminClick);
+    $("#employee-pending-result").addEventListener("click", handleEmployeeAdminClick);
 
     applyPortalMode();
     loadSupabaseAuth();
