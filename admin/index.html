@@ -228,36 +228,11 @@
       display: none;
     }
 
-    .portal-footer {
-      display: flex;
-      justify-content: center;
-      margin-top: 28px;
-    }
-
-    .footer-link {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      font: inherit;
-      font-size: 0.9rem;
-      font-weight: 800;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
-    .footer-link:hover {
-      color: var(--pine);
-    }
-
     body.customer-site .team-access,
-    body.customer-site .portal-footer,
     body.admin-site .customer-login-card,
     body.admin-site .staff-login-card,
-    body.admin-site .portal-footer,
     body.employee-site .customer-login-card,
-    body.employee-site .owner-login-card,
-    body.employee-site .portal-footer {
+    body.employee-site .owner-login-card {
       display: none;
     }
 
@@ -784,13 +759,13 @@
 <body>
   <header>
     <div class="wrap nav">
-      <a class="brand" href="index.html">
+      <a class="brand" href="/">
         <img src="../assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
       </a>
       <div class="nav-actions">
         <span id="account-pill" class="account-pill">Signed in</span>
         <button id="sign-out" class="button ghost" type="button" hidden>Sign Out</button>
-        <a class="button ghost" href="index.html">Main Site</a>
+        <a class="button ghost" href="/">Main Site</a>
       </div>
     </div>
   </header>
@@ -799,11 +774,11 @@
     <div class="wrap hero-grid">
       <div>
         <h1 id="portal-title">Customer Portal</h1>
-        <p id="portal-subtitle">Customers can check service status, see messages, view billing, and keep yard notes in one place.</p>
+        <p id="portal-subtitle">Service status, billing, messages, and property details.</p>
       </div>
       <div class="portal-card">
         <strong>Customer accounts</strong>
-        <span>Account sign-in, property notes, message settings, billing, and service status in one place.</span>
+        <span>Green Grin service dashboard</span>
       </div>
     </div>
   </section>
@@ -812,7 +787,6 @@
     <div class="auth-shell">
       <div class="auth-card customer-login-card">
         <h2>Customer sign in</h2>
-        <p class="muted">Customers can create an account with email and password, then sign in anytime.</p>
         <form id="auth-form">
           <div>
             <label for="auth-email">Email</label>
@@ -833,7 +807,6 @@
       <div id="team-access" class="team-access" hidden>
         <div class="auth-card owner-login-card">
         <h2>Owner login</h2>
-        <p class="muted">Use your admin PIN to schedule jobs, manage customers, approve employees, and send completed-service texts.</p>
         <form id="owner-login-form">
           <div>
             <label for="owner-login-pin">Admin PIN</label>
@@ -846,7 +819,6 @@
 
       <div class="auth-card staff-login-card">
         <h2>Staff access</h2>
-        <p class="muted">Employees can request access. After approval, the owner sets their PIN for job access.</p>
         <form id="employee-request-form">
           <div class="two">
             <div>
@@ -886,9 +858,6 @@
       </div>
       </div>
     </div>
-    <div class="portal-footer">
-      <button id="team-access-toggle" class="footer-link" type="button">Staff / Owner</button>
-    </div>
   </section>
 
   <main id="portal-app" class="wrap portal-app">
@@ -910,48 +879,29 @@
       <div class="three">
         <div class="metric">
           <span>Next Visit</span>
-          <strong>Friday</strong>
-          <p class="muted">Mow, trim, edge, and blowoff.</p>
+          <strong id="dashboard-next-visit">Not scheduled</strong>
+          <p id="dashboard-next-service" class="muted">Your next service will appear here.</p>
         </div>
         <div class="metric">
           <span>Monthly Plan</span>
-          <strong>Weekly</strong>
-          <p class="muted">$280 due at the beginning of the month.</p>
+          <strong id="dashboard-plan">Not set</strong>
+          <p id="dashboard-price" class="muted">Monthly price will appear here.</p>
         </div>
         <div class="metric">
           <span>Service Status</span>
-          <strong>Scheduled</strong>
-          <p class="muted">Reminder text ready to send.</p>
+          <strong id="dashboard-status">Account ready</strong>
+          <p id="dashboard-address" class="muted">Property details will appear here.</p>
         </div>
       </div>
 
       <div class="grid" style="margin-top: 20px;">
         <div class="card">
           <h2>Upcoming service</h2>
-          <p>This gives the customer a clear view of what is happening next.</p>
-          <div class="timeline">
-            <div class="step">
-              <span class="dot"></span>
-              <div>
-                <strong>Morning reminder</strong>
-                <p class="muted">If service is scheduled today, the customer gets a cleanup reminder in the morning.</p>
-              </div>
-              <span class="badge warn">Automatic</span>
-            </div>
-            <div class="step">
-              <span class="dot"></span>
-              <div>
-                <strong>Completed</strong>
-                <p class="muted">Customer gets a finished notice after the yard is done.</p>
-              </div>
-              <span class="badge dark">Done</span>
-            </div>
-          </div>
+          <div id="customer-upcoming-list" class="timeline"></div>
         </div>
 
         <div class="card">
           <h2>Quick actions</h2>
-          <p>Common customer tasks are right up front.</p>
           <div class="quick-actions">
             <button class="button ghost go-tab" data-go="billing" type="button">View Billing</button>
             <button class="button ghost go-tab" data-go="property" type="button">Update Yard Notes</button>
@@ -965,7 +915,6 @@
       <div class="grid">
         <div class="card">
           <h2>Request mowing or project work</h2>
-          <p>Customers send the basics and Green Grin follows up to confirm schedule and details.</p>
           <form id="request-form">
             <div class="two">
               <div>
@@ -985,12 +934,9 @@
               <div>
                 <label for="service_type">Service</label>
                 <select id="service_type" name="service_type">
-                  <option>Weekly mowing</option>
-                  <option>Bi-weekly mowing</option>
-                  <option>One-time mowing</option>
-                  <option>Landscape project</option>
-                  <option>Cleanup</option>
-                  <option>Commercial maintenance</option>
+                  <option>Fresh Grin Weekly - Mow, Edge, Blow</option>
+                  <option>Sharp Grin Weekly - Mow, Edge, Blow & Weed Spraying</option>
+                  <option>Full Grin Season - Mow, Edge, Blow, Weed Spraying, Spring & Fall Cleanup</option>
                 </select>
               </div>
             </div>
@@ -1046,22 +992,11 @@
       <div class="grid">
         <div class="card">
           <h2>Customer messages</h2>
-          <p>These are the kinds of texts customers can receive automatically.</p>
-          <div class="status-box">
-            <div class="message">
-              <div class="message-head"><strong>Morning cleanup reminder</strong><span class="badge warn">Automatic</span></div>
-              <p class="muted">"Green Grin is scheduled for your yard today. Please pick up toys, hoses, pet waste, and yard objects before we arrive."</p>
-            </div>
-            <div class="message">
-              <div class="message-head"><strong>Job complete</strong><span class="badge dark">Done</span></div>
-              <p class="muted">"Green Grin finished your yard today. Thanks for choosing us."</p>
-            </div>
-          </div>
+          <div id="customer-message-list" class="status-box"></div>
         </div>
 
         <div class="card">
           <h2>Message preferences</h2>
-          <p>A real customer account can let customers choose what they want to receive.</p>
           <div class="checklist">
             <label class="check"><input type="checkbox" checked /> Text me the morning of scheduled service.</label>
             <label class="check"><input type="checkbox" checked /> Text me when service is finished.</label>
@@ -1078,62 +1013,16 @@
     <section id="billing" class="panel">
       <div class="card">
         <h2>Billing and monthly service</h2>
-        <p>Customers can open secure payment links once your payment provider links are added in Netlify.</p>
-        <div class="notice">Best setup: use secure hosted payment links. The website should never store bank or card details.</div>
+        <p id="billing-summary">Your monthly service and payment details will appear here.</p>
 
-        <div class="plans">
-          <div class="plan">
-            <strong>Bi-weekly Mowing</strong>
-            <div class="price">$160 <span>/ month</span></div>
-            <ul class="clean-list">
-              <li>2 visits per month</li>
-              <li>Mow, trim, edge, and blowoff</li>
-              <li>Monthly auto-pay</li>
-            </ul>
-            <button class="button billing-action" data-plan="Bi-weekly Mowing" data-price="$160/month" type="button">Open Pay Link</button>
-          </div>
-
-          <div class="plan">
-            <strong>Weekly Mowing</strong>
-            <div class="price">$280 <span>/ month</span></div>
-            <ul class="clean-list">
-              <li>Weekly lawn service</li>
-              <li>Clean edges and hard-surface blowoff</li>
-              <li>Best for growing season</li>
-            </ul>
-            <button class="button billing-action" data-plan="Weekly Mowing" data-price="$280/month" type="button">Open Pay Link</button>
-          </div>
-
-          <div class="plan">
-            <strong>Commercial Care</strong>
-            <div class="price">Quote <span>/ month</span></div>
-            <ul class="clean-list">
-              <li>Recurring property maintenance</li>
-              <li>Custom schedule</li>
-              <li>Invoice or ACH option</li>
-            </ul>
-            <button class="button billing-action" data-plan="Commercial Care" data-price="custom monthly price" type="button">Open Pay Link</button>
-          </div>
-        </div>
+        <div id="customer-billing-plans" class="plans"></div>
 
         <div id="billing-result" aria-live="polite"></div>
       </div>
 
       <div class="card">
         <h2>Invoice preview</h2>
-        <div class="status-box">
-          <div class="invoice">
-            <div class="invoice-head"><strong>August service plan</strong><span class="badge warn">Due Aug 1</span></div>
-            <p class="muted">$280.00 - Weekly mowing plan</p>
-            <div class="row-actions">
-              <button class="button small billing-action" data-plan="August service plan" data-price="$280" type="button">Open Pay Link</button>
-            </div>
-          </div>
-          <div class="invoice">
-            <div class="invoice-head"><strong>July service plan</strong><span class="badge">Paid</span></div>
-            <p class="muted">$280.00 - Paid by bank transfer.</p>
-          </div>
-        </div>
+        <div id="customer-invoice-list" class="status-box"></div>
       </div>
     </section>
 
@@ -1141,7 +1030,6 @@
       <div class="grid">
         <div class="card">
           <h2>Property details</h2>
-          <p>Useful customer notes for gates, pets, parking, and lawn preferences.</p>
           <form id="property-form">
             <div class="two">
               <div>
@@ -1189,7 +1077,6 @@
       <div class="grid">
         <div class="card owner-only">
           <h2>Owner dashboard</h2>
-          <p>Add jobs, schedule service, send cleanup reminders, and mark work done.</p>
           <div class="admin-bar">
             <input id="admin-pin" type="password" placeholder="Admin PIN" />
             <button id="load-admin" class="button secondary" type="button">Load Jobs</button>
@@ -1214,16 +1101,17 @@
               <div>
                 <label for="owner_job_service_type">Service</label>
                 <select id="owner_job_service_type">
-                  <option>Weekly mowing</option>
-                  <option>Bi-weekly mowing</option>
-                  <option>One-time mowing</option>
-                  <option>Landscape project</option>
-                  <option>Cleanup</option>
-                  <option>Commercial maintenance</option>
+                  <option>Fresh Grin Weekly - Mow, Edge, Blow</option>
+                  <option>Sharp Grin Weekly - Mow, Edge, Blow & Weed Spraying</option>
+                  <option>Full Grin Season - Mow, Edge, Blow, Weed Spraying, Spring & Fall Cleanup</option>
                 </select>
               </div>
               <div>
-                <label for="owner_job_monthly_price">Customer price</label>
+                <label for="owner_job_annual_price">Yearly price</label>
+                <input id="owner_job_annual_price" type="number" min="0" step="0.01" placeholder="Yearly price" />
+              </div>
+              <div>
+                <label for="owner_job_monthly_price">Monthly price</label>
                 <input id="owner_job_monthly_price" type="number" min="0" step="0.01" placeholder="Monthly price" />
               </div>
             </div>
@@ -1233,8 +1121,12 @@
                 <input id="owner_job_address" placeholder="Service address" />
               </div>
               <div>
-                <label for="owner_job_scheduled_date">Schedule date</label>
+                <label for="owner_job_scheduled_date">Season start</label>
                 <input id="owner_job_scheduled_date" type="date" />
+              </div>
+              <div>
+                <label for="owner_job_end_date">Season end</label>
+                <input id="owner_job_end_date" type="date" />
               </div>
               <div>
                 <label for="owner_job_reminder_time">Morning text time</label>
@@ -1248,6 +1140,9 @@
             <button class="button" type="submit">Create Job</button>
           </form>
           <div id="owner-create-result" aria-live="polite"></div>
+        </div>
+        <div class="card owner-only">
+          <h2>Jobs</h2>
           <div id="admin-result" class="status-box" aria-live="polite"></div>
         </div>
       </div>
@@ -1257,7 +1152,6 @@
       <div class="grid">
         <div class="card">
           <h2>Employee job list</h2>
-          <p>Employees only see the work list and a Done button. Pricing and billing stay hidden.</p>
           <div class="admin-bar">
             <input id="employee-pin" type="password" placeholder="Employee PIN, optional if signed in" />
             <button id="load-employee" class="button secondary" type="button">Load Employee Jobs</button>
@@ -1271,7 +1165,6 @@
       <div class="grid">
         <div class="card owner-only">
           <h2>Employee access</h2>
-          <p>Approve employees, set their PIN, deactivate fired employees, or reactivate them later.</p>
           <div class="admin-bar">
             <input id="employee-admin-pin" type="password" placeholder="Admin PIN" />
             <button id="load-employees" class="button secondary" type="button">Load Employees</button>
@@ -1285,7 +1178,6 @@
       <div class="grid">
         <div class="card owner-only">
           <h2>Activity log</h2>
-          <p>See recent customer texts and who clicked Done.</p>
           <div class="admin-bar">
             <input id="activity-admin-pin" type="password" placeholder="Admin PIN" />
             <button id="load-activity" class="button secondary" type="button">Load Activity</button>
@@ -1299,8 +1191,9 @@
       <div class="grid">
         <div class="card owner-only">
           <h2>Invoice center</h2>
-          <p>Create invoice notes, track prices, and open hosted payment links when your payment provider is connected.</p>
+          <p>Create invoices, track amounts, and keep billing organized.</p>
           <form id="invoice-form">
+            <input id="invoice_id" type="hidden" />
             <div class="two">
               <div>
                 <label for="invoice_customer">Customer</label>
@@ -1330,30 +1223,18 @@
               <label for="invoice_notes">Notes</label>
               <textarea id="invoice_notes" placeholder="Monthly mowing, cleanup, landscape project, payment note"></textarea>
             </div>
-            <button class="button" type="submit">Add Invoice Note</button>
+            <button id="invoice-submit" class="button" type="submit">Save Invoice</button>
           </form>
           <div id="invoice-result" aria-live="polite"></div>
         </div>
 
         <div class="card owner-only">
           <h2>Invoice list</h2>
-          <p>Local invoice notes for planning. Secure payment links still open through the Billing buttons.</p>
           <div id="invoice-list" class="status-box">
             <div class="invoice">
-              <div class="invoice-head"><strong>No invoice notes yet</strong><span class="badge warn">Draft</span></div>
-              <p class="muted">Add one from the form to stage billing before sending a payment link.</p>
+              <div class="invoice-head"><strong>No invoices yet</strong><span class="badge warn">Draft</span></div>
             </div>
           </div>
-        </div>
-
-        <div class="card setup owner-only">
-          <h2>System notes</h2>
-          <p>Owner tools use the private admin PIN. Keep employee access current as your crew changes.</p>
-          <ul class="clean-list" style="margin-top: 14px;">
-            <li>Supabase stores requests and job status.</li>
-            <li>Twilio sends customer texts.</li>
-            <li>Stripe or GoCardless can handle secure ACH later.</li>
-          </ul>
         </div>
       </div>
     </section>
@@ -1368,6 +1249,7 @@
     let supabaseClient = null;
     let activeAccount = null;
     let accountData = null;
+    let invoiceDrafts = [];
 
     function portalMode() {
       const path = window.location.pathname.toLowerCase();
@@ -1489,14 +1371,6 @@
       button.addEventListener("click", () => openTab(button.dataset.go));
     });
 
-    $("#team-access-toggle").addEventListener("click", () => {
-      const teamAccess = $("#team-access");
-      teamAccess.hidden = !teamAccess.hidden;
-      if (!teamAccess.hidden) {
-        teamAccess.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
-
     async function loadCurrentEmployee() {
       try {
         const data = await requestJson("portal-employees");
@@ -1514,7 +1388,7 @@
       const action = event.submitter?.dataset.authAction || "signin";
       $("#auth-result").innerHTML = notice(action === "signup" ? "Creating account..." : "Signing in...");
       if (!supabaseClient) {
-        $("#auth-result").innerHTML = notice("Account sign-in is not available yet. Please try again later.", true);
+        $("#auth-result").innerHTML = notice("Sign in is temporarily unavailable.", true);
         return;
       }
 
@@ -1583,7 +1457,7 @@
       localStorage.setItem("greenGrinEmployeeLogin", "1");
       $("#staff-login-result").innerHTML = notice("Preparing employee sign-in link...");
       if (!supabaseClient) {
-        $("#staff-login-result").innerHTML = notice("Employee sign-in is not available yet. Please try again later.", true);
+        $("#staff-login-result").innerHTML = notice("Employee sign-in is temporarily unavailable.", true);
         return;
       }
       const { error } = await supabaseClient.auth.signInWithOtp({
@@ -1618,8 +1492,146 @@
       }
     });
 
+    $("#owner_job_annual_price").addEventListener("input", () => {
+      $("#owner_job_monthly_price").value = monthlyFromAnnual($("#owner_job_annual_price").value);
+    });
+
     function notice(message, error = false) {
       return `<div class="notice ${error ? "error" : ""}">${message}</div>`;
+    }
+
+    function cleanText(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function money(value) {
+      const number = Number(value);
+      return Number.isFinite(number) && number > 0 ? `$${number.toFixed(2)}` : "";
+    }
+
+    function monthlyFromAnnual(value) {
+      const number = Number(value);
+      return Number.isFinite(number) && number > 0 ? (number / 12).toFixed(2) : "";
+    }
+
+    function newestJob(jobs) {
+      return [...jobs].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0] || null;
+    }
+
+    function nextScheduledJob(jobs) {
+      const upcoming = jobs
+        .filter((job) => job.scheduled_date && job.status !== "Completed")
+        .sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date));
+      return upcoming[0] || jobs.find((job) => job.status !== "Completed") || jobs[0] || null;
+    }
+
+    function customerMessageCard(log) {
+      const sent = log.created_at ? new Date(log.created_at).toLocaleString() : "";
+      const title = log.template === "completed" ? "Service completed" : "Cleanup reminder";
+      return `
+        <div class="message">
+          <div class="message-head"><strong>${title}</strong><span class="badge">${cleanText(log.actor_type || "Green Grin")}</span></div>
+          <p class="muted">${cleanText(log.message || "")}</p>
+          <p class="muted">${cleanText(sent)}</p>
+        </div>
+      `;
+    }
+
+    function upcomingStep(job) {
+      const scheduled = scheduleLine(job);
+      return `
+        <div class="step">
+          <span class="dot"></span>
+          <div>
+            <strong>${cleanText(job.service_type || "Service")}</strong>
+            <p class="muted">${cleanText(scheduled)}${job.address ? ` - ${cleanText(job.address)}` : ""}</p>
+          </div>
+          <span class="badge">${cleanText(job.status || "Scheduled")}</span>
+        </div>
+      `;
+    }
+
+    function billingPlanCard(job, customer) {
+      const plan = customer.billing_plan || job?.service_type || "Monthly service";
+      const price = money(customer.monthly_price || job?.monthly_price);
+      const annual = money(customer.annual_price || job?.annual_price);
+      const status = customer.billing_status || job?.status || "Active";
+      return `
+        <div class="plan">
+          <strong>${cleanText(plan)}</strong>
+          <div class="price">${price || "Quote"} <span>/ month</span></div>
+          <ul class="clean-list">
+            <li>${cleanText(status)}</li>
+            <li>${cleanText(annual ? `${annual} split across 12 months` : "Custom price set by Green Grin")}</li>
+            <li>${cleanText(job?.address || "Service address on file")}</li>
+            <li>${cleanText(job?.cleanup_reminder_time ? `Morning reminder ${String(job.cleanup_reminder_time).slice(0, 5)}` : "Morning reminder on scheduled service days")}</li>
+          </ul>
+          <button class="button billing-action" data-plan="${cleanText(plan)}" data-price="${cleanText(price || "custom monthly price")}" type="button">Open Pay Link</button>
+        </div>
+      `;
+    }
+
+    function invoiceCard(job, customer) {
+      const price = money(job.monthly_price || customer.monthly_price);
+      const annual = money(job.annual_price || customer.annual_price);
+      return `
+        <div class="invoice">
+          <div class="invoice-head"><strong>${cleanText(job.service_type || customer.billing_plan || "Service")}</strong><span class="badge">${cleanText(job.status || customer.billing_status || "Active")}</span></div>
+          <p class="muted">${cleanText(price || "Quote")} monthly${annual ? ` - ${cleanText(annual)} yearly` : ""}</p>
+          <p class="muted">${cleanText(job.address || "Property on file")}</p>
+          <div class="row-actions">
+            <button class="button small billing-action" data-plan="${cleanText(job.service_type || "Service")}" data-price="${cleanText(price || "custom monthly price")}" type="button">Open Pay Link</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function wireBillingButtons() {
+      document.querySelectorAll(".billing-action").forEach((button) => {
+        if (button.dataset.ready === "1") return;
+        button.dataset.ready = "1";
+        button.addEventListener("click", async () => {
+          const plan = button.dataset.plan;
+          const price = button.dataset.price;
+          $("#billing-result").innerHTML = notice("Checking payment link...");
+          try {
+            const data = await requestJson("portal-payments", {
+              method: "POST",
+              body: JSON.stringify({ plan, price })
+            });
+            if (data.configured && data.paymentUrl) {
+              window.open(data.paymentUrl, "_blank", "noopener");
+              $("#billing-result").innerHTML = notice(`Opening payment link for ${cleanText(plan)}.`);
+            } else {
+              $("#billing-result").innerHTML = notice(data.message || "Payment link is not ready.", true);
+            }
+          } catch (error) {
+            $("#billing-result").innerHTML = notice(error.message, true);
+          }
+        });
+      });
+    }
+
+    function renderInvoiceDrafts() {
+      $("#invoice-list").innerHTML = invoiceDrafts.length
+        ? invoiceDrafts.map((invoice) => `
+          <div class="invoice" data-id="${invoice.id}">
+            <div class="invoice-head"><strong>${cleanText(invoice.customer)}</strong><span class="badge">${cleanText(invoice.status)}</span></div>
+            <p class="muted">${cleanText(invoice.amount)} - Due ${cleanText(invoice.due)}</p>
+            <p>${cleanText(invoice.notes)}</p>
+            <div class="row-actions">
+              <button class="button small ghost" data-invoice-action="edit" type="button">Edit</button>
+              <button class="button small ghost" data-invoice-action="delete" type="button">Delete</button>
+            </div>
+          </div>
+        `).join("")
+        : `<div class="invoice"><div class="invoice-head"><strong>No invoices yet</strong><span class="badge warn">Draft</span></div></div>`;
     }
 
     function renderAccount(data = {}) {
@@ -1627,6 +1639,10 @@
       const customer = accountData.customer || {};
       const property = accountData.property || {};
       const jobs = accountData.jobs || [];
+      const logs = accountData.logs || [];
+      const nextJob = nextScheduledJob(jobs);
+      const currentJob = nextJob || newestJob(jobs);
+      const currentPrice = money(customer.monthly_price || currentJob?.monthly_price);
 
       $("#customer_name").value = customer.full_name || activeAccount?.user_metadata?.name || "";
       $("#phone").value = customer.phone || "";
@@ -1636,6 +1652,30 @@
       $("#gate_code").value = property.gate_code || "";
       $("#pets").value = property.pets || "";
       $("#yard_notes").value = property.yard_notes || "";
+
+      $("#dashboard-next-visit").textContent = currentJob ? scheduleLine(currentJob) : "Not scheduled";
+      $("#dashboard-next-service").textContent = currentJob?.service_type || "Your next service will appear here.";
+      $("#dashboard-plan").textContent = customer.billing_plan || currentJob?.service_type || "Not set";
+      $("#dashboard-price").textContent = currentPrice ? `${currentPrice} monthly` : "Monthly price will appear here.";
+      $("#dashboard-status").textContent = currentJob?.status || customer.billing_status || "Account ready";
+      $("#dashboard-address").textContent = property.address || currentJob?.address || "Property details will appear here.";
+
+      $("#customer-upcoming-list").innerHTML = jobs.length
+        ? jobs.slice(0, 4).map((job) => upcomingStep(job)).join("")
+        : notice("No scheduled service yet.");
+
+      $("#customer-message-list").innerHTML = logs.length
+        ? logs.map((log) => customerMessageCard(log)).join("")
+        : notice("No customer messages yet.");
+
+      $("#billing-summary").textContent = currentPrice
+        ? `${currentPrice} monthly for ${customer.billing_plan || currentJob?.service_type || "service"}.`
+        : "No monthly price is set on this account yet.";
+      $("#customer-billing-plans").innerHTML = billingPlanCard(currentJob, customer);
+      $("#customer-invoice-list").innerHTML = jobs.length
+        ? jobs.filter((job) => job.monthly_price || customer.monthly_price).slice(0, 6).map((job) => invoiceCard(job, customer)).join("")
+        : notice("No invoices yet.");
+      wireBillingButtons();
 
       $("#lookup-result").innerHTML = jobs.length
         ? jobs.map((job) => jobCard(job)).join("")
@@ -1671,10 +1711,20 @@
       return new Date(value).toLocaleDateString();
     }
 
+    function scheduleLine(job) {
+      if (job.recurring_weekly && job.schedule_start_date && job.schedule_end_date) {
+        return `Weekly ${displayScheduleDate(job.schedule_start_date)} to ${displayScheduleDate(job.schedule_end_date)}`;
+      }
+      return displayScheduleDate(job.scheduled_date || job.preferred_date);
+    }
+
     function jobCard(job, admin = false) {
-      const scheduled = displayScheduleDate(job.scheduled_date);
+      const scheduled = scheduleLine(job);
       const reminderTime = job.cleanup_reminder_time ? String(job.cleanup_reminder_time).slice(0, 5) : "08:00";
       const monthlyPrice = job.monthly_price ? Number(job.monthly_price).toFixed(2) : "";
+      const annualPrice = job.annual_price ? Number(job.annual_price).toFixed(2) : "";
+      const scheduleStart = String(job.schedule_start_date || job.scheduled_date || "").split("T")[0];
+      const scheduleEnd = String(job.schedule_end_date || "").split("T")[0];
       return `
         <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
@@ -1683,14 +1733,16 @@
           </div>
           <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
           <p class="muted">Morning text: ${reminderTime}</p>
-          ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}</p>` : ""}
+          ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
           <p>${job.address || ""}</p>
           <p class="muted">${job.notes || ""}</p>
           ${admin ? `
             <div class="two" style="margin-top: 12px;">
-              <input type="date" class="schedule-input" />
+              <input type="date" class="schedule-input" value="${scheduleStart}" />
+              <input type="date" class="schedule-end-input" value="${scheduleEnd}" />
               <input type="time" class="reminder-time-input" value="${reminderTime}" />
-              <input type="number" min="0" step="0.01" class="price-input" value="${monthlyPrice}" placeholder="Customer price" />
+              <input type="number" min="0" step="0.01" class="annual-price-input" value="${annualPrice}" placeholder="Yearly price" />
+              <input type="number" min="0" step="0.01" class="price-input" value="${monthlyPrice}" placeholder="Monthly price" />
               <select class="status-input">
                 <option>New</option>
                 <option>Scheduled</option>
@@ -1702,6 +1754,7 @@
               <button class="button small ghost" data-action="schedule" type="button">Save Schedule</button>
               <button class="button small" data-action="objects" type="button">Text: Pick Up Yard Objects</button>
               <button class="button small secondary" data-action="completed" type="button">Text: Done</button>
+              <button class="button small ghost" data-action="delete-job" type="button">Delete Job</button>
               <button class="button small ghost" data-customer-action="deactivate" type="button">Deactivate Customer</button>
               <button class="button small ghost" data-customer-action="delete" type="button">Delete Customer</button>
             </div>
@@ -1711,7 +1764,7 @@
     }
 
     function employeeJobCard(job) {
-      const scheduled = displayScheduleDate(job.scheduled_date);
+      const scheduled = scheduleLine(job);
       return `
         <div class="job" data-id="${job.id}">
           <div class="job-head">
@@ -1805,6 +1858,9 @@
       const form = event.currentTarget;
       const pin = $("#admin-pin").value || $("#owner-login-pin").value;
       const scheduledDate = $("#owner_job_scheduled_date").value;
+      const scheduleEndDate = $("#owner_job_end_date").value;
+      const annualPrice = $("#owner_job_annual_price").value || null;
+      const monthlyPrice = $("#owner_job_monthly_price").value || monthlyFromAnnual(annualPrice) || null;
       $("#owner-create-result").innerHTML = notice("Creating job...");
       try {
         await requestJson("portal-jobs", {
@@ -1817,8 +1873,11 @@
             address: $("#owner_job_address").value,
             service_type: $("#owner_job_service_type").value,
             scheduled_date: scheduledDate || null,
+            schedule_start_date: scheduledDate || null,
+            schedule_end_date: scheduleEndDate || null,
             cleanup_reminder_time: $("#owner_job_reminder_time").value || "08:00",
-            monthly_price: $("#owner_job_monthly_price").value || null,
+            annual_price: annualPrice,
+            monthly_price: monthlyPrice,
             notes: $("#owner_job_notes").value,
             status: scheduledDate ? "Scheduled" : "New"
           })
@@ -1848,7 +1907,7 @@
     $("#property-form").addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!supabaseClient) {
-        $("#property-result").innerHTML = notice("Account saving is not available yet. Please try again later.", true);
+        $("#property-result").innerHTML = notice("Property saving is temporarily unavailable.", true);
         return;
       }
 
@@ -1908,26 +1967,56 @@
 
     $("#invoice-form").addEventListener("submit", (event) => {
       event.preventDefault();
+      const id = $("#invoice_id").value || crypto.randomUUID();
       const customer = $("#invoice_customer").value || "Customer";
       const amount = $("#invoice_amount").value ? `$${Number($("#invoice_amount").value).toFixed(2)}` : "Amount not set";
       const due = $("#invoice_due").value || "No due date";
       const status = $("#invoice_status").value;
       const notes = $("#invoice_notes").value || "No notes";
-      $("#invoice-list").innerHTML = `
-        <div class="invoice">
-          <div class="invoice-head"><strong>${customer}</strong><span class="badge">${status}</span></div>
-          <p class="muted">${amount} - Due ${due}</p>
-          <p>${notes}</p>
-        </div>
-      ` + $("#invoice-list").innerHTML;
-      $("#invoice-result").innerHTML = notice("Invoice note added locally. Payment links still come from your payment provider.");
+      const invoice = { id, customer, amount, due, status, notes };
+      const existingIndex = invoiceDrafts.findIndex((item) => item.id === id);
+      if (existingIndex >= 0) invoiceDrafts[existingIndex] = invoice;
+      else invoiceDrafts.unshift(invoice);
+      renderInvoiceDrafts();
+      $("#invoice-result").innerHTML = notice(existingIndex >= 0 ? "Invoice updated." : "Invoice added.");
       event.currentTarget.reset();
+      $("#invoice_id").value = "";
+      $("#invoice-submit").textContent = "Save Invoice";
+    });
+
+    $("#invoice-list").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-invoice-action]");
+      if (!button) return;
+      const id = button.closest(".invoice")?.dataset.id;
+      const invoice = invoiceDrafts.find((item) => item.id === id);
+      if (!invoice) return;
+      if (button.dataset.invoiceAction === "delete") {
+        invoiceDrafts = invoiceDrafts.filter((item) => item.id !== id);
+        renderInvoiceDrafts();
+        $("#invoice-result").innerHTML = notice("Invoice deleted.");
+        return;
+      }
+      $("#invoice_id").value = invoice.id;
+      $("#invoice_customer").value = invoice.customer === "Customer" ? "" : invoice.customer;
+      $("#invoice_amount").value = invoice.amount.startsWith("$") ? invoice.amount.slice(1) : "";
+      $("#invoice_due").value = invoice.due === "No due date" ? "" : invoice.due;
+      $("#invoice_status").value = invoice.status;
+      $("#invoice_notes").value = invoice.notes === "No notes" ? "" : invoice.notes;
+      $("#invoice-submit").textContent = "Update Invoice";
+      $("#invoice-result").innerHTML = notice("Editing invoice.");
     });
 
     $("#load-admin").addEventListener("click", loadAdminJobs);
     $("#load-employee").addEventListener("click", loadEmployeeJobs);
     $("#load-employees").addEventListener("click", loadEmployees);
     $("#load-activity").addEventListener("click", loadActivity);
+
+    $("#admin-result").addEventListener("input", (event) => {
+      if (!event.target.classList.contains("annual-price-input")) return;
+      const card = event.target.closest(".job");
+      const monthlyInput = card.querySelector(".price-input");
+      monthlyInput.value = monthlyFromAnnual(event.target.value);
+    });
 
     async function loadAdminJobs() {
       const pin = $("#admin-pin").value;
@@ -1991,8 +2080,10 @@
       const action = button.dataset.action;
       const customerAction = button.dataset.customerAction;
       const scheduled_date = card.querySelector(".schedule-input")?.value;
+      const schedule_end_date = card.querySelector(".schedule-end-input")?.value;
       const cleanup_reminder_time = card.querySelector(".reminder-time-input")?.value;
-      const monthly_price = card.querySelector(".price-input")?.value || null;
+      const annual_price = card.querySelector(".annual-price-input")?.value || null;
+      const monthly_price = card.querySelector(".price-input")?.value || monthlyFromAnnual(annual_price) || null;
       const status = card.querySelector(".status-input")?.value;
       button.disabled = true;
       try {
@@ -2008,11 +2099,18 @@
             headers: { "x-admin-pin": pin },
             body: JSON.stringify(payload)
           });
+        } else if (action === "delete-job") {
+          if (!confirm("Delete this job forever? This cannot be undone.")) return;
+          await requestJson("portal-jobs", {
+            method: "DELETE",
+            headers: { "x-admin-pin": pin },
+            body: JSON.stringify({ id })
+          });
         } else if (action === "schedule") {
           await requestJson("portal-jobs", {
             method: "PATCH",
             headers: { "x-admin-pin": pin },
-            body: JSON.stringify({ id, scheduled_date, cleanup_reminder_time, monthly_price, status })
+            body: JSON.stringify({ id, scheduled_date, schedule_start_date: scheduled_date, schedule_end_date, cleanup_reminder_time, annual_price, monthly_price, status })
           });
         } else {
           await requestJson("portal-message", {

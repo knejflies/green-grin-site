@@ -89,8 +89,17 @@ async function loadAccount(user) {
     });
   }
 
-  const jobs = await supabase(`green_grin_jobs?select=*&customer_user_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=20`);
-  return { user: { id: user.id, email: user.email }, customer, property: properties?.[0] || null, jobs };
+  const matches = [`customer_user_id.eq.${encodeURIComponent(user.id)}`];
+  if (user.email) matches.push(`email.eq.${encodeURIComponent(user.email)}`);
+  if (customer.phone) matches.push(`phone.eq.${encodeURIComponent(customer.phone)}`);
+
+  const jobs = await supabase(`green_grin_jobs?select=*&or=(${matches.join(",")})&order=created_at.desc&limit=40`);
+  const jobIds = jobs.map((job) => job.id).filter(Boolean);
+  const logs = jobIds.length
+    ? await supabase(`green_grin_message_log?select=*&job_id=in.(${jobIds.join(",")})&order=created_at.desc&limit=30`)
+    : [];
+
+  return { user: { id: user.id, email: user.email }, customer, property: properties?.[0] || null, jobs, logs };
 }
 
 exports.handler = async (event) => {

@@ -11,8 +11,12 @@ create table if not exists public.green_grin_jobs (
   service_type text,
   preferred_date date,
   scheduled_date timestamptz,
+  recurring_weekly boolean not null default false,
+  schedule_start_date date,
+  schedule_end_date date,
   cleanup_reminder_time time not null default '08:00',
   monthly_price numeric(10, 2),
+  annual_price numeric(10, 2),
   status text not null default 'New',
   notes text,
   last_message_template text,
@@ -32,6 +36,18 @@ alter table public.green_grin_jobs
 alter table public.green_grin_jobs
   add column if not exists monthly_price numeric(10, 2);
 
+alter table public.green_grin_jobs
+  add column if not exists annual_price numeric(10, 2);
+
+alter table public.green_grin_jobs
+  add column if not exists recurring_weekly boolean not null default false;
+
+alter table public.green_grin_jobs
+  add column if not exists schedule_start_date date;
+
+alter table public.green_grin_jobs
+  add column if not exists schedule_end_date date;
+
 create table if not exists public.green_grin_customers (
   id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -42,12 +58,25 @@ create table if not exists public.green_grin_customers (
   billing_plan text,
   billing_status text not null default 'Not connected',
   monthly_price numeric(10, 2),
+  annual_price numeric(10, 2),
   stripe_customer_id text,
   gocardless_customer_id text
 );
 
 alter table public.green_grin_customers
   add column if not exists active boolean not null default true;
+
+alter table public.green_grin_customers
+  add column if not exists billing_plan text;
+
+alter table public.green_grin_customers
+  add column if not exists billing_status text not null default 'Not connected';
+
+alter table public.green_grin_customers
+  add column if not exists monthly_price numeric(10, 2);
+
+alter table public.green_grin_customers
+  add column if not exists annual_price numeric(10, 2);
 
 create table if not exists public.green_grin_properties (
   id uuid primary key default gen_random_uuid(),

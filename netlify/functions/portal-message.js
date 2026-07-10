@@ -158,7 +158,7 @@ exports.handler = async (event) => {
 
     const message = messageFor(body.template, job);
     const sms = await sendSms(job.phone, message);
-    const status = body.template === "completed" ? "Completed" : job.status;
+    const status = body.template === "completed" && !job.recurring_weekly ? "Completed" : job.status;
 
     await supabase(`green_grin_jobs?id=eq.${id}`, {
       method: "PATCH",

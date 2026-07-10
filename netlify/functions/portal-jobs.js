@@ -7,7 +7,7 @@ const headers = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type, x-admin-pin, x-employee-pin, Authorization",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS"
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS"
 };
 
 function json(statusCode, body) {
@@ -84,6 +84,36 @@ async function activeEmployeeByPin(event) {
   return rows?.[0] || null;
 }
 
+async function matchingCustomer(body) {
+  const email = (body.email || "").toLowerCase().trim();
+  const phone = (body.phone || "").trim();
+  if (email) {
+    const rows = await supabase(`green_grin_customers?select=*&email=eq.${encodeURIComponent(email)}&limit=1`);
+    if (rows?.[0]) return rows[0];
+  }
+  if (phone) {
+    const rows = await supabase(`green_grin_customers?select=*&phone=eq.${encodeURIComponent(phone)}&limit=1`);
+    if (rows?.[0]) return rows[0];
+  }
+  return null;
+}
+
+async function syncCustomerPlan(customerUserId, job) {
+  if (!customerUserId) return;
+  await supabase(`green_grin_customers?id=eq.${encodeURIComponent(customerUserId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      billing_plan: job.service_type || null,
+      billing_status: job.status || "Scheduled",
+      monthly_price: job.monthly_price || null,
+      annual_price: job.annual_price || null,
+      phone: job.phone || "",
+      email: job.email || "",
+      full_name: job.customer_name || ""
+    })
+  });
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
 
@@ -97,9 +127,12 @@ exports.handler = async (event) => {
       const adminError = adminCreate ? requireAdmin(event) : null;
       if (adminError) return json(401, { error: adminError });
       const user = adminCreate ? null : await optionalUser(event);
-      const scheduledDate = adminCreate ? body.scheduled_date || null : null;
+      const customer = adminCreate ? await matchingCustomer(body) : null;
+      const scheduleStartDate = adminCreate ? body.schedule_start_date || body.scheduled_date || null : null;
+      const scheduleEndDate = adminCreate ? body.schedule_end_date || null : null;
+      const scheduledDate = adminCreate ? scheduleStartDate : null;
       const job = {
-        customer_user_id: user?.id || null,
+        customer_user_id: customer?.id || user?.id || null,
         customer_name: body.customer_name || "",
         phone: body.phone || "",
         email: body.email || user?.email || "",
@@ -107,7 +140,11 @@ exports.handler = async (event) => {
         service_type: body.service_type || "Service request",
         preferred_date: body.preferred_date || null,
         scheduled_date: scheduledDate,
+        recurring_weekly: Boolean(adminCreate && scheduleStartDate && scheduleEndDate),
+        schedule_start_date: scheduleStartDate,
+        schedule_end_date: scheduleEndDate,
         cleanup_reminder_time: body.cleanup_reminder_time || "08:00",
+        annual_price: body.annual_price || null,
         monthly_price: body.monthly_price || null,
         notes: body.notes || "",
         status: adminCreate ? body.status || (scheduledDate ? "Scheduled" : "New") : "New"
@@ -121,6 +158,7 @@ exports.handler = async (event) => {
         method: "POST",
         body: JSON.stringify(job)
       });
+      await syncCustomerPlan(created?.[0]?.customer_user_id, created?.[0] || job);
       return json(200, { job: created?.[0] });
     }
 
@@ -136,7 +174,7 @@ exports.handler = async (event) => {
       if (params.get("employee") === "1") {
         const employee = await activeEmployee(event) || await activeEmployeeByPin(event);
         if (!employee) return json(401, { error: "Employee access was not found. Sign in or use the PIN the owner set for you." });
-        const jobs = await supabase("green_grin_jobs?select=id,customer_name,address,service_type,scheduled_date,status,notes&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80");
+        const jobs = await supabase("green_grin_jobs?select=id,customer_name,address,service_type,scheduled_date,recurring_weekly,schedule_start_date,schedule_end_date,status,notes&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80");
         return json(200, { jobs });
       }
 
@@ -155,8 +193,12 @@ exports.handler = async (event) => {
 
       const update = {
         status: body.status || "Scheduled",
-        scheduled_date: body.scheduled_date || null,
+        scheduled_date: body.schedule_start_date || body.scheduled_date || null,
+        recurring_weekly: Boolean(body.schedule_start_date && body.schedule_end_date),
+        schedule_start_date: body.schedule_start_date || body.scheduled_date || null,
+        schedule_end_date: body.schedule_end_date || null,
         cleanup_reminder_time: body.cleanup_reminder_time || "08:00",
+        annual_price: body.annual_price || null,
         monthly_price: body.monthly_price || null
       };
       const id = encodeURIComponent(body.id);
@@ -164,7 +206,21 @@ exports.handler = async (event) => {
         method: "PATCH",
         body: JSON.stringify(update)
       });
+      if (updated?.[0]?.customer_user_id) {
+        await syncCustomerPlan(updated[0].customer_user_id, updated[0]);
+      }
       return json(200, { job: updated?.[0] });
+    }
+
+    if (event.httpMethod === "DELETE") {
+      const adminError = requireAdmin(event);
+      if (adminError) return json(401, { error: adminError });
+      const body = JSON.parse(event.body || "{}");
+      if (!body.id) return json(400, { error: "Job id is required." });
+      const id = encodeURIComponent(body.id);
+      await supabase(`green_grin_message_log?job_id=eq.${id}`, { method: "DELETE" });
+      await supabase(`green_grin_jobs?id=eq.${id}`, { method: "DELETE" });
+      return json(200, { ok: true });
     }
 
     return json(405, { error: "Method not allowed." });

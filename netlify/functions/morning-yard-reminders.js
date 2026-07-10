@@ -20,6 +20,24 @@ function localDate(date = new Date()) {
   return `${value.year}-${value.month}-${value.day}`;
 }
 
+function dateOnly(value) {
+  return String(value || "").split("T")[0];
+}
+
+function localWeekday(value) {
+  const [year, month, day] = dateOnly(value).split("-").map(Number);
+  return new Date(year, month - 1, day).getDay();
+}
+
+function isServiceToday(job, today) {
+  if (job.recurring_weekly && job.schedule_start_date && job.schedule_end_date) {
+    const start = dateOnly(job.schedule_start_date);
+    const end = dateOnly(job.schedule_end_date);
+    return today >= start && today <= end && localWeekday(today) === localWeekday(start);
+  }
+  return dateOnly(job.scheduled_date) === today;
+}
+
 function localTime(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TIME_ZONE,
@@ -87,16 +105,17 @@ exports.handler = async () => {
 
   const today = localDate();
   const nowTime = localTime();
-  const start = encodeURIComponent(`${today}T00:00:00`);
-  const end = encodeURIComponent(`${today}T23:59:59`);
-  const jobs = await supabase(
-    `green_grin_jobs?select=*&scheduled_date=gte.${start}&scheduled_date=lte.${end}&status=neq.Completed&limit=100`
-  );
+  const jobs = await supabase("green_grin_jobs?select=*&status=neq.Completed&limit=200");
 
   let sent = 0;
   let skipped = 0;
 
   for (const job of jobs || []) {
+    if (!isServiceToday(job, today)) {
+      skipped += 1;
+      continue;
+    }
+
     const reminderTime = String(job.cleanup_reminder_time || "08:00").slice(0, 5);
     if (reminderTime > nowTime) {
       skipped += 1;
