@@ -1634,6 +1634,20 @@
         : `<div class="invoice"><div class="invoice-head"><strong>No invoices yet</strong><span class="badge warn">Draft</span></div></div>`;
     }
 
+    function downloadArchive(archive) {
+      if (!archive) return;
+      const code = archive.customer_code || "GG-ARCHIVE";
+      const name = (archive.name || "Customer").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+      const blob = new Blob([JSON.stringify(archive, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Archived Customers - ${code} - ${name || "Customer"}.json`;
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }
+
     function renderAccount(data = {}) {
       accountData = data || {};
       const customer = accountData.customer || {};
@@ -1643,6 +1657,7 @@
       const nextJob = nextScheduledJob(jobs);
       const currentJob = nextJob || newestJob(jobs);
       const currentPrice = money(customer.monthly_price || currentJob?.monthly_price);
+      if (customer.customer_code) $("#account-pill").textContent = customer.customer_code;
 
       $("#customer_name").value = customer.full_name || activeAccount?.user_metadata?.name || "";
       $("#phone").value = customer.phone || "";
@@ -1729,8 +1744,9 @@
         <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
             <strong>${job.customer_name || "Customer"}</strong>
-            <span class="badge">${job.status || "New"}</span>
+            <span class="badge">${job.customer_code || "No ID"}</span>
           </div>
+          <p class="muted">Status: ${job.status || "New"}</p>
           <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
           <p class="muted">Morning text: ${reminderTime}</p>
           ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
@@ -1769,8 +1785,9 @@
         <div class="job" data-id="${job.id}">
           <div class="job-head">
             <strong>${job.customer_name || "Customer"}</strong>
-            <span class="badge">${job.status || "Scheduled"}</span>
+            <span class="badge">${job.customer_code || job.status || "Scheduled"}</span>
           </div>
+          <p class="muted">Status: ${job.status || "Scheduled"}</p>
           <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
           <p>${job.address || ""}</p>
           <p class="muted">${job.notes || ""}</p>
@@ -1786,8 +1803,9 @@
         <div class="job" data-id="${employee.id}">
           <div class="job-head">
             <strong>${employee.full_name || employee.email}</strong>
-            <span class="badge">${employee.status}</span>
+            <span class="badge">${employee.employee_code || "GGE-NEW"}</span>
           </div>
+          <p class="muted">Status: ${employee.status}</p>
           <p class="muted">${employee.email}</p>
           <p class="muted">${employee.phone || ""}</p>
           <div class="two" style="margin-top: 12px;">
@@ -2094,11 +2112,12 @@
             email: card.dataset.email || ""
           };
           if (customerAction === "delete" && !confirm("Delete this customer and their saved jobs? This cannot be undone.")) return;
-          await requestJson("portal-customers", {
+          const result = await requestJson("portal-customers", {
             method: customerAction === "delete" ? "DELETE" : "PATCH",
             headers: { "x-admin-pin": pin },
             body: JSON.stringify(payload)
           });
+          if (customerAction === "delete") downloadArchive(result.archive);
         } else if (action === "delete-job") {
           if (!confirm("Delete this job forever? This cannot be undone.")) return;
           await requestJson("portal-jobs", {

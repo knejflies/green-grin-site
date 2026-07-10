@@ -58,6 +58,24 @@ async function supabase(path, options = {}) {
   return data;
 }
 
+function employeeCodeNumber(code) {
+  const match = String(code || "").match(/GGE-(\d{4})$/);
+  return match ? Number(match[1]) : 0;
+}
+
+async function nextEmployeeCode() {
+  const rows = await supabase("green_grin_employees?select=employee_code&employee_code=not.is.null&order=employee_code.desc&limit=1");
+  const counters = await supabase("green_grin_counters?select=*&name=eq.employee_code&limit=1");
+  const current = counters?.[0]?.last_value || 0;
+  const next = Math.max(current, employeeCodeNumber(rows?.[0]?.employee_code)) + 1;
+  await supabase("green_grin_counters?on_conflict=name", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({ name: "employee_code", last_value: next })
+  });
+  return `GGE-${String(next).padStart(4, "0")}`;
+}
+
 async function employeeForUser(user) {
   const email = encodeURIComponent((user.email || "").toLowerCase());
   let rows = await supabase(`green_grin_employees?select=*&user_id=eq.${encodeURIComponent(user.id)}&limit=1`);
@@ -73,6 +91,18 @@ async function employeeForUser(user) {
   return rows?.[0] || null;
 }
 
+async function deleteAuthUser(userId) {
+  if (!userId) return false;
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method: "DELETE",
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+    }
+  });
+  return response.ok;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
   const setupError = requireSetup();
@@ -81,9 +111,14 @@ exports.handler = async (event) => {
   try {
     if (event.httpMethod === "POST") {
       const body = JSON.parse(event.body || "{}");
+      const email = (body.email || "").toLowerCase();
+      const existing = email
+        ? await supabase(`green_grin_employees?select=*&email=eq.${encodeURIComponent(email)}&limit=1`)
+        : [];
       const employee = {
+        employee_code: existing?.[0]?.employee_code || await nextEmployeeCode(),
         full_name: body.full_name || "",
-        email: (body.email || "").toLowerCase(),
+        email,
         phone: body.phone || "",
         status: "Pending"
       };
@@ -136,8 +171,11 @@ exports.handler = async (event) => {
       if (adminError) return json(401, { error: adminError });
       const body = JSON.parse(event.body || "{}");
       if (!body.id) return json(400, { error: "Employee id is required." });
+      const rows = await supabase(`green_grin_employees?select=*&id=eq.${encodeURIComponent(body.id)}&limit=1`);
+      const employee = rows?.[0] || null;
       await supabase(`green_grin_employees?id=eq.${encodeURIComponent(body.id)}`, { method: "DELETE" });
-      return json(200, { ok: true });
+      const authDeleted = await deleteAuthUser(employee?.user_id);
+      return json(200, { ok: true, authDeleted });
     }
 
     return json(405, { error: "Method not allowed." });

@@ -1,8 +1,18 @@
 create extension if not exists pgcrypto;
 
+create table if not exists public.green_grin_counters (
+  name text primary key,
+  last_value integer not null default 0
+);
+
+insert into public.green_grin_counters (name, last_value)
+values ('customer_code', 0), ('employee_code', 0)
+on conflict (name) do nothing;
+
 create table if not exists public.green_grin_jobs (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
+  customer_code text,
   customer_user_id uuid references auth.users(id) on delete set null,
   customer_name text not null,
   phone text not null,
@@ -28,6 +38,9 @@ alter table public.green_grin_jobs
   add column if not exists customer_user_id uuid references auth.users(id) on delete set null;
 
 alter table public.green_grin_jobs
+  add column if not exists customer_code text;
+
+alter table public.green_grin_jobs
   add column if not exists last_cleanup_reminder_sent_at timestamptz;
 
 alter table public.green_grin_jobs
@@ -51,6 +64,7 @@ alter table public.green_grin_jobs
 create table if not exists public.green_grin_customers (
   id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
+  customer_code text unique,
   full_name text,
   phone text,
   email text,
@@ -65,6 +79,9 @@ create table if not exists public.green_grin_customers (
 
 alter table public.green_grin_customers
   add column if not exists active boolean not null default true;
+
+alter table public.green_grin_customers
+  add column if not exists customer_code text unique;
 
 alter table public.green_grin_customers
   add column if not exists billing_plan text;
@@ -93,6 +110,7 @@ create table if not exists public.green_grin_properties (
 create table if not exists public.green_grin_employees (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
+  employee_code text unique,
   user_id uuid references auth.users(id) on delete set null,
   full_name text not null,
   email text not null unique,
@@ -104,6 +122,9 @@ create table if not exists public.green_grin_employees (
 
 alter table public.green_grin_employees
   add column if not exists employee_pin text;
+
+alter table public.green_grin_employees
+  add column if not exists employee_code text unique;
 
 create table if not exists public.green_grin_message_log (
   id uuid primary key default gen_random_uuid(),
@@ -168,14 +189,17 @@ create policy "Employees can read own employee profile"
   using (auth.uid() = user_id);
 
 create index if not exists green_grin_jobs_phone_idx on public.green_grin_jobs(phone);
+create index if not exists green_grin_jobs_customer_code_idx on public.green_grin_jobs(customer_code);
 create index if not exists green_grin_jobs_customer_user_idx on public.green_grin_jobs(customer_user_id);
 create index if not exists green_grin_jobs_created_at_idx on public.green_grin_jobs(created_at desc);
 create index if not exists green_grin_jobs_scheduled_date_idx on public.green_grin_jobs(scheduled_date);
 create index if not exists green_grin_properties_customer_user_idx on public.green_grin_properties(customer_user_id);
 create index if not exists green_grin_employees_user_id_idx on public.green_grin_employees(user_id);
+create index if not exists green_grin_employees_employee_code_idx on public.green_grin_employees(employee_code);
 create index if not exists green_grin_employees_email_idx on public.green_grin_employees(email);
 create index if not exists green_grin_employees_status_idx on public.green_grin_employees(status);
 create index if not exists green_grin_employees_pin_idx on public.green_grin_employees(employee_pin);
 create index if not exists green_grin_message_log_created_at_idx on public.green_grin_message_log(created_at desc);
+create index if not exists green_grin_customers_customer_code_idx on public.green_grin_customers(customer_code);
 
 notify pgrst, 'reload schema';

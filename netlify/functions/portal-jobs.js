@@ -84,6 +84,25 @@ async function activeEmployeeByPin(event) {
   return rows?.[0] || null;
 }
 
+function codeNumber(code) {
+  const match = String(code || "").match(/GG-(\d{4})$/);
+  return match ? Number(match[1]) : 0;
+}
+
+async function nextCustomerCode() {
+  const customers = await supabase("green_grin_customers?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
+  const jobs = await supabase("green_grin_jobs?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
+  const counters = await supabase("green_grin_counters?select=*&name=eq.customer_code&limit=1");
+  const current = counters?.[0]?.last_value || 0;
+  const next = Math.max(current, codeNumber(customers?.[0]?.customer_code), codeNumber(jobs?.[0]?.customer_code)) + 1;
+  await supabase("green_grin_counters?on_conflict=name", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({ name: "customer_code", last_value: next })
+  });
+  return `GG-${String(next).padStart(4, "0")}`;
+}
+
 async function matchingCustomer(body) {
   const email = (body.email || "").toLowerCase().trim();
   const phone = (body.phone || "").trim();
@@ -98,12 +117,28 @@ async function matchingCustomer(body) {
   return null;
 }
 
+async function matchingCustomerCode(body, customer) {
+  if (customer?.customer_code) return customer.customer_code;
+  const email = (body.email || "").toLowerCase().trim();
+  const phone = (body.phone || "").trim();
+  if (email) {
+    const rows = await supabase(`green_grin_jobs?select=customer_code&email=eq.${encodeURIComponent(email)}&customer_code=not.is.null&order=created_at.desc&limit=1`);
+    if (rows?.[0]?.customer_code) return rows[0].customer_code;
+  }
+  if (phone) {
+    const rows = await supabase(`green_grin_jobs?select=customer_code&phone=eq.${encodeURIComponent(phone)}&customer_code=not.is.null&order=created_at.desc&limit=1`);
+    if (rows?.[0]?.customer_code) return rows[0].customer_code;
+  }
+  return await nextCustomerCode();
+}
+
 async function syncCustomerPlan(customerUserId, job) {
   if (!customerUserId) return;
   await supabase(`green_grin_customers?id=eq.${encodeURIComponent(customerUserId)}`, {
     method: "PATCH",
     body: JSON.stringify({
       billing_plan: job.service_type || null,
+      customer_code: job.customer_code || null,
       billing_status: job.status || "Scheduled",
       monthly_price: job.monthly_price || null,
       annual_price: job.annual_price || null,
@@ -128,11 +163,13 @@ exports.handler = async (event) => {
       if (adminError) return json(401, { error: adminError });
       const user = adminCreate ? null : await optionalUser(event);
       const customer = adminCreate ? await matchingCustomer(body) : null;
+      const customerCode = adminCreate ? await matchingCustomerCode(body, customer) : null;
       const scheduleStartDate = adminCreate ? body.schedule_start_date || body.scheduled_date || null : null;
       const scheduleEndDate = adminCreate ? body.schedule_end_date || null : null;
       const scheduledDate = adminCreate ? scheduleStartDate : null;
       const job = {
         customer_user_id: customer?.id || user?.id || null,
+        customer_code: customerCode,
         customer_name: body.customer_name || "",
         phone: body.phone || "",
         email: body.email || user?.email || "",
@@ -174,7 +211,7 @@ exports.handler = async (event) => {
       if (params.get("employee") === "1") {
         const employee = await activeEmployee(event) || await activeEmployeeByPin(event);
         if (!employee) return json(401, { error: "Employee access was not found. Sign in or use the PIN the owner set for you." });
-        const jobs = await supabase("green_grin_jobs?select=id,customer_name,address,service_type,scheduled_date,recurring_weekly,schedule_start_date,schedule_end_date,status,notes&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80");
+        const jobs = await supabase("green_grin_jobs?select=id,customer_code,customer_name,address,service_type,scheduled_date,recurring_weekly,schedule_start_date,schedule_end_date,status,notes&status=neq.Completed&order=scheduled_date.asc.nullslast&limit=80");
         return json(200, { jobs });
       }
 

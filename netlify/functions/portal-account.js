@@ -52,9 +52,31 @@ async function supabase(path, options = {}) {
   return data;
 }
 
+function codeNumber(code) {
+  const match = String(code || "").match(/GG-(\d{4})$/);
+  return match ? Number(match[1]) : 0;
+}
+
+async function nextCustomerCode() {
+  const customers = await supabase("green_grin_customers?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
+  const jobs = await supabase("green_grin_jobs?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
+  const counters = await supabase("green_grin_counters?select=*&name=eq.customer_code&limit=1");
+  const current = counters?.[0]?.last_value || 0;
+  const next = Math.max(current, codeNumber(customers?.[0]?.customer_code), codeNumber(jobs?.[0]?.customer_code)) + 1;
+  await supabase("green_grin_counters?on_conflict=name", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({ name: "customer_code", last_value: next })
+  });
+  return `GG-${String(next).padStart(4, "0")}`;
+}
+
 async function ensureCustomer(user) {
+  const existing = await supabase(`green_grin_customers?select=*&id=eq.${encodeURIComponent(user.id)}&limit=1`);
+  const existingCustomer = existing?.[0];
   const profile = {
     id: user.id,
+    customer_code: existingCustomer?.customer_code || await nextCustomerCode(),
     email: user.email || "",
     full_name: user.user_metadata?.name || user.email?.split("@")[0] || "",
     billing_status: "Not connected"

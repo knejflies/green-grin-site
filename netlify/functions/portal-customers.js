@@ -52,6 +52,41 @@ async function deleteAuthUser(userId) {
   return response.ok;
 }
 
+async function archiveForCustomer({ customerUserId, phone, email }) {
+  const archive = {
+    archived_at: new Date().toISOString(),
+    customer: null,
+    properties: [],
+    jobs: [],
+    message_logs: []
+  };
+
+  if (customerUserId) {
+    const customers = await supabase(`green_grin_customers?select=*&id=eq.${encodeURIComponent(customerUserId)}&limit=1`);
+    archive.customer = customers?.[0] || null;
+    archive.properties = await supabase(`green_grin_properties?select=*&customer_user_id=eq.${encodeURIComponent(customerUserId)}`);
+  }
+
+  const jobMatches = [];
+  if (customerUserId) jobMatches.push(`customer_user_id.eq.${encodeURIComponent(customerUserId)}`);
+  if (phone) jobMatches.push(`phone.eq.${encodeURIComponent(phone)}`);
+  if (email) jobMatches.push(`email.eq.${encodeURIComponent(email)}`);
+  if (jobMatches.length) {
+    archive.jobs = await supabase(`green_grin_jobs?select=*&or=(${jobMatches.join(",")})&order=created_at.desc`);
+  }
+
+  const jobIds = archive.jobs.map((job) => job.id).filter(Boolean);
+  if (jobIds.length) {
+    archive.message_logs = await supabase(`green_grin_message_log?select=*&job_id=in.(${jobIds.join(",")})&order=created_at.desc`);
+  }
+
+  archive.customer_code = archive.customer?.customer_code || archive.jobs.find((job) => job.customer_code)?.customer_code || null;
+  archive.name = archive.customer?.full_name || archive.jobs[0]?.customer_name || "";
+  archive.phone = archive.customer?.phone || phone || archive.jobs[0]?.phone || "";
+  archive.email = archive.customer?.email || email || archive.jobs[0]?.email || "";
+  return archive;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
 
@@ -81,12 +116,20 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod === "DELETE") {
+      const archive = await archiveForCustomer({ customerUserId, phone, email });
+      const jobIds = archive.jobs.map((job) => job.id).filter(Boolean);
+      if (jobIds.length) {
+        await supabase(`green_grin_message_log?job_id=in.(${jobIds.join(",")})`, { method: "DELETE" });
+      }
+
       if (customerUserId) {
         await supabase(`green_grin_properties?customer_user_id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
-        await supabase(`green_grin_customers?id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
         await supabase(`green_grin_jobs?customer_user_id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
+        if (phone) await supabase(`green_grin_jobs?phone=eq.${encodeURIComponent(phone)}`, { method: "DELETE" });
+        if (email) await supabase(`green_grin_jobs?email=eq.${encodeURIComponent(email)}`, { method: "DELETE" });
+        await supabase(`green_grin_customers?id=eq.${encodeURIComponent(customerUserId)}`, { method: "DELETE" });
         const authDeleted = await deleteAuthUser(customerUserId);
-        return json(200, { ok: true, authDeleted });
+        return json(200, { ok: true, authDeleted, archive });
       }
 
       if (phone) {
@@ -95,7 +138,7 @@ exports.handler = async (event) => {
       if (email) {
         await supabase(`green_grin_jobs?email=eq.${encodeURIComponent(email)}`, { method: "DELETE" });
       }
-      return json(200, { ok: true, authDeleted: false });
+      return json(200, { ok: true, authDeleted: false, archive });
     }
 
     return json(405, { error: "Method not allowed." });
