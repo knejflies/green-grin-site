@@ -9,6 +9,21 @@ insert into public.green_grin_counters (name, last_value)
 values ('customer_code', 0), ('employee_code', 0)
 on conflict (name) do nothing;
 
+do $$
+begin
+  if to_regclass('public.green_grin_jobs') is not null then
+    alter table public.green_grin_jobs add column if not exists customer_code text;
+  end if;
+
+  if to_regclass('public.green_grin_customers') is not null then
+    alter table public.green_grin_customers add column if not exists customer_code text;
+  end if;
+
+  if to_regclass('public.green_grin_employees') is not null then
+    alter table public.green_grin_employees add column if not exists employee_code text;
+  end if;
+end $$;
+
 create table if not exists public.green_grin_jobs (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -81,7 +96,7 @@ alter table public.green_grin_customers
   add column if not exists active boolean not null default true;
 
 alter table public.green_grin_customers
-  add column if not exists customer_code text unique;
+  add column if not exists customer_code text;
 
 alter table public.green_grin_customers
   add column if not exists billing_plan text;
@@ -124,7 +139,7 @@ alter table public.green_grin_employees
   add column if not exists employee_pin text;
 
 alter table public.green_grin_employees
-  add column if not exists employee_code text unique;
+  add column if not exists employee_code text;
 
 create table if not exists public.green_grin_message_log (
   id uuid primary key default gen_random_uuid(),
@@ -201,5 +216,13 @@ create index if not exists green_grin_employees_status_idx on public.green_grin_
 create index if not exists green_grin_employees_pin_idx on public.green_grin_employees(employee_pin);
 create index if not exists green_grin_message_log_created_at_idx on public.green_grin_message_log(created_at desc);
 create index if not exists green_grin_customers_customer_code_idx on public.green_grin_customers(customer_code);
+
+create unique index if not exists green_grin_customers_customer_code_unique
+  on public.green_grin_customers(customer_code)
+  where customer_code is not null;
+
+create unique index if not exists green_grin_employees_employee_code_unique
+  on public.green_grin_employees(employee_code)
+  where employee_code is not null;
 
 notify pgrst, 'reload schema';
