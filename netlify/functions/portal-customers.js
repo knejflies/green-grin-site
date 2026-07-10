@@ -139,29 +139,6 @@ exports.handler = async (event) => {
         });
       }
 
-      for (const job of jobs || []) {
-        const key = job.customer_code || job.email || job.phone || job.customer_name;
-        if (!key || byKey.has(key)) continue;
-        byKey.set(key, {
-          id: "",
-          customer_user_id: job.customer_user_id || "",
-          customer_code: job.customer_code || "",
-          name: job.customer_name || job.email || job.phone || "Customer",
-          phone: job.phone || "",
-          email: job.email || "",
-          active: true,
-          plan: job.service_type || "",
-          billing_status: job.status || "",
-          monthly_price: job.monthly_price || null,
-          annual_price: job.annual_price || null,
-          text_cleanup_reminders: true,
-          text_done_messages: true,
-          email_monthly_receipts: false,
-          property: { address: job.address || "", yard_notes: job.notes || "" },
-          jobs: [job]
-        });
-      }
-
       return json(200, { customers: [...byKey.values()] });
     }
 

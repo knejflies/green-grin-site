@@ -636,13 +636,16 @@
           </div>
           <p class="muted">Status: ${job.status || "New"}</p>
           <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
-          <p class="muted">Morning text: ${reminderTime}</p>
-          ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
-          <p>${job.address || ""}</p>
-          <p class="muted">${job.notes || ""}</p>
-          ${admin ? `<p class="muted">Assigned to: ${cleanText(job.assigned_employee_name || "Unassigned")}</p>` : ""}
+          ${admin ? `<div class="row-actions"><button class="button small secondary" data-action="toggle-job" type="button">Expand</button></div>` : ""}
+          <div class="${admin ? "job-collapse" : ""}" ${admin ? "hidden" : ""}>
+            <p class="muted">Morning text: ${reminderTime}</p>
+            ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
+            <p>${job.address || ""}</p>
+            <p class="muted">${job.notes || ""}</p>
+            ${admin ? `<p class="muted">Assigned to: ${cleanText(job.assigned_employee_name || "Unassigned")}</p>` : ""}
+          </div>
           ${admin ? `
-            <div class="two" style="margin-top: 12px;">
+            <div class="two job-collapse" style="margin-top: 12px;" hidden>
               <input type="date" class="schedule-input" value="${scheduleStart}" />
               <input type="date" class="schedule-end-input" value="${scheduleEnd}" />
               <input type="time" class="reminder-time-input" value="${reminderTime}" />
@@ -658,7 +661,7 @@
                 ${employeeOptions(job.assigned_employee_id || "")}
               </select>
             </div>
-            <div class="admin-actions">
+            <div class="admin-actions job-collapse" hidden>
               <button class="button small ghost" data-action="schedule" type="button">Save Schedule</button>
               <button class="button small" data-action="objects" type="button">Text: Pick Up Yard Objects</button>
               <button class="button small secondary" data-action="completed" type="button">Text: Done</button>
@@ -1192,6 +1195,15 @@
       const id = card.dataset.id;
       const action = button.dataset.action;
       const customerAction = button.dataset.customerAction;
+      if (action === "toggle-job") {
+        const panels = card.querySelectorAll(".job-collapse");
+        const isOpen = panels.length ? !panels[0].hidden : false;
+        panels.forEach((panel) => {
+          panel.hidden = isOpen;
+        });
+        button.textContent = isOpen ? "Expand" : "Collapse";
+        return;
+      }
       const scheduled_date = card.querySelector(".schedule-input")?.value;
       const schedule_end_date = card.querySelector(".schedule-end-input")?.value;
       const cleanup_reminder_time = card.querySelector(".reminder-time-input")?.value;
