@@ -76,6 +76,24 @@ async function nextEmployeeCode() {
   return `GGE-${String(next).padStart(4, "0")}`;
 }
 
+async function ensureEmployeeCode(employee) {
+  if (!employee || employee.employee_code) return employee || null;
+  const employeeCode = await nextEmployeeCode();
+  const rows = await supabase(`green_grin_employees?id=eq.${encodeURIComponent(employee.id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ employee_code: employeeCode })
+  });
+  return rows?.[0] || { ...employee, employee_code: employeeCode };
+}
+
+async function ensureEmployeeCodes(employees) {
+  const fixed = [];
+  for (const employee of employees || []) {
+    fixed.push(await ensureEmployeeCode(employee));
+  }
+  return fixed;
+}
+
 async function employeeForUser(user) {
   const email = encodeURIComponent((user.email || "").toLowerCase());
   let rows = await supabase(`green_grin_employees?select=*&user_id=eq.${encodeURIComponent(user.id)}&limit=1`);
@@ -88,7 +106,7 @@ async function employeeForUser(user) {
       });
     }
   }
-  return rows?.[0] || null;
+  return await ensureEmployeeCode(rows?.[0]);
 }
 
 async function deleteAuthUser(userId) {
@@ -139,7 +157,7 @@ exports.handler = async (event) => {
       if (params.get("admin") === "1") {
         const adminError = requireAdmin(event);
         if (adminError) return json(401, { error: adminError });
-        const employees = await supabase("green_grin_employees?select=*&order=created_at.desc&limit=100");
+        const employees = await ensureEmployeeCodes(await supabase("green_grin_employees?select=*&order=created_at.desc&limit=100"));
         return json(200, { employees });
       }
 
