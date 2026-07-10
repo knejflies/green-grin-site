@@ -149,7 +149,7 @@ async function loadAccount(user) {
   if (customer.customer_code) invoiceMatches.push(`customer_code.eq.${encodeURIComponent(customer.customer_code)}`);
   if (user.email) invoiceMatches.push(`email.eq.${encodeURIComponent(user.email)}`);
   if (customer.phone) invoiceMatches.push(`phone.eq.${encodeURIComponent(customer.phone)}`);
-  const invoices = await supabase(`green_grin_invoices?select=*&active=eq.true&or=(${invoiceMatches.join(",")})&order=created_at.desc&limit=40`);
+  const invoices = await supabase(`green_grin_invoices?select=*&active=eq.true&status=neq.Draft&or=(${invoiceMatches.join(",")})&order=created_at.desc&limit=40`);
   const jobIds = jobs.map((job) => job.id).filter(Boolean);
   const logs = jobIds.length
     ? await supabase(`green_grin_message_log?select=*&job_id=in.(${jobIds.join(",")})&order=created_at.desc&limit=30`)

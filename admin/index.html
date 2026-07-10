@@ -1255,7 +1255,10 @@
               <label for="invoice_payment_url">Pay link</label>
               <input id="invoice_payment_url" type="url" placeholder="Optional invoice payment link" />
             </div>
-            <button id="invoice-submit" class="button" type="submit">Save Invoice</button>
+            <div class="row-actions">
+              <button id="invoice-submit" class="button ghost" data-invoice-intent="draft" type="submit">Save Draft</button>
+              <button id="invoice-send" class="button" data-invoice-intent="send" type="submit">Send Invoice</button>
+            </div>
           </form>
           <div id="invoice-result" aria-live="polite"></div>
         </div>
@@ -1665,6 +1668,7 @@
             ${invoice.service_line && invoice.notes ? `<p class="muted">${cleanText(invoice.notes)}</p>` : ""}
             <div class="row-actions">
               <button class="button small ghost" data-invoice-action="edit" type="button">Edit</button>
+              ${invoice.status === "Draft" ? `<button class="button small" data-invoice-action="send" type="button">Send</button>` : ""}
               <button class="button small ghost" data-invoice-action="delete" type="button">Delete</button>
             </div>
           </div>
@@ -2149,6 +2153,8 @@
 
     $("#invoice-form").addEventListener("submit", async (event) => {
       event.preventDefault();
+      const form = event.currentTarget || $("#invoice-form");
+      const intent = event.submitter?.dataset.invoiceIntent || "draft";
       const id = $("#invoice_id").value;
       const selectedCustomer = invoiceCustomers[Number($("#invoice_customer").value)] || null;
       if (!selectedCustomer) {
@@ -2164,24 +2170,24 @@
         email: selectedCustomer.email || "",
         amount: $("#invoice_amount").value || 0,
         due_date: $("#invoice_due").value || null,
-        status: $("#invoice_status").value,
+        status: intent === "send" ? "Sent" : "Draft",
         service_line: $("#invoice_custom_service").value || $("#invoice_notes").value || "Monthly service",
         notes: $("#invoice_notes").value || "Monthly service",
         payment_url: $("#invoice_payment_url").value || ""
       };
-      $("#invoice-result").innerHTML = notice(id ? "Updating invoice..." : "Saving invoice...");
+      $("#invoice-result").innerHTML = notice(intent === "send" ? "Sending invoice..." : "Saving draft...");
       try {
         await requestJson("portal-invoices", {
           method: id ? "PATCH" : "POST",
           headers: adminHeaders(),
           body: JSON.stringify(payload)
         });
-        event.currentTarget.reset();
+        form?.reset();
         $("#invoice_id").value = "";
-        $("#invoice-submit").textContent = "Save Invoice";
+        $("#invoice-submit").textContent = "Save Draft";
         renderInvoiceCustomerOptions();
         await loadInvoices();
-        $("#invoice-result").innerHTML = notice(id ? "Invoice updated." : "Invoice saved to that customer account.");
+        $("#invoice-result").innerHTML = notice(intent === "send" ? "Invoice sent to that customer account." : "Invoice saved as a draft.");
       } catch (error) {
         $("#invoice-result").innerHTML = notice(error.message, true);
       }
@@ -2222,6 +2228,21 @@
         }
         return;
       }
+      if (button.dataset.invoiceAction === "send") {
+        try {
+          $("#invoice-result").innerHTML = notice("Sending invoice...");
+          await requestJson("portal-invoices", {
+            method: "PATCH",
+            headers: adminHeaders(),
+            body: JSON.stringify({ ...invoice, status: "Sent" })
+          });
+          await loadInvoices();
+          $("#invoice-result").innerHTML = notice("Invoice sent to that customer account.");
+        } catch (error) {
+          $("#invoice-result").innerHTML = notice(error.message, true);
+        }
+        return;
+      }
       $("#invoice_id").value = invoice.id;
       const index = invoiceCustomers.findIndex((customer) =>
         (invoice.customer_user_id && (customer.customer_user_id || customer.id) === invoice.customer_user_id) ||
@@ -2235,7 +2256,7 @@
       $("#invoice_custom_service").value = invoice.service_line || "";
       $("#invoice_notes").value = invoice.notes || "";
       $("#invoice_payment_url").value = invoice.payment_url || "";
-      $("#invoice-submit").textContent = "Update Invoice";
+      $("#invoice-submit").textContent = "Save Draft";
       $("#invoice-result").innerHTML = notice("Editing invoice.");
     });
 
@@ -2290,7 +2311,7 @@
         $("#invoice_custom_service").value = customer.plan || "";
         $("#invoice_notes").value = customer.plan || "Monthly service";
         $("#invoice_payment_url").value = "";
-        $("#invoice-submit").textContent = "Save Invoice";
+        $("#invoice-submit").textContent = "Save Draft";
         openTab("invoices");
         return;
       }
