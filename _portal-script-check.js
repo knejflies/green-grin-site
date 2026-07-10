@@ -632,9 +632,11 @@
         <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
             <strong>${job.customer_name || "Customer"}</strong>
-            <span class="badge">${job.customer_code || "No ID"}</span>
+            <span class="job-head-actions">
+              <span class="badge">${job.customer_code || "No ID"}</span>
+              ${admin ? `<button class="job-toggle" data-action="toggle-job" type="button" aria-label="Expand job" aria-expanded="false">&gt;</button>` : ""}
+            </span>
           </div>
-          ${admin ? `<div class="row-actions"><button class="button small secondary" data-action="toggle-job" type="button">Expand</button></div>` : ""}
           <div class="${admin ? "job-collapse" : ""}" ${admin ? "hidden" : ""}>
             <p class="muted">Status: ${job.status || "New"}</p>
             <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
@@ -1201,7 +1203,9 @@
         panels.forEach((panel) => {
           panel.hidden = isOpen;
         });
-        button.textContent = isOpen ? "Expand" : "Collapse";
+        button.textContent = isOpen ? ">" : "v";
+        button.setAttribute("aria-expanded", String(!isOpen));
+        button.setAttribute("aria-label", isOpen ? "Expand job" : "Collapse job");
         return;
       }
       const scheduled_date = card.querySelector(".schedule-input")?.value;
