@@ -453,6 +453,45 @@
       line-height: 1.1;
     }
 
+    .job-collapse[hidden],
+    .admin-job.collapsed-job .job-collapse {
+      display: none !important;
+    }
+
+    .customer-card {
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+
+    .customer-card .job-head {
+      margin-bottom: 4px;
+    }
+
+    .customer-card strong {
+      font-size: 0.96rem;
+      line-height: 1.1;
+    }
+
+    .customer-summary {
+      margin: 0;
+      font-size: 0.86rem;
+    }
+
+    .customer-card .admin-actions {
+      margin-top: 10px;
+    }
+
+    .customer-card .button.small {
+      min-height: 34px;
+      padding: 7px 10px;
+      font-size: 0.86rem;
+    }
+
+    .customer-collapse[hidden],
+    .customer-card.collapsed-customer .customer-collapse {
+      display: none !important;
+    }
+
     .step {
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -1786,28 +1825,31 @@
       const plan = customer.plan || job?.service_type || "No plan set";
       const price = monthlyAmount ? `$${Number(monthlyAmount).toFixed(2)}/month` : "No monthly payment set";
       return `
-        <div class="job" data-customer-index="${index}">
+        <div class="job customer-card collapsed-customer" data-customer-index="${index}">
           <div class="job-head">
             <strong>${cleanText(customer.name || "Customer")}</strong>
-            <span class="badge">${cleanText(customer.customer_code || "No ID")}</span>
+            <span class="job-head-actions">
+              <span class="badge">${cleanText(customer.customer_code || "No ID")}</span>
+              <button class="job-toggle" data-customer-list-action="toggle" type="button" aria-label="Expand customer" aria-expanded="false">&gt;</button>
+            </span>
           </div>
-          <p class="muted">${cleanText(customer.email || "")}${customer.phone ? ` | ${cleanText(customer.phone)}` : ""}</p>
-          <p>${cleanText(property.address || "No property address saved yet.")}</p>
-          <p class="muted">${cleanText(plan)} | Monthly payment: ${cleanText(price)}</p>
+          <p class="muted customer-summary">${cleanText(customer.phone || customer.email || "No contact saved")} | ${cleanText(price)}</p>
           <div class="customer-collapse" hidden>
+            <p class="muted">${cleanText(customer.email || "")}${customer.phone ? ` | ${cleanText(customer.phone)}` : ""}</p>
+            <p>${cleanText(property.address || "No property address saved yet.")}</p>
+            <p class="muted">${cleanText(plan)} | Monthly payment: ${cleanText(price)}</p>
             <p class="muted">${cleanText(preferenceLine(customer))}</p>
             <p class="muted">Yearly quote: ${annualAmount ? `$${Number(annualAmount).toFixed(2)}` : "Not set"}</p>
             <div class="status-box">
               ${(customer.jobs || []).length ? (customer.jobs || []).slice(0, 4).map((item) => upcomingStep(item)).join("") : notice("No jobs created for this customer yet.")}
             </div>
-          </div>
-          <div class="admin-actions">
-            <button class="button small secondary" data-customer-list-action="toggle" type="button">Expand</button>
-            <button class="button small secondary" data-customer-list-action="details" type="button">View Details</button>
-            <button class="button small" data-customer-list-action="fill-job" type="button">Create Booking</button>
-            <button class="button small" data-customer-list-action="invoice" type="button">Create Invoice</button>
-            <button class="button small" data-customer-list-action="monthly-invoice" type="button">Send Monthly Invoice</button>
-            <button class="button small ghost" data-customer-list-action="delete" type="button">Delete Customer</button>
+            <div class="admin-actions">
+              <button class="button small secondary" data-customer-list-action="details" type="button">View Details</button>
+              <button class="button small" data-customer-list-action="fill-job" type="button">Create Booking</button>
+              <button class="button small" data-customer-list-action="invoice" type="button">Create Invoice</button>
+              <button class="button small" data-customer-list-action="monthly-invoice" type="button">Send Monthly Invoice</button>
+              <button class="button small ghost" data-customer-list-action="delete" type="button">Delete Customer</button>
+            </div>
           </div>
         </div>
       `;
@@ -2343,9 +2385,12 @@
 
       if (action === "toggle") {
         const collapse = card.querySelector(".customer-collapse");
-        const isOpen = collapse && !collapse.hidden;
-        if (collapse) collapse.hidden = isOpen;
-        button.textContent = isOpen ? "Expand" : "Collapse";
+        const willOpen = card.classList.contains("collapsed-customer");
+        if (collapse) collapse.hidden = !willOpen;
+        card.classList.toggle("collapsed-customer", !willOpen);
+        button.textContent = willOpen ? "v" : ">";
+        button.setAttribute("aria-expanded", String(willOpen));
+        button.setAttribute("aria-label", willOpen ? "Collapse customer" : "Expand customer");
         return;
       }
 
@@ -2518,14 +2563,14 @@
       const customerAction = button.dataset.customerAction;
       if (action === "toggle-job") {
         const panels = card.querySelectorAll(".job-collapse");
-        const isOpen = panels.length ? !panels[0].hidden : false;
+        const willOpen = card.classList.contains("collapsed-job");
         panels.forEach((panel) => {
-          panel.hidden = isOpen;
+          panel.hidden = !willOpen;
         });
-        card.classList.toggle("collapsed-job", isOpen);
-        button.textContent = isOpen ? ">" : "v";
-        button.setAttribute("aria-expanded", String(!isOpen));
-        button.setAttribute("aria-label", isOpen ? "Expand job" : "Collapse job");
+        card.classList.toggle("collapsed-job", !willOpen);
+        button.textContent = willOpen ? "v" : ">";
+        button.setAttribute("aria-expanded", String(willOpen));
+        button.setAttribute("aria-label", willOpen ? "Collapse job" : "Expand job");
         return;
       }
       const scheduled_date = card.querySelector(".schedule-input")?.value;
