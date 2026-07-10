@@ -840,13 +840,6 @@
           </div>
           <button class="button" type="submit">Request Employee Access</button>
         </form>
-        <form id="staff-email-form">
-          <div>
-            <label for="staff-email">Employee email</label>
-            <input id="staff-email" type="email" placeholder="employee@example.com" />
-          </div>
-          <button class="button secondary" type="submit">Email Employee Sign-In Link</button>
-        </form>
         <form id="staff-login-form">
           <div>
             <label for="staff-pin">Employee PIN</label>
@@ -1501,24 +1494,6 @@
       } catch (error) {
         $("#staff-login-result").innerHTML = notice(error.message, true);
       }
-    });
-
-    $("#staff-email-form").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const email = $("#staff-email").value.trim();
-      localStorage.setItem("greenGrinEmployeeLogin", "1");
-      $("#staff-login-result").innerHTML = notice("Preparing employee sign-in link...");
-      if (!supabaseClient) {
-        $("#staff-login-result").innerHTML = notice("Employee sign-in is temporarily unavailable.", true);
-        return;
-      }
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.href.split("#")[0] }
-      });
-      $("#staff-login-result").innerHTML = error
-        ? notice(error.message, true)
-        : notice("Check that employee email for the sign-in link.");
     });
 
     $("#sign-out").addEventListener("click", async () => {

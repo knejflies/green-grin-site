@@ -52,6 +52,10 @@ async function supabase(path, options = {}) {
   return data;
 }
 
+function isMissingPreferenceColumn(error) {
+  return /text_cleanup_reminders|text_done_messages|email_monthly_receipts|schema cache/i.test(error?.message || "");
+}
+
 function codeNumber(code) {
   const match = String(code || "").match(/GG-(\d{4})$/);
   return match ? Number(match[1]) : 0;
@@ -83,23 +87,36 @@ async function nextCustomerCode() {
 async function ensureCustomer(user) {
   const existing = await supabase(`green_grin_customers?select=*&id=eq.${encodeURIComponent(user.id)}&limit=1`);
   const existingCustomer = existing?.[0];
-  const profile = {
+  const baseProfile = {
     id: user.id,
     customer_code: existingCustomer?.customer_code || await nextCustomerCode(),
     email: user.email || "",
     full_name: user.user_metadata?.name || user.email?.split("@")[0] || "",
-    billing_status: existingCustomer?.billing_status || "Not connected",
+    billing_status: existingCustomer?.billing_status || "Not connected"
+  };
+  const profile = {
+    ...baseProfile,
     text_cleanup_reminders: existingCustomer?.text_cleanup_reminders ?? true,
     text_done_messages: existingCustomer?.text_done_messages ?? true,
     email_monthly_receipts: existingCustomer?.email_monthly_receipts ?? false
   };
 
-  const rows = await supabase("green_grin_customers?on_conflict=id", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify(profile)
-  });
-  return rows?.[0] || profile;
+  try {
+    const rows = await supabase("green_grin_customers?on_conflict=id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify(profile)
+    });
+    return rows?.[0] || profile;
+  } catch (error) {
+    if (!isMissingPreferenceColumn(error)) throw error;
+    const rows = await supabase("green_grin_customers?on_conflict=id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify(baseProfile)
+    });
+    return rows?.[0] || baseProfile;
+  }
 }
 
 async function loadAccount(user) {
@@ -172,10 +189,21 @@ exports.handler = async (event) => {
         if (Object.prototype.hasOwnProperty.call(body.profile, "email_monthly_receipts")) {
           profileUpdate.email_monthly_receipts = !!body.profile.email_monthly_receipts;
         }
-        await supabase(`green_grin_customers?id=eq.${encodeURIComponent(user.id)}`, {
-          method: "PATCH",
-          body: JSON.stringify(profileUpdate)
-        });
+        try {
+          await supabase(`green_grin_customers?id=eq.${encodeURIComponent(user.id)}`, {
+            method: "PATCH",
+            body: JSON.stringify(profileUpdate)
+          });
+        } catch (error) {
+          if (!isMissingPreferenceColumn(error)) throw error;
+          delete profileUpdate.text_cleanup_reminders;
+          delete profileUpdate.text_done_messages;
+          delete profileUpdate.email_monthly_receipts;
+          await supabase(`green_grin_customers?id=eq.${encodeURIComponent(user.id)}`, {
+            method: "PATCH",
+            body: JSON.stringify(profileUpdate)
+          });
+        }
       }
 
       if (body.property) {

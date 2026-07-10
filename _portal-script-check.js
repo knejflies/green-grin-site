@@ -219,24 +219,6 @@
       }
     });
 
-    $("#staff-email-form").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const email = $("#staff-email").value.trim();
-      localStorage.setItem("greenGrinEmployeeLogin", "1");
-      $("#staff-login-result").innerHTML = notice("Preparing employee sign-in link...");
-      if (!supabaseClient) {
-        $("#staff-login-result").innerHTML = notice("Employee sign-in is temporarily unavailable.", true);
-        return;
-      }
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.href.split("#")[0] }
-      });
-      $("#staff-login-result").innerHTML = error
-        ? notice(error.message, true)
-        : notice("Check that employee email for the sign-in link.");
-    });
-
     $("#sign-out").addEventListener("click", async () => {
       if (supabaseClient) await supabaseClient.auth.signOut();
       setSignedOut();
