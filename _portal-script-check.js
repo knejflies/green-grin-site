@@ -461,7 +461,11 @@
 
     function adminCustomerCard(customer, index) {
       const property = customer.property || {};
-      const price = customer.monthly_price ? `$${Number(customer.monthly_price).toFixed(2)}/month` : "No price set";
+      const job = newestJob(customer.jobs || []);
+      const monthlyAmount = customer.monthly_price || job?.monthly_price || "";
+      const annualAmount = customer.annual_price || job?.annual_price || "";
+      const plan = customer.plan || job?.service_type || "No plan set";
+      const price = monthlyAmount ? `$${Number(monthlyAmount).toFixed(2)}/month` : "No monthly payment set";
       return `
         <div class="job" data-customer-index="${index}">
           <div class="job-head">
@@ -470,12 +474,20 @@
           </div>
           <p class="muted">${cleanText(customer.email || "")}${customer.phone ? ` | ${cleanText(customer.phone)}` : ""}</p>
           <p>${cleanText(property.address || "No property address saved yet.")}</p>
-          <p class="muted">${cleanText(customer.plan || "No plan set")} | ${cleanText(price)}</p>
-          <p class="muted">${cleanText(preferenceLine(customer))}</p>
+          <p class="muted">${cleanText(plan)} | Monthly payment: ${cleanText(price)}</p>
+          <div class="customer-collapse" hidden>
+            <p class="muted">${cleanText(preferenceLine(customer))}</p>
+            <p class="muted">Yearly quote: ${annualAmount ? `$${Number(annualAmount).toFixed(2)}` : "Not set"}</p>
+            <div class="status-box">
+              ${(customer.jobs || []).length ? (customer.jobs || []).slice(0, 4).map((item) => upcomingStep(item)).join("") : notice("No jobs created for this customer yet.")}
+            </div>
+          </div>
           <div class="admin-actions">
+            <button class="button small secondary" data-customer-list-action="toggle" type="button">Expand</button>
             <button class="button small secondary" data-customer-list-action="details" type="button">View Details</button>
             <button class="button small" data-customer-list-action="fill-job" type="button">Create Booking</button>
             <button class="button small" data-customer-list-action="invoice" type="button">Create Invoice</button>
+            <button class="button small" data-customer-list-action="monthly-invoice" type="button">Send Monthly Invoice</button>
             <button class="button small ghost" data-customer-list-action="delete" type="button">Delete Customer</button>
           </div>
         </div>
@@ -538,7 +550,7 @@
       $("#dashboard-next-visit").textContent = currentJob ? scheduleLine(currentJob) : "Not scheduled";
       $("#dashboard-next-service").textContent = currentJob?.service_type || "Your next service will appear here.";
       $("#dashboard-plan").textContent = customer.billing_plan || currentJob?.service_type || "Not set";
-      $("#dashboard-price").textContent = currentPrice ? `${currentPrice} monthly` : "Monthly price will appear here.";
+      $("#dashboard-price").textContent = currentPrice ? `${currentPrice} monthly payment` : "Monthly payment will appear here.";
       $("#dashboard-status").textContent = currentJob?.status || customer.billing_status || "Account ready";
       $("#dashboard-address").textContent = property.address || currentJob?.address || "Property details will appear here.";
 
@@ -551,8 +563,8 @@
         : notice("No customer messages yet.");
 
       $("#billing-summary").textContent = currentPrice
-        ? `${currentPrice} monthly for ${customer.billing_plan || currentJob?.service_type || "service"}.`
-        : "No monthly price is set on this account yet.";
+        ? `${currentPrice} monthly payment for ${customer.billing_plan || currentJob?.service_type || "service"}.`
+        : "No monthly payment is set on this account yet.";
       $("#customer-billing-plans").innerHTML = billingPlanCard(currentJob, customer);
       $("#customer-invoice-list").innerHTML = invoices.length
         ? invoices.map((invoice) => invoiceCard(invoice)).join("")
@@ -1000,6 +1012,18 @@
       const customer = invoiceCustomers[Number(card?.dataset.customerIndex)] || null;
       if (!customer) return;
       const action = button.dataset.customerListAction;
+      const newestCustomerJob = newestJob(customer.jobs || []);
+      const customerMonthlyPrice = customer.monthly_price || newestCustomerJob?.monthly_price || "";
+      const customerAnnualPrice = customer.annual_price || newestCustomerJob?.annual_price || "";
+      const customerPlan = customer.plan || newestCustomerJob?.service_type || "Monthly service";
+
+      if (action === "toggle") {
+        const collapse = card.querySelector(".customer-collapse");
+        const isOpen = collapse && !collapse.hidden;
+        if (collapse) collapse.hidden = isOpen;
+        button.textContent = isOpen ? "Expand" : "Collapse";
+        return;
+      }
 
       if (action === "details") {
         $("#customer-detail-result").innerHTML = customerDetailHtml(customer);
@@ -1012,9 +1036,9 @@
         $("#owner_job_phone").value = customer.phone || "";
         $("#owner_job_email").value = customer.email || "";
         $("#owner_job_address").value = property.address || customer.jobs?.[0]?.address || "";
-        if (customer.plan) $("#owner_job_service_type").value = customer.plan;
-        $("#owner_job_annual_price").value = customer.annual_price || "";
-        $("#owner_job_monthly_price").value = customer.monthly_price || "";
+        if (customerPlan) $("#owner_job_service_type").value = customerPlan;
+        $("#owner_job_annual_price").value = customerAnnualPrice || "";
+        $("#owner_job_monthly_price").value = customerMonthlyPrice || "";
         $("#owner_job_notes").value = [property.gate_code ? `Gate code: ${property.gate_code}` : "", property.pets ? `Pets: ${property.pets}` : "", property.yard_notes || property.service_preferences || ""].filter(Boolean).join("\n");
         $("#customer-detail-result").innerHTML = notice("Customer copied into the booking form. Open Jobs to finish the schedule.");
         openTab("owner");
@@ -1025,14 +1049,53 @@
         const index = invoiceCustomers.findIndex((item) => item === customer);
         $("#invoice_id").value = "";
         $("#invoice_customer").value = index >= 0 ? String(index) : "";
-        $("#invoice_amount").value = customer.monthly_price ? Number(customer.monthly_price).toFixed(2) : "";
+        $("#invoice_amount").value = customerMonthlyPrice ? Number(customerMonthlyPrice).toFixed(2) : "";
         $("#invoice_due").value = "";
         $("#invoice_status").value = "Draft";
-        $("#invoice_custom_service").value = customer.plan || "";
-        $("#invoice_notes").value = customer.plan || "Monthly service";
+        $("#invoice_custom_service").value = customerPlan || "";
+        $("#invoice_notes").value = customerPlan || "Monthly service";
         $("#invoice_payment_url").value = "";
         $("#invoice-submit").textContent = "Save Draft";
         openTab("invoices");
+        return;
+      }
+
+      if (action === "monthly-invoice") {
+        if (!customerMonthlyPrice) {
+          $("#customer-detail-result").innerHTML = notice("Set a monthly payment on this customer's job before sending a monthly invoice.", true);
+          return;
+        }
+        try {
+          button.disabled = true;
+          button.textContent = "Sending...";
+          const due = new Date();
+          due.setDate(due.getDate() + 7);
+          const dueDate = due.toISOString().slice(0, 10);
+          await requestJson("portal-invoices", {
+            method: "POST",
+            headers: adminHeaders(),
+            body: JSON.stringify({
+              customer_user_id: customer.customer_user_id || customer.id || null,
+              customer_code: customer.customer_code || "",
+              customer_name: customer.name || "Customer",
+              phone: customer.phone || "",
+              email: customer.email || "",
+              amount: Number(customerMonthlyPrice).toFixed(2),
+              due_date: dueDate,
+              status: "Sent",
+              service_line: customerPlan,
+              notes: `Monthly service invoice for ${customerPlan}`,
+              payment_url: ""
+            })
+          });
+          await loadInvoices();
+          $("#customer-detail-result").innerHTML = notice(`Monthly invoice sent for ${money(customerMonthlyPrice)}.`);
+        } catch (error) {
+          $("#customer-detail-result").innerHTML = notice(error.message, true);
+        } finally {
+          button.disabled = false;
+          button.textContent = "Send Monthly Invoice";
+        }
         return;
       }
 
