@@ -87,6 +87,7 @@ exports.handler = async (event) => {
         phone: body.phone || "",
         status: "Pending"
       };
+      if (body.requested_pin) employee.employee_pin = body.requested_pin;
       if (!employee.full_name || !employee.email) {
         return json(400, { error: "Employee name and email are required." });
       }

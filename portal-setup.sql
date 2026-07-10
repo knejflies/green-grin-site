@@ -12,6 +12,7 @@ create table if not exists public.green_grin_jobs (
   preferred_date date,
   scheduled_date timestamptz,
   cleanup_reminder_time time not null default '08:00',
+  monthly_price numeric(10, 2),
   status text not null default 'New',
   notes text,
   last_message_template text,
@@ -27,6 +28,9 @@ alter table public.green_grin_jobs
 
 alter table public.green_grin_jobs
   add column if not exists cleanup_reminder_time time not null default '08:00';
+
+alter table public.green_grin_jobs
+  add column if not exists monthly_price numeric(10, 2);
 
 create table if not exists public.green_grin_customers (
   id uuid primary key references auth.users(id) on delete cascade,

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Customer Portal | Green Grin Lawn & Landscape</title>
+  <link rel="icon" href="/assets/green-grin-logo.png" type="image/png" />
   <style>
     :root {
       --pine: #123324;
@@ -688,6 +689,59 @@
         justify-self: start;
       }
     }
+
+    @media (max-width: 1100px) {
+      body.admin-site .grid,
+      body.employee-site .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body.admin-site .wrap,
+      body.employee-site .wrap {
+        width: min(100% - 20px, 1180px);
+      }
+
+      body.admin-site .card,
+      body.employee-site .card,
+      body.admin-site .auth-card,
+      body.employee-site .auth-card {
+        padding: 16px;
+      }
+
+      body.admin-site .button,
+      body.employee-site .button,
+      body.admin-site input,
+      body.employee-site input,
+      body.admin-site select,
+      body.employee-site select {
+        min-height: 48px;
+      }
+
+      body.admin-site .admin-actions,
+      body.employee-site .admin-actions,
+      body.admin-site .row-actions,
+      body.employee-site .row-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      body.admin-site .admin-actions .button,
+      body.employee-site .admin-actions .button,
+      body.admin-site .row-actions .button,
+      body.employee-site .row-actions .button {
+        width: 100%;
+      }
+
+      body.admin-site .job-head,
+      body.employee-site .job-head,
+      body.admin-site .message-head,
+      body.employee-site .message-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
@@ -708,11 +762,11 @@
     <div class="wrap hero-grid">
       <div>
         <h1 id="portal-title">Customer Portal</h1>
-        <p id="portal-subtitle">Customers can request service, check their next visit, see messages, view billing, and keep yard notes in one place.</p>
+        <p id="portal-subtitle">Customers can check service status, see messages, view billing, and keep yard notes in one place.</p>
       </div>
       <div class="portal-card">
         <strong>Customer accounts</strong>
-        <span>Email sign-in, property notes, service requests, message settings, and billing in one place.</span>
+        <span>Account sign-in, property notes, message settings, billing, and service status in one place.</span>
       </div>
     </div>
   </section>
@@ -771,6 +825,10 @@
             <label for="employee-request-email">Email</label>
             <input id="employee-request-email" type="email" required placeholder="employee@example.com" />
           </div>
+          <div>
+            <label for="employee-request-pin">Requested PIN</label>
+            <input id="employee-request-pin" type="password" placeholder="PIN you want to use" />
+          </div>
           <button class="button" type="submit">Request Employee Access</button>
         </form>
         <form id="staff-email-form">
@@ -799,7 +857,6 @@
   <main id="portal-app" class="wrap portal-app">
     <div class="tabs" role="tablist">
       <button class="tab active" data-tab="dashboard" type="button">Dashboard</button>
-      <button class="tab" data-tab="schedule" type="button">Schedule</button>
       <button class="tab" data-tab="messages" type="button">Messages</button>
       <button class="tab" data-tab="billing" type="button">Billing</button>
       <button class="tab" data-tab="property" type="button">Property</button>
@@ -853,17 +910,15 @@
           <h2>Quick actions</h2>
           <p>Common customer tasks are right up front.</p>
           <div class="quick-actions">
-            <button class="button go-tab" data-go="schedule" type="button">Request Service</button>
             <button class="button ghost go-tab" data-go="billing" type="button">View Billing</button>
             <button class="button ghost go-tab" data-go="property" type="button">Update Yard Notes</button>
             <button class="button secondary go-tab" data-go="messages" type="button">Message Green Grin</button>
           </div>
-          <div class="notice">For live use, customers would sign in by phone number or a private link.</div>
         </div>
       </div>
     </section>
 
-    <section id="schedule" class="panel">
+    <section id="schedule" class="panel" hidden>
       <div class="grid">
         <div class="card">
           <h2>Request mowing or project work</h2>
@@ -1124,6 +1179,10 @@
                   <option>Commercial maintenance</option>
                 </select>
               </div>
+              <div>
+                <label for="owner_job_monthly_price">Customer price</label>
+                <input id="owner_job_monthly_price" type="number" min="0" step="0.01" placeholder="Monthly price" />
+              </div>
             </div>
             <div class="two">
               <div>
@@ -1242,12 +1301,15 @@
     }
 
     async function setOwnerSignedIn(pin) {
+      const jobsData = await requestJson("portal-jobs?admin=1", { headers: { "x-admin-pin": pin } });
       setSignedIn({ id: "owner", email: "Owner" });
       $("#admin-pin").value = pin;
       $("#employee-admin-pin").value = pin;
       $("#activity-admin-pin").value = pin;
       openTab("owner");
-      await loadAdminJobs();
+      $("#admin-result").innerHTML = jobsData.jobs.length
+        ? jobsData.jobs.map((job) => jobCard(job, true)).join("")
+        : notice("No jobs yet.");
       await loadEmployees();
       await loadActivity();
     }
@@ -1394,7 +1456,8 @@
           body: JSON.stringify({
             full_name: $("#employee-name").value,
             phone: $("#employee-phone").value,
-            email: $("#employee-request-email").value
+            email: $("#employee-request-email").value,
+            requested_pin: $("#employee-request-pin").value
           })
         });
         event.currentTarget.reset();
@@ -1501,6 +1564,7 @@
     function jobCard(job, admin = false) {
       const scheduled = displayScheduleDate(job.scheduled_date);
       const reminderTime = job.cleanup_reminder_time ? String(job.cleanup_reminder_time).slice(0, 5) : "08:00";
+      const monthlyPrice = job.monthly_price ? Number(job.monthly_price).toFixed(2) : "";
       return `
         <div class="job" data-id="${job.id}" data-customer-user-id="${job.customer_user_id || ""}" data-phone="${job.phone || ""}" data-email="${job.email || ""}">
           <div class="job-head">
@@ -1509,12 +1573,14 @@
           </div>
           <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
           <p class="muted">Morning text: ${reminderTime}</p>
+          ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}</p>` : ""}
           <p>${job.address || ""}</p>
           <p class="muted">${job.notes || ""}</p>
           ${admin ? `
             <div class="two" style="margin-top: 12px;">
               <input type="date" class="schedule-input" />
               <input type="time" class="reminder-time-input" value="${reminderTime}" />
+              <input type="number" min="0" step="0.01" class="price-input" value="${monthlyPrice}" placeholder="Customer price" />
               <select class="status-input">
                 <option>New</option>
                 <option>Scheduled</option>
@@ -1642,6 +1708,7 @@
             service_type: $("#owner_job_service_type").value,
             scheduled_date: scheduledDate || null,
             cleanup_reminder_time: $("#owner_job_reminder_time").value || "08:00",
+            monthly_price: $("#owner_job_monthly_price").value || null,
             notes: $("#owner_job_notes").value,
             status: scheduledDate ? "Scheduled" : "New"
           })
@@ -1797,6 +1864,7 @@
       const customerAction = button.dataset.customerAction;
       const scheduled_date = card.querySelector(".schedule-input")?.value;
       const cleanup_reminder_time = card.querySelector(".reminder-time-input")?.value;
+      const monthly_price = card.querySelector(".price-input")?.value || null;
       const status = card.querySelector(".status-input")?.value;
       button.disabled = true;
       try {
@@ -1816,7 +1884,7 @@
           await requestJson("portal-jobs", {
             method: "PATCH",
             headers: { "x-admin-pin": pin },
-            body: JSON.stringify({ id, scheduled_date, cleanup_reminder_time, status })
+            body: JSON.stringify({ id, scheduled_date, cleanup_reminder_time, monthly_price, status })
           });
         } else {
           await requestJson("portal-message", {

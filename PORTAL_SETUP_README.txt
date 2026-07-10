@@ -6,14 +6,13 @@ What works after setup:
 - Customers can sign in with email and password
 - Customer profiles are created/loaded automatically
 - Customers can save property notes to their account
-- New service requests attach to the signed-in customer
-- Customers can request service at /portal/
-- Customers can check status by phone number
+- Customers can view service status, billing, messages, and property notes at /portal/
 - Owner dashboard can view requests
 - Owner can create jobs directly in the portal
+- Owner can set the customer price for each job/customer
 - Owner can schedule a job
 - Employees can log in with an employee PIN
-- Employees can request their own account access from the portal
+- Employees can request their own account access and requested PIN from /employee/
 - Owner can approve, deactivate, or reactivate employee accounts
 - Owner can set each employee's PIN inside the portal
 - Employees can view scheduled jobs without billing/pricing
@@ -118,7 +117,7 @@ The "job complete" message is manual, so you click "Text: Done" when the work is
 
 EMPLOYEE ACCOUNTS NOTE
 Employees can request access on the portal.
-Owner opens the Owner tab, loads Employee Access with the admin PIN, then approves employees and sets each employee's PIN.
+Owner opens the Admin portal, loads Employee Access with the admin PIN, then approves employees and sets each employee's PIN.
 Active employees can sign in by email or use the PIN you set. They can only see the employee job list and the Done button.
 Deactivated employees cannot load jobs or mark jobs done.
 
@@ -126,3 +125,4 @@ IMPORTANT UPDATE NOTE
 If you already ran portal-setup.sql before this version, run it again in Supabase SQL Editor.
 It safely adds the employee PIN and activity log columns without deleting your data.
 This version also adds a customer active/inactive column.
+This version also adds job pricing and per-job morning reminder time.
