@@ -845,6 +845,29 @@
       color: var(--white);
     }
 
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius);
+      color: var(--white);
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    .footer-link:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
     @media (max-width: 980px) {
       .nav-links {
         display: none;
@@ -1278,8 +1301,14 @@
 
   <footer>
     <div class="wrap">
-      <p><strong>Green Grin Lawn & Landscape</strong> &copy; 2026</p>
-      <p>Caldwell, Idaho - Treasure Valley Lawn Care</p>
+      <div>
+        <p><strong>Green Grin Lawn & Landscape</strong> &copy; 2026</p>
+        <p>Caldwell, Idaho - Treasure Valley Lawn Care</p>
+      </div>
+      <div class="footer-actions" aria-label="Team sign in links">
+        <a class="footer-link" href="admin/">Admin Sign In</a>
+        <a class="footer-link" href="employee/">Employee Sign In</a>
+      </div>
     </div>
   </footer>
   <script>

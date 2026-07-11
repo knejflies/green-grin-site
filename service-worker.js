@@ -1,4 +1,4 @@
-const CACHE_NAME = "green-grin-app-v1";
+const CACHE_NAME = "green-grin-app-v2";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,6 +6,9 @@ const APP_SHELL = [
   "/employee/",
   "/admin/",
   "/manifest.webmanifest",
+  "/manifest-customer.webmanifest",
+  "/manifest-admin.webmanifest",
+  "/manifest-employee.webmanifest",
   "/assets/green-grin-tab-icon.png",
   "/assets/green-grin-pwa-192.png",
   "/assets/green-grin-pwa-512.png",

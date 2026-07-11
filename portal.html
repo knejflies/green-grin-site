@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Green Grin" />
   <link rel="icon" href="/assets/green-grin-tab-icon.png" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/green-grin-pwa-192.png" />
-  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="manifest" href="/manifest-customer.webmanifest" />
   <style>
     :root {
       --pine: #123324;
@@ -495,6 +495,21 @@
     .customer-collapse[hidden],
     .customer-card.collapsed-customer .customer-collapse {
       display: none !important;
+    }
+
+    .live-clock {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      margin: 10px 0 14px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--mint);
+      color: var(--pine);
+      font-size: 1.08rem;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
     }
 
     .step {
@@ -1254,6 +1269,7 @@
       <div class="grid">
         <div class="card">
           <h2>Time clock</h2>
+          <div id="rolling-clock" class="live-clock">--:--:--</div>
           <p id="timeclock-status" class="muted">Load your time clock or clock in to start tracking hours.</p>
           <div class="two">
             <div>
@@ -1432,6 +1448,20 @@
 
     function applyPortalMode() {
       const mode = portalMode();
+      const manifestByMode = {
+        customer: "/manifest-customer.webmanifest",
+        admin: "/manifest-customer.webmanifest",
+        employee: "/manifest-employee.webmanifest"
+      };
+      const appTitleByMode = {
+        customer: "Green Grin Portal",
+        admin: "Green Grin Admin",
+        employee: "Green Grin Crew"
+      };
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+      if (manifestLink) manifestLink.setAttribute("href", manifestByMode[mode] || manifestByMode.customer);
+      if (appleTitle) appleTitle.setAttribute("content", appTitleByMode[mode] || appTitleByMode.customer);
       document.body.classList.add(`${mode}-site`);
       if (mode === "admin") {
         document.title = "Admin Portal | Green Grin Lawn & Landscape";
@@ -1445,6 +1475,16 @@
         $("#portal-subtitle").textContent = "Crew access for assigned jobs and Done updates.";
         $("#team-access").hidden = false;
       }
+    }
+
+    function updateRollingClock() {
+      const clock = $("#rolling-clock");
+      if (!clock) return;
+      clock.textContent = new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit"
+      });
     }
 
     function setSignedIn(account = {}) {
@@ -2902,6 +2942,8 @@
     }
 
     applyPortalMode();
+    updateRollingClock();
+    window.setInterval(updateRollingClock, 1000);
     loadSupabaseAuth();
   </script>
 </body>
