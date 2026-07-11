@@ -1548,6 +1548,10 @@
       if (bar) bar.hidden = hidden;
     }
 
+    function blockedPushMessage() {
+      return "Notifications are turned off for this device. Turn them back on in your phone/browser settings, then tap Check Again.";
+    }
+
     function pushErrorText(push) {
       const reason = push?.errors?.[0]?.reason || "";
       return reason ? ` Reason: ${cleanText(reason)}` : "";
@@ -1612,12 +1616,14 @@
         return;
       }
       if (Notification.permission === "denied") {
-        pushStatus("Notifications are blocked in this browser.", true);
+        pushStatus(blockedPushMessage(), true);
+        setPushButton(true, "Check Again");
         return;
       }
       setPushButton(true);
       if (Notification.permission !== "granted") {
         pushStatus("Not enabled on this device.");
+        setPushButton(true, "Turn On Notifications");
         return;
       }
       try {
@@ -1641,8 +1647,10 @@
       try {
         if (!activeAccount) throw new Error("Sign in first, then enable notifications.");
         if (!portalConfig.vapidPublicKey) throw new Error("Notification keys are not configured in Netlify yet.");
+        if (Notification.permission === "denied") throw new Error(blockedPushMessage());
         const permission = await Notification.requestPermission();
-        if (permission !== "granted") throw new Error("Notifications were not allowed on this device.");
+        if (permission === "denied") throw new Error(blockedPushMessage());
+        if (permission !== "granted") throw new Error("Notifications were not allowed on this device. Tap Turn On Notifications when you are ready.");
         pushStatus("Saving this device...");
         const registration = await appServiceWorker();
         let subscription = await registration.pushManager.getSubscription();
@@ -1787,6 +1795,14 @@
     });
 
     $("#enable-push").addEventListener("click", enablePushNotifications);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) updatePushStatus();
+    });
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({ name: "notifications" }).then((permission) => {
+        permission.onchange = updatePushStatus;
+      }).catch(() => null);
+    }
 
     async function loadCurrentEmployee() {
       try {
