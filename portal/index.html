@@ -1480,6 +1480,54 @@
     let employeeDirectory = [];
     let adminSessionPin = "";
     let portalConfig = {};
+    const sessionKeys = {
+      adminPin: "greenGrinAdminPin",
+      employeePin: "greenGrinEmployeePin",
+      employeeLogin: "greenGrinEmployeeLogin",
+      lastEmail: "greenGrinLastEmail"
+    };
+
+    function storageForKey(key) {
+      return key === sessionKeys.lastEmail ? window.localStorage : window.sessionStorage;
+    }
+
+    function removeFromAllStorage(key) {
+      try { localStorage.removeItem(key); } catch (_error) { return; }
+      try { sessionStorage.removeItem(key); } catch (_error) { return; }
+    }
+
+    function readSavedValue(key) {
+      try {
+        return storageForKey(key).getItem(key) || "";
+      } catch (_error) {
+        return "";
+      }
+    }
+
+    function saveValue(key, value) {
+      try {
+        if (value) storageForKey(key).setItem(key, value);
+        else removeFromAllStorage(key);
+      } catch (_error) {
+        return;
+      }
+    }
+
+    function clearSavedPortalSessions() {
+      saveValue(sessionKeys.adminPin, "");
+      saveValue(sessionKeys.employeePin, "");
+      saveValue(sessionKeys.employeeLogin, "");
+    }
+
+    function clearOldSavedSecrets() {
+      try {
+        localStorage.removeItem(sessionKeys.adminPin);
+        localStorage.removeItem(sessionKeys.employeePin);
+        localStorage.removeItem(sessionKeys.employeeLogin);
+      } catch (_error) {
+        return;
+      }
+    }
 
     function portalMode() {
       const path = window.location.pathname.toLowerCase();
@@ -1694,7 +1742,8 @@
       if (activeAccount.id !== "owner" && activeAccount.id !== "employee") loadAccountData();
     }
 
-    async function setEmployeeSignedIn(employee) {
+    async function setEmployeeSignedIn(employee, remember = true) {
+      if (remember) saveValue(sessionKeys.employeeLogin, "auth");
       setSignedIn({ id: "employee", email: `Welcome, ${employee.full_name || employee.email || "Employee"}` });
       $("#employee-welcome").textContent = `Welcome, ${employee.full_name || employee.email || "Employee"}.`;
       openTab("employee-work");
@@ -1702,9 +1751,10 @@
       await loadTimeClock();
     }
 
-    async function setOwnerSignedIn(pin) {
+    async function setOwnerSignedIn(pin, remember = true) {
       adminSessionPin = pin;
       const jobsData = await requestJson("portal-jobs?admin=1", { headers: { "x-admin-pin": pin } });
+      if (remember) saveValue(sessionKeys.adminPin, pin);
       setSignedIn({ id: "owner", email: "Owner" });
       openTab("owner");
       await loadEmployees();
@@ -1718,9 +1768,28 @@
       await loadTimeClockReport();
     }
 
-    function setSignedOut() {
+    async function setEmployeePinSignedIn(pin, remember = true) {
+      const data = await requestJson("portal-jobs?employee=1", { headers: { "x-employee-pin": pin } });
+      const employeeName = data.employee?.full_name || data.employee?.email || "Employee";
+      if (remember) {
+        saveValue(sessionKeys.employeePin, pin);
+        saveValue(sessionKeys.employeeLogin, "pin");
+      }
+      setSignedIn({ id: "employee", email: `Welcome, ${employeeName}` });
+      $("#employee-welcome").textContent = `Welcome, ${employeeName}.`;
+      $("#employee-pin").value = pin;
+      openTab("employee-work");
+      $("#employee-result").innerHTML = data.jobs.length
+        ? data.jobs.map((job) => employeeJobCard(job)).join("")
+        : notice("No employee jobs ready.");
+      await loadTimeClock();
+    }
+
+    function setSignedOut(options = {}) {
+      const shouldClearSaved = options.clearSaved !== false;
       activeAccount = null;
       adminSessionPin = "";
+      if (shouldClearSaved) clearSavedPortalSessions();
       document.body.classList.remove("employee-mode");
       $("#auth-gate").classList.add("active");
       $("#portal-app").classList.remove("active");
@@ -1730,39 +1799,95 @@
       updatePushStatus();
     }
 
+    async function restoreSavedPortalSession() {
+      if (activeAccount) return true;
+      const mode = portalMode();
+
+      if (mode === "admin") {
+        const savedPin = readSavedValue(sessionKeys.adminPin);
+        if (!savedPin) return false;
+        $("#owner-login-result").innerHTML = notice("Restoring owner session...");
+        try {
+          await setOwnerSignedIn(savedPin, false);
+          $("#owner-login-result").innerHTML = "";
+          return true;
+        } catch (_error) {
+          saveValue(sessionKeys.adminPin, "");
+          $("#owner-login-result").innerHTML = notice("Saved owner session expired. Sign in again.", true);
+          setSignedOut({ clearSaved: false });
+          return false;
+        }
+      }
+
+      if (mode === "employee") {
+        const savedPin = readSavedValue(sessionKeys.employeePin);
+        if (!savedPin) return false;
+        $("#staff-login-result").innerHTML = notice("Restoring employee session...");
+        try {
+          await setEmployeePinSignedIn(savedPin, false);
+          $("#staff-login-result").innerHTML = "";
+          return true;
+        } catch (_error) {
+          saveValue(sessionKeys.employeePin, "");
+          saveValue(sessionKeys.employeeLogin, "");
+          $("#staff-login-result").innerHTML = notice("Saved employee session expired. Sign in again.", true);
+          setSignedOut({ clearSaved: false });
+          return false;
+        }
+      }
+
+      return false;
+    }
+
+    async function handleAuthSession(session) {
+      if (!session?.user) return false;
+      const employee = await loadCurrentEmployee();
+      if (employee) {
+        await setEmployeeSignedIn(employee);
+        return true;
+      }
+      if (readSavedValue(sessionKeys.employeeLogin) === "auth") {
+        await supabaseClient.auth.signOut();
+        saveValue(sessionKeys.employeeLogin, "");
+        $("#auth-result").innerHTML = notice("Employee access is not active yet. The owner needs to approve this employee first.", true);
+        return false;
+      }
+      setSignedIn(session.user);
+      return true;
+    }
+
     async function loadSupabaseAuth() {
       try {
+        clearOldSavedSecrets();
         const response = await fetch(api("portal-config"));
         if (!response.ok) return;
         const config = await response.json();
         portalConfig = config || {};
         updatePushStatus();
         if (!config.supabaseUrl || !config.supabaseAnonKey || !window.supabase) return;
-        supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+        supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: `green-grin-${portalMode()}-auth`
+          }
+        });
+        const savedEmail = readSavedValue(sessionKeys.lastEmail);
+        if (savedEmail && $("#auth-email") && !$("#auth-email").value) $("#auth-email").value = savedEmail;
         const { data } = await supabaseClient.auth.getSession();
         if (data.session?.user) {
-          const employee = await loadCurrentEmployee();
-          if (employee) await setEmployeeSignedIn(employee);
-          else if (localStorage.getItem("greenGrinEmployeeLogin") === "1") {
-            await supabaseClient.auth.signOut();
-            localStorage.removeItem("greenGrinEmployeeLogin");
-            $("#auth-result").innerHTML = notice("Employee access is not active yet. The owner needs to approve this employee first.", true);
-          }
-          else setSignedIn(data.session.user);
+          await handleAuthSession(data.session);
+        } else {
+          await restoreSavedPortalSession();
         }
-        supabaseClient.auth.onAuthStateChange((_event, session) => {
+        supabaseClient.auth.onAuthStateChange((eventName, session) => {
           if (session?.user) {
-            loadCurrentEmployee().then((employee) => {
-              if (employee) setEmployeeSignedIn(employee);
-              else if (localStorage.getItem("greenGrinEmployeeLogin") === "1") {
-                supabaseClient.auth.signOut();
-                localStorage.removeItem("greenGrinEmployeeLogin");
-                $("#auth-result").innerHTML = notice("Employee access is not active yet. The owner needs to approve this employee first.", true);
-              }
-              else setSignedIn(session.user);
-            });
-          } else {
+            handleAuthSession(session);
+          } else if (eventName === "SIGNED_OUT") {
             setSignedOut();
+          } else if (!activeAccount) {
+            restoreSavedPortalSession();
           }
         });
       } catch (_error) {
@@ -1815,7 +1940,7 @@
 
     $("#auth-form").addEventListener("submit", async (event) => {
       event.preventDefault();
-      localStorage.removeItem("greenGrinEmployeeLogin");
+      saveValue(sessionKeys.employeeLogin, "");
       const email = $("#auth-email").value.trim();
       const password = $("#auth-password").value;
       const action = event.submitter?.dataset.authAction || "signin";
@@ -1840,6 +1965,7 @@
         }
 
         if (result?.data?.session?.user) {
+          saveValue(sessionKeys.lastEmail, email);
           setSignedIn(result.data.session.user);
         }
 
@@ -1894,16 +2020,7 @@
       const pin = $("#staff-pin").value;
       $("#staff-login-result").innerHTML = notice("Checking employee PIN...");
       try {
-        const data = await requestJson("portal-jobs?employee=1", { headers: { "x-employee-pin": pin } });
-        const employeeName = data.employee?.full_name || data.employee?.email || "Employee";
-        setSignedIn({ id: "employee", email: `Welcome, ${employeeName}` });
-        $("#employee-welcome").textContent = `Welcome, ${employeeName}.`;
-        $("#employee-pin").value = pin;
-        openTab("employee-work");
-        $("#employee-result").innerHTML = data.jobs.length
-          ? data.jobs.map((job) => employeeJobCard(job)).join("")
-          : notice("No employee jobs ready.");
-        await loadTimeClock();
+        await setEmployeePinSignedIn(pin);
         $("#staff-login-result").innerHTML = "";
       } catch (error) {
         $("#staff-login-result").innerHTML = notice(error.message, true);
