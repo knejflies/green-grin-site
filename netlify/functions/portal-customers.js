@@ -103,6 +103,7 @@ exports.handler = async (event) => {
       const customers = await supabase("green_grin_customers?select=*&active=eq.true&order=customer_code.asc.nullslast,created_at.desc&limit=300");
       const properties = await supabase("green_grin_properties?select=*&active=eq.true&order=created_at.desc&limit=500");
       const jobs = await supabase("green_grin_jobs?select=*&order=created_at.desc&limit=500");
+      const devices = await supabase("green_grin_push_subscriptions?select=owner_email,customer_user_id,customer_code,updated_at&active=eq.true&owner_type=eq.customer&limit=1000").catch(() => []);
       const propertyByUser = new Map();
       for (const property of properties || []) {
         if (!propertyByUser.has(property.customer_user_id)) propertyByUser.set(property.customer_user_id, property);
@@ -118,6 +119,16 @@ exports.handler = async (event) => {
           (customer.email && job.email === customer.email) ||
           (customer.phone && job.phone === customer.phone)
         );
+        const customerDevices = (devices || []).filter((device) =>
+          (customer.id && device.customer_user_id === customer.id) ||
+          (customer.customer_code && device.customer_code === customer.customer_code) ||
+          (customer.email && String(device.owner_email || "").toLowerCase() === String(customer.email || "").toLowerCase())
+        );
+        const lastNotificationDevice = customerDevices
+          .map((device) => device.updated_at)
+          .filter(Boolean)
+          .sort()
+          .pop() || null;
         const newestJob = customerJobs[0] || {};
         byKey.set(key, {
           id: customer.id || "",
@@ -134,6 +145,8 @@ exports.handler = async (event) => {
           text_cleanup_reminders: customer.text_cleanup_reminders !== false,
           text_done_messages: customer.text_done_messages !== false,
           email_monthly_receipts: customer.email_monthly_receipts === true,
+          notification_devices: customerDevices.length,
+          notification_last_seen: lastNotificationDevice,
           property,
           jobs: customerJobs.slice(0, 12)
         });

@@ -84,12 +84,43 @@ async function nextCustomerCode() {
   return `GG-${String(next).padStart(4, "0")}`;
 }
 
+async function existingCustomerCodeForUser(user) {
+  const email = (user.email || "").toLowerCase();
+  if (!email) return "";
+  const jobRows = await supabase(`green_grin_jobs?select=customer_code&email=eq.${encodeURIComponent(email)}&customer_code=not.is.null&order=created_at.desc&limit=1`).catch(() => []);
+  if (jobRows?.[0]?.customer_code) return jobRows[0].customer_code;
+  const invoiceRows = await supabase(`green_grin_invoices?select=customer_code&email=eq.${encodeURIComponent(email)}&customer_code=not.is.null&order=created_at.desc&limit=1`).catch(() => []);
+  return invoiceRows?.[0]?.customer_code || "";
+}
+
+async function linkExistingRecords(user, customer) {
+  const email = (user.email || customer.email || "").toLowerCase();
+  if (!email) return;
+  const linked = {
+    customer_user_id: user.id,
+    customer_code: customer.customer_code || null
+  };
+  await supabase(`green_grin_jobs?email=eq.${encodeURIComponent(email)}`, {
+    method: "PATCH",
+    body: JSON.stringify(linked)
+  }).catch(() => null);
+  await supabase(`green_grin_invoices?email=eq.${encodeURIComponent(email)}`, {
+    method: "PATCH",
+    body: JSON.stringify(linked)
+  }).catch(() => null);
+  await supabase(`green_grin_push_subscriptions?owner_type=eq.customer&owner_email=eq.${encodeURIComponent(email)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...linked, updated_at: new Date().toISOString() })
+  }).catch(() => null);
+}
+
 async function ensureCustomer(user) {
   const existing = await supabase(`green_grin_customers?select=*&id=eq.${encodeURIComponent(user.id)}&limit=1`);
   const existingCustomer = existing?.[0];
+  const linkedCode = existingCustomer?.customer_code || await existingCustomerCodeForUser(user) || await nextCustomerCode();
   const baseProfile = {
     id: user.id,
-    customer_code: existingCustomer?.customer_code || await nextCustomerCode(),
+    customer_code: linkedCode,
     email: user.email || "",
     full_name: user.user_metadata?.name || user.email?.split("@")[0] || "",
     billing_status: existingCustomer?.billing_status || "Not connected"
@@ -107,7 +138,9 @@ async function ensureCustomer(user) {
       headers: { Prefer: "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify(profile)
     });
-    return rows?.[0] || profile;
+    const customer = rows?.[0] || profile;
+    await linkExistingRecords(user, customer);
+    return customer;
   } catch (error) {
     if (!isMissingPreferenceColumn(error)) throw error;
     const rows = await supabase("green_grin_customers?on_conflict=id", {
@@ -115,7 +148,9 @@ async function ensureCustomer(user) {
       headers: { Prefer: "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify(baseProfile)
     });
-    return rows?.[0] || baseProfile;
+    const customer = rows?.[0] || baseProfile;
+    await linkExistingRecords(user, customer);
+    return customer;
   }
 }
 

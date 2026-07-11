@@ -1708,6 +1708,9 @@
             applicationServerKey: urlBase64ToUint8Array(portalConfig.vapidPublicKey)
           });
         }
+        if (activeAccount?.id !== "owner" && activeAccount?.id !== "employee") {
+          await loadAccountData().catch(() => null);
+        }
         const data = await requestJson("portal-push", {
           method: "POST",
           headers: pushRequestHeaders(),
@@ -2196,6 +2199,13 @@
       return prefs.join(" | ");
     }
 
+    function notificationLine(customer) {
+      const count = Number(customer.notification_devices || 0);
+      if (!count) return "App notifications: not enabled";
+      const last = customer.notification_last_seen ? `, last checked ${formatDateTime(customer.notification_last_seen)}` : "";
+      return `App notifications: ${count} device${count === 1 ? "" : "s"} enabled${last}`;
+    }
+
     function customerDetailHtml(customer) {
       const property = customer.property || {};
       const jobs = customer.jobs || [];
@@ -2210,6 +2220,7 @@
           <p class="muted"><strong>Gate:</strong> ${cleanText(property.gate_code || "None")} | <strong>Pets:</strong> ${cleanText(property.pets || "None listed")}</p>
           <p class="muted"><strong>Yard notes:</strong> ${cleanText(property.yard_notes || property.service_preferences || "None saved yet.")}</p>
           <p class="muted"><strong>Messages:</strong> ${cleanText(preferenceLine(customer))}</p>
+          <p class="muted"><strong>Notifications:</strong> ${cleanText(notificationLine(customer))}</p>
           <p class="muted"><strong>Plan:</strong> ${cleanText(customer.plan || "Not set")} ${customer.monthly_price ? `| $${Number(customer.monthly_price).toFixed(2)}/month` : ""}</p>
           <div class="status-box">
             ${jobs.length ? jobs.slice(0, 4).map((job) => upcomingStep(job)).join("") : notice("No jobs created for this customer yet.")}
@@ -2240,6 +2251,7 @@
             <p>${cleanText(property.address || "No property address saved yet.")}</p>
             <p class="muted">${cleanText(plan)} | Monthly payment: ${cleanText(price)}</p>
             <p class="muted">${cleanText(preferenceLine(customer))}</p>
+            <p class="muted">${cleanText(notificationLine(customer))}</p>
             <p class="muted">Yearly quote: ${annualAmount ? `$${Number(annualAmount).toFixed(2)}` : "Not set"}</p>
             <div class="status-box">
               ${(customer.jobs || []).length ? (customer.jobs || []).slice(0, 4).map((item) => upcomingStep(item)).join("") : notice("No jobs created for this customer yet.")}
@@ -2249,6 +2261,7 @@
               <button class="button small" data-customer-list-action="fill-job" type="button">Create Booking</button>
               <button class="button small" data-customer-list-action="invoice" type="button">Create Invoice</button>
               <button class="button small" data-customer-list-action="monthly-invoice" type="button">Send Monthly Invoice</button>
+              <button class="button small secondary" data-customer-list-action="test-notification" type="button">Test Notification</button>
               <button class="button small ghost" data-customer-list-action="delete" type="button">Delete Customer</button>
             </div>
           </div>
@@ -2983,6 +2996,34 @@
         } finally {
           button.disabled = false;
           button.textContent = "Send Monthly Invoice";
+        }
+        return;
+      }
+
+      if (action === "test-notification") {
+        try {
+          button.disabled = true;
+          button.textContent = "Testing...";
+          const data = await requestJson("portal-push", {
+            method: "POST",
+            headers: adminHeaders(),
+            body: JSON.stringify({
+              testCustomer: true,
+              customer: {
+                id: customer.id || "",
+                customer_user_id: customer.customer_user_id || customer.id || "",
+                customer_code: customer.customer_code || "",
+                email: customer.email || ""
+              }
+            })
+          });
+          $("#customer-detail-result").innerHTML = notice(pushDeliveryText(data.push, "Customer notification test sent."));
+          await loadCustomers();
+        } catch (error) {
+          $("#customer-detail-result").innerHTML = notice(error.message, true);
+        } finally {
+          button.disabled = false;
+          button.textContent = "Test Notification";
         }
         return;
       }

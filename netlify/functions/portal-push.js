@@ -94,7 +94,10 @@ async function ownerContext(event) {
   }
 
   if (!user) throw new Error("Please sign in before enabling notifications.");
-  const customers = await supabase(`green_grin_customers?select=*&id=eq.${encodeURIComponent(user.id)}&limit=1`);
+  let customers = await supabase(`green_grin_customers?select=*&id=eq.${encodeURIComponent(user.id)}&limit=1`);
+  if (!customers?.length && user.email) {
+    customers = await supabase(`green_grin_customers?select=*&email=eq.${encodeURIComponent(String(user.email).toLowerCase())}&limit=1`);
+  }
   const customer = customers?.[0] || {};
   return {
     owner_type: "customer",
@@ -170,6 +173,22 @@ exports.handler = async (event) => {
           actor_employee_id: null,
           twilio_sid: null
         })
+      });
+      return json(200, { ok: true, push });
+    }
+
+    if (body.testCustomer) {
+      if (context.owner_type !== "admin") return json(401, { error: "Admin access is required." });
+      const customer = body.customer || {};
+      const push = await sendPushToTarget(supabase, {
+        customer_user_id: customer.customer_user_id || customer.id || null,
+        customer_code: customer.customer_code || "",
+        email: customer.email || ""
+      }, {
+        title: "Green Grin notification test",
+        body: "Your Green Grin app notifications are connected.",
+        url: "/portal/",
+        tag: `green-grin-customer-test-${Date.now()}`
       });
       return json(200, { ok: true, push });
     }
