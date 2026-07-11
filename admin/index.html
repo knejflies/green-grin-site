@@ -626,6 +626,10 @@
       padding: 12px 14px;
     }
 
+    .notification-bar[hidden] {
+      display: none !important;
+    }
+
     .notification-bar div {
       display: grid;
       gap: 2px;
@@ -1539,6 +1543,31 @@
       button.textContent = label;
     }
 
+    function setNotificationBarHidden(hidden) {
+      const bar = document.querySelector(".notification-bar");
+      if (bar) bar.hidden = hidden;
+    }
+
+    function pushDeliveryText(push, fallback) {
+      if (!push || push.enabled === false) return fallback;
+      if (push.customer || push.owner) {
+        const customerSent = Number(push.customer?.sent || 0);
+        const customerTotal = Number(push.customer?.total || 0);
+        const ownerSent = Number(push.owner?.sent || 0);
+        const pieces = [fallback];
+        if (customerSent > 0) pieces.push(`Customer notification sent to ${customerSent} device${customerSent === 1 ? "" : "s"}.`);
+        else if (customerTotal > 0) pieces.push("Customer notification did not deliver yet. Check that notifications are allowed on the customer device.");
+        else pieces.push("No registered customer device was found yet.");
+        if (ownerSent > 0) pieces.push(`Owner copy sent to ${ownerSent} device${ownerSent === 1 ? "" : "s"}.`);
+        return pieces.join(" ");
+      }
+      const sent = Number(push.sent || 0);
+      const total = Number(push.total || 0);
+      if (sent > 0) return `${fallback} App notification sent to ${sent} device${sent === 1 ? "" : "s"}.`;
+      if (total > 0) return `${fallback} No app notification delivered yet. Check that notifications are allowed on that device.`;
+      return `${fallback} No registered customer device was found yet.`;
+    }
+
     function urlBase64ToUint8Array(base64String) {
       const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
       const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -1562,6 +1591,7 @@
 
     async function updatePushStatus() {
       if (!$("#enable-push")) return;
+      setNotificationBarHidden(false);
       setPushButton(false, "Sign In First");
       if (!activeAccount) {
         pushStatus("Sign in to this portal first, then enable notifications.");
@@ -1587,8 +1617,14 @@
       try {
         const registration = await appServiceWorker();
         const subscription = await registration.pushManager.getSubscription();
-        pushStatus(subscription ? "Enabled on this device." : "Not enabled on this device.");
-        setPushButton(true, subscription ? "Notifications Enabled" : "Enable Notifications");
+        if (subscription) {
+          pushStatus("Enabled on this device.");
+          setPushButton(true, "Notifications Enabled");
+          setNotificationBarHidden(true);
+        } else {
+          pushStatus("Not enabled on this device.");
+          setPushButton(true);
+        }
       } catch (_error) {
         pushStatus("Not enabled on this device.");
         setPushButton(true);
@@ -1610,16 +1646,24 @@
             applicationServerKey: urlBase64ToUint8Array(portalConfig.vapidPublicKey)
           });
         }
-        await requestJson("portal-push", {
+        const data = await requestJson("portal-push", {
           method: "POST",
           headers: pushRequestHeaders(),
           body: JSON.stringify({ subscription: subscription.toJSON(), test: true })
         });
+        if (data.push?.failed && !data.push?.sent) {
+          pushStatus("Device saved, but the test notification did not deliver yet.", true);
+          setPushButton(true, "Try Notifications Again");
+          setNotificationBarHidden(false);
+          return;
+        }
         pushStatus("Enabled on this device.");
         setPushButton(true, "Notifications Enabled");
+        setNotificationBarHidden(true);
       } catch (error) {
         pushStatus(error.message || "Notifications could not be enabled.", true);
         setPushButton(Boolean(activeAccount && portalConfig.vapidPublicKey));
+        setNotificationBarHidden(false);
       }
     }
 
@@ -2585,7 +2629,7 @@
       };
       $("#invoice-result").innerHTML = notice(intent === "send" ? "Sending invoice..." : "Saving draft...");
       try {
-        await requestJson("portal-invoices", {
+        const data = await requestJson("portal-invoices", {
           method: id ? "PATCH" : "POST",
           headers: adminHeaders(),
           body: JSON.stringify(payload)
@@ -2595,7 +2639,7 @@
         $("#invoice-submit").textContent = "Save Draft";
         renderInvoiceCustomerOptions();
         await loadInvoices();
-        $("#invoice-result").innerHTML = notice(intent === "send" ? "Invoice sent to that customer account." : "Invoice saved as a draft.");
+        $("#invoice-result").innerHTML = notice(intent === "send" ? pushDeliveryText(data.push, "Invoice sent to that customer account.") : "Invoice saved as a draft.");
       } catch (error) {
         $("#invoice-result").innerHTML = notice(error.message, true);
       }
@@ -2639,13 +2683,13 @@
       if (button.dataset.invoiceAction === "send") {
         try {
           $("#invoice-result").innerHTML = notice("Sending invoice...");
-          await requestJson("portal-invoices", {
+          const data = await requestJson("portal-invoices", {
             method: "PATCH",
             headers: adminHeaders(),
             body: JSON.stringify({ ...invoice, status: "Sent" })
           });
           await loadInvoices();
-          $("#invoice-result").innerHTML = notice("Invoice sent to that customer account.");
+          $("#invoice-result").innerHTML = notice(pushDeliveryText(data.push, "Invoice sent to that customer account."));
         } catch (error) {
           $("#invoice-result").innerHTML = notice(error.message, true);
         }
@@ -2776,7 +2820,7 @@
           const due = new Date();
           due.setDate(due.getDate() + 7);
           const dueDate = due.toISOString().slice(0, 10);
-          await requestJson("portal-invoices", {
+          const data = await requestJson("portal-invoices", {
             method: "POST",
             headers: adminHeaders(),
             body: JSON.stringify({
@@ -2793,7 +2837,7 @@
             })
           });
           await loadInvoices();
-          $("#customer-detail-result").innerHTML = notice(`Monthly invoice sent for ${money(customerMonthlyPrice)}.`);
+          $("#customer-detail-result").innerHTML = notice(pushDeliveryText(data.push, `Monthly invoice sent for ${money(customerMonthlyPrice)}.`));
         } catch (error) {
           $("#customer-detail-result").innerHTML = notice(error.message, true);
         } finally {

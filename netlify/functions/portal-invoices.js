@@ -61,7 +61,7 @@ function invoicePayload(body) {
 
 async function notifyInvoice(invoice) {
   if (!invoice || invoice.status !== "Sent") return null;
-  return await sendPushToTarget(supabase, {
+  const customer = await sendPushToTarget(supabase, {
     customer_user_id: invoice.customer_user_id || null,
     customer_code: invoice.customer_code || "",
     email: invoice.email || ""
@@ -71,6 +71,20 @@ async function notifyInvoice(invoice) {
     url: "/portal/",
     tag: `green-grin-invoice-${invoice.id}`
   });
+  const owner = await sendPushToTarget(supabase, { owner_type: "admin" }, {
+    title: "Invoice sent",
+    body: `${invoice.customer_name || "Customer"} - $${Number(invoice.amount || 0).toFixed(2)}`,
+    url: "/admin/",
+    tag: `green-grin-owner-invoice-${invoice.id}`
+  });
+  return {
+    customer,
+    owner,
+    sent: Number(customer?.sent || 0) + Number(owner?.sent || 0),
+    failed: Number(customer?.failed || 0) + Number(owner?.failed || 0),
+    total: Number(customer?.total || 0) + Number(owner?.total || 0),
+    enabled: customer?.enabled !== false || owner?.enabled !== false
+  };
 }
 
 exports.handler = async (event) => {
