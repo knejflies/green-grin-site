@@ -28,6 +28,7 @@ WHAT WORKS AFTER SETUP
 - Done notices send through app notifications only.
 - Sent invoices send through app notifications only.
 - Admin can send a broadcast app notification to all customers who enabled notifications.
+- Notifications can arrive while the portal app is closed after that device has enabled notifications.
 
 SUPABASE SETUP
 1. Open Supabase.
@@ -66,7 +67,7 @@ APP NOTIFICATION SETUP
 1. Upload/deploy this site to Netlify.
 2. Add the Netlify environment variables above.
 3. Run portal-setup.sql in Supabase.
-4. Redeploy the site.
+4. Redeploy the site. Netlify must include package.json so it installs the push sender.
 5. Open /portal/, /admin/, or /employee/.
 6. Sign in.
 7. Click Enable Notifications on each device that should receive alerts.
@@ -76,6 +77,7 @@ NOTIFICATION NOTES
 - Admin only receives admin notifications after you sign in to /admin/ and tap Enable Notifications.
 - Employees only receive employee notifications after they sign in to /employee/ and tap Enable Notifications.
 - iPhone users usually need to add the portal to their Home Screen before notifications work.
+- After notifications are enabled, the app can be closed and notifications can still arrive.
 - If a customer blocks notifications, they will not receive reminders.
 - If a customer changes phone/browser, they need to enable notifications again.
 

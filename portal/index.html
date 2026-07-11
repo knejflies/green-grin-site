@@ -1548,6 +1548,11 @@
       if (bar) bar.hidden = hidden;
     }
 
+    function pushErrorText(push) {
+      const reason = push?.errors?.[0]?.reason || "";
+      return reason ? ` Reason: ${cleanText(reason)}` : "";
+    }
+
     function pushDeliveryText(push, fallback) {
       if (!push || push.enabled === false) return fallback;
       if (push.customer || push.owner) {
@@ -1556,15 +1561,16 @@
         const ownerSent = Number(push.owner?.sent || 0);
         const pieces = [fallback];
         if (customerSent > 0) pieces.push(`Customer notification sent to ${customerSent} device${customerSent === 1 ? "" : "s"}.`);
-        else if (customerTotal > 0) pieces.push("Customer notification did not deliver yet. Check that notifications are allowed on the customer device.");
+        else if (customerTotal > 0) pieces.push(`Customer notification did not deliver yet.${pushErrorText(push.customer)}`);
         else pieces.push("No registered customer device was found yet.");
         if (ownerSent > 0) pieces.push(`Owner copy sent to ${ownerSent} device${ownerSent === 1 ? "" : "s"}.`);
+        else if (Number(push.owner?.total || 0) > 0) pieces.push(`Owner copy did not deliver yet.${pushErrorText(push.owner)}`);
         return pieces.join(" ");
       }
       const sent = Number(push.sent || 0);
       const total = Number(push.total || 0);
       if (sent > 0) return `${fallback} App notification sent to ${sent} device${sent === 1 ? "" : "s"}.`;
-      if (total > 0) return `${fallback} No app notification delivered yet. Check that notifications are allowed on that device.`;
+      if (total > 0) return `${fallback} No app notification delivered yet.${pushErrorText(push)}`;
       return `${fallback} No registered customer device was found yet.`;
     }
 
@@ -1652,7 +1658,8 @@
           body: JSON.stringify({ subscription: subscription.toJSON(), test: true })
         });
         if (data.push?.failed && !data.push?.sent) {
-          pushStatus("Device saved, but the test notification did not deliver yet.", true);
+          const reason = data.push?.errors?.[0]?.reason ? ` ${data.push.errors[0].reason}` : "";
+          pushStatus(`Device saved, but the test notification did not deliver yet.${reason}`, true);
           setPushButton(true, "Try Notifications Again");
           setNotificationBarHidden(false);
           return;
