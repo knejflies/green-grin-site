@@ -1,0 +1,42 @@
+{
+  "name": "Green Grin Lawn & Landscape",
+  "short_name": "Green Grin",
+  "description": "Green Grin customer, employee, and admin portal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f1",
+  "theme_color": "#123324",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/assets/green-grin-pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/green-grin-pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Customer Portal",
+      "short_name": "Portal",
+      "url": "/portal/"
+    },
+    {
+      "name": "Employee Portal",
+      "short_name": "Employee",
+      "url": "/employee/"
+    },
+    {
+      "name": "Admin Portal",
+      "short_name": "Admin",
+      "url": "/admin/"
+    }
+  ]
+}

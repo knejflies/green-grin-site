@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Green Grin Lawn & Landscape provides mowing, edging, cleanups, mulch, shrub trimming, and commercial property care across Caldwell and the Treasure Valley." />
   <title>Green Grin Lawn & Landscape | Caldwell & Treasure Valley Lawn Care</title>
+  <meta name="theme-color" content="#123324" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Green Grin" />
   <link rel="icon" href="assets/green-grin-tab-icon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/assets/green-grin-pwa-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
   <style>
     :root {
       --pine: #123324;
@@ -1277,6 +1282,13 @@
       <p>Caldwell, Idaho - Treasure Valley Lawn Care</p>
     </div>
   </footer>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js").catch(() => null);
+      });
+    }
+  </script>
 </body>
 </html>
 

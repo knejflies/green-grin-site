@@ -185,6 +185,10 @@ exports.handler = async (event) => {
       const update = {};
       if (body.status) update.status = body.status;
       if (Object.prototype.hasOwnProperty.call(body, "employee_pin")) update.employee_pin = body.employee_pin || null;
+      if (Object.prototype.hasOwnProperty.call(body, "hourly_rate")) {
+        const hourlyRate = Number(body.hourly_rate);
+        update.hourly_rate = Number.isFinite(hourlyRate) ? hourlyRate : null;
+      }
       if (!Object.keys(update).length) return json(400, { error: "Nothing to update." });
       const rows = await supabase(`green_grin_employees?id=eq.${encodeURIComponent(body.id)}`, {
         method: "PATCH",

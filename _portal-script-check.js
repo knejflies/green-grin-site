@@ -49,6 +49,7 @@
       $("#employee-welcome").textContent = `Welcome, ${employee.full_name || employee.email || "Employee"}.`;
       openTab("employee-work");
       await loadEmployeeJobs();
+      await loadTimeClock();
     }
 
     async function setOwnerSignedIn(pin) {
@@ -64,6 +65,7 @@
       await loadInvoiceCustomers();
       await loadInvoices();
       await loadActivity();
+      await loadTimeClockReport();
     }
 
     function setSignedOut() {
@@ -238,6 +240,7 @@
         $("#employee-result").innerHTML = data.jobs.length
           ? data.jobs.map((job) => employeeJobCard(job)).join("")
           : notice("No employee jobs ready.");
+        await loadTimeClock();
         $("#staff-login-result").innerHTML = "";
       } catch (error) {
         $("#staff-login-result").innerHTML = notice(error.message, true);
@@ -708,9 +711,12 @@
           <p class="muted">Status: ${employee.status}</p>
           <p class="muted">${employee.email}</p>
           <p class="muted">${employee.phone || ""}</p>
+          <p class="muted">Hourly rate: ${employee.hourly_rate ? money(employee.hourly_rate) : "Not set"}</p>
           <div class="two" style="margin-top: 12px;">
             <input class="employee-pin-input" type="password" value="${employee.employee_pin || ""}" placeholder="Set employee PIN" />
             <button class="button small" data-employee-pin="1" type="button">Save PIN</button>
+            <input class="employee-rate-input" type="number" min="0" step="0.01" value="${employee.hourly_rate || ""}" placeholder="Hourly rate" />
+            <button class="button small" data-employee-rate="1" type="button">Save Rate</button>
           </div>
           <div class="admin-actions">
             <button class="button small secondary" data-employee-status="Active" type="button">Approve / Reactivate</button>
@@ -718,6 +724,97 @@
             <button class="button small ghost" data-employee-delete="1" type="button">Delete Employee</button>
           </div>
         </div>
+      `;
+    }
+
+    function formatDateTime(value) {
+      return value ? new Date(value).toLocaleString() : "";
+    }
+
+    function formatMinutes(minutes = 0) {
+      const total = Math.max(0, Number(minutes) || 0);
+      const hours = Math.floor(total / 60);
+      const mins = total % 60;
+      return `${hours}h ${mins}m`;
+    }
+
+    function employeeTimeHeaders() {
+      const pin = $("#employee-pin")?.value || "";
+      return pin ? { "x-employee-pin": pin } : {};
+    }
+
+    function timeEntryCard(entry) {
+      const out = entry.clock_out_at ? formatDateTime(entry.clock_out_at) : "Clocked in";
+      const minutes = entry.total_minutes ?? (entry.clock_out_at ? Math.round((new Date(entry.clock_out_at) - new Date(entry.clock_in_at)) / 60000) : 0);
+      const grossPay = Number(entry.gross_pay ?? ((Number(entry.hourly_rate) || 0) * minutes / 60));
+      return `
+        <div class="message">
+          <div class="message-head">
+            <strong>${cleanText(entry.employee_name || "Employee")}</strong>
+            <span class="badge">${entry.clock_out_at ? cleanText(formatMinutes(minutes)) : "Open"}</span>
+          </div>
+          <p class="muted">In: ${cleanText(formatDateTime(entry.clock_in_at))}</p>
+          <p class="muted">Out: ${cleanText(out)}</p>
+          ${grossPay ? `<p class="muted">Pay: ${cleanText(money(grossPay))}</p>` : ""}
+          ${entry.notes ? `<p>${cleanText(entry.notes)}</p>` : ""}
+        </div>
+      `;
+    }
+
+    function renderTimeClock(data = {}) {
+      const open = data.open || null;
+      const recent = data.recent || [];
+      const employeeName = data.employee?.full_name || data.employee?.email || "Employee";
+      const periodLabel = `${data.count || $("#timeclock-count").value || 1} ${data.unit || $("#timeclock-unit").value || "weeks"}`;
+      $("#timeclock-status").textContent = open
+        ? `${employeeName} is clocked in since ${formatDateTime(open.clock_in_at)}.`
+        : `${employeeName} is clocked out.`;
+      $("#clock-in").disabled = Boolean(open);
+      $("#clock-out").disabled = !open;
+      $("#timeclock-result").innerHTML = recent.length
+        ? `
+          <div class="metric">
+            <span>Previous ${cleanText(periodLabel)}</span>
+            <strong>${cleanText(money(data.summary?.total_pay || 0))}</strong>
+            <p class="muted">${cleanText(formatMinutes(data.summary?.total_minutes || 0))} / ${cleanText(String(data.summary?.total_hours || 0))} hours</p>
+          </div>
+          ${recent.map((entry) => timeEntryCard(entry)).join("")}
+        `
+        : notice("No time entries yet.");
+    }
+
+    function renderTimeReportEmployeeOptions() {
+      const select = $("#time-report-employee");
+      if (!select) return;
+      const active = employeeDirectory.filter((employee) => employee.status === "Active");
+      select.innerHTML = `<option value="">All employees</option>` + active.map((employee) => {
+        const label = `${employee.employee_code ? `${employee.employee_code} - ` : ""}${employee.full_name || employee.email}`;
+        return `<option value="${employee.id}">${cleanText(label)}</option>`;
+      }).join("");
+    }
+
+    function renderTimeReport(data = {}) {
+      const summary = data.summary || {};
+      const employees = summary.employees || [];
+      const entries = data.entries || [];
+      $("#time-report-result").innerHTML = `
+        <div class="metric">
+          <span>Total Pay</span>
+          <strong>${cleanText(money(summary.total_pay || 0))}</strong>
+          <p class="muted">${cleanText(String(summary.total_hours || 0))} hours / ${cleanText(formatMinutes(summary.total_minutes || 0))} across ${entries.length} entries</p>
+        </div>
+        ${employees.length ? employees.map((employee) => `
+          <div class="message">
+            <div class="message-head">
+              <strong>${cleanText(employee.employee_name || "Employee")}</strong>
+              <span class="badge">${cleanText(employee.employee_code || "")}</span>
+            </div>
+            <p class="muted">${cleanText(money(employee.total_pay || 0))} total pay</p>
+            <p class="muted">${cleanText(formatMinutes(employee.total_minutes || 0))} / ${cleanText(String(employee.total_hours || 0))} hours</p>
+            <p class="muted">${employee.entries || 0} clock entries</p>
+          </div>
+        `).join("") : notice("No time entries for that range.")}
+        ${entries.length ? `<div class="status-box">${entries.slice(0, 30).map((entry) => timeEntryCard(entry)).join("")}</div>` : ""}
       `;
     }
 
@@ -1005,6 +1102,10 @@
     $("#load-employee").addEventListener("click", loadEmployeeJobs);
     $("#load-employees").addEventListener("click", loadEmployees);
     $("#load-activity").addEventListener("click", loadActivity);
+    $("#load-timeclock").addEventListener("click", loadTimeClock);
+    $("#clock-in").addEventListener("click", () => punchTimeClock("clock-in"));
+    $("#clock-out").addEventListener("click", () => punchTimeClock("clock-out"));
+    $("#load-time-report").addEventListener("click", loadTimeClockReport);
 
     $("#admin-result").addEventListener("input", (event) => {
       if (!event.target.classList.contains("annual-price-input")) return;
@@ -1163,6 +1264,58 @@
       }
     }
 
+    async function loadTimeClock() {
+      $("#timeclock-result").innerHTML = notice("Loading time clock...");
+      try {
+        const count = $("#timeclock-count").value || 1;
+        const unit = $("#timeclock-unit").value || "weeks";
+        const data = await requestJson(`portal-timeclock?count=${encodeURIComponent(count)}&unit=${encodeURIComponent(unit)}`, { headers: employeeTimeHeaders() });
+        renderTimeClock(data);
+      } catch (error) {
+        $("#timeclock-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    async function punchTimeClock(action) {
+      $("#timeclock-result").innerHTML = notice(action === "clock-in" ? "Clocking in..." : "Clocking out...");
+      try {
+        const data = await requestJson("portal-timeclock", {
+          method: "POST",
+          headers: employeeTimeHeaders(),
+          body: JSON.stringify({
+            action,
+            count: $("#timeclock-count").value || 1,
+            unit: $("#timeclock-unit").value || "weeks",
+            notes: $("#timeclock-notes").value || ""
+          })
+        });
+        $("#timeclock-notes").value = "";
+        renderTimeClock(data);
+      } catch (error) {
+        $("#timeclock-result").innerHTML = notice(error.message, true);
+      }
+    }
+
+    async function loadTimeClockReport() {
+      if (!adminPin()) return;
+      $("#time-report-result").innerHTML = notice("Loading time totals...");
+      try {
+        if (!employeeDirectory.length) {
+          const employees = await requestJson("portal-employees?admin=1", { headers: adminHeaders() });
+          employeeDirectory = employees.employees || [];
+          renderTimeReportEmployeeOptions();
+        }
+        const count = $("#time-report-count").value || 1;
+        const unit = $("#time-report-unit").value || "weeks";
+        const employeeId = $("#time-report-employee").value || "";
+        const suffix = employeeId ? `&employee_id=${encodeURIComponent(employeeId)}` : "";
+        const data = await requestJson(`portal-timeclock?admin=1&count=${encodeURIComponent(count)}&unit=${encodeURIComponent(unit)}${suffix}`, { headers: adminHeaders() });
+        renderTimeReport(data);
+      } catch (error) {
+        $("#time-report-result").innerHTML = notice(error.message, true);
+      }
+    }
+
     async function loadEmployees() {
       $("#employees-result").innerHTML = notice("Loading employees...");
       $("#employee-pending-result").innerHTML = notice("Loading pending requests...");
@@ -1172,6 +1325,7 @@
         const pending = employeeDirectory.filter((employee) => employee.status !== "Active");
         const active = employeeDirectory.filter((employee) => employee.status === "Active");
         if ($("#owner_job_employee")) $("#owner_job_employee").innerHTML = employeeOptions("");
+        renderTimeReportEmployeeOptions();
         $("#employee-pending-result").innerHTML = pending.length
           ? pending.map((employee) => employeeAccessCard(employee)).join("")
           : notice("No pending employee requests.");
@@ -1290,7 +1444,7 @@
     });
 
     async function handleEmployeeAdminClick(event) {
-      const button = event.target.closest("button[data-employee-status], button[data-employee-pin], button[data-employee-delete]");
+      const button = event.target.closest("button[data-employee-status], button[data-employee-pin], button[data-employee-rate], button[data-employee-delete]");
       if (!button) return;
       const card = button.closest(".job");
       const id = card.dataset.id;
@@ -1306,7 +1460,9 @@
         } else {
           const payload = button.dataset.employeePin
             ? { id, employee_pin: card.querySelector(".employee-pin-input")?.value || "" }
-            : { id, status: button.dataset.employeeStatus };
+            : button.dataset.employeeRate
+              ? { id, hourly_rate: card.querySelector(".employee-rate-input")?.value || null }
+              : { id, status: button.dataset.employeeStatus };
           await requestJson("portal-employees", {
             method: "PATCH",
             headers: adminHeaders(),
@@ -1324,6 +1480,12 @@
 
     $("#employees-result").addEventListener("click", handleEmployeeAdminClick);
     $("#employee-pending-result").addEventListener("click", handleEmployeeAdminClick);
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js").catch(() => null);
+      });
+    }
 
     applyPortalMode();
     loadSupabaseAuth();

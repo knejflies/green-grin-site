@@ -80,6 +80,7 @@ create table if not exists public.green_grin_employees (
   phone text,
   status text not null default 'Pending',
   employee_pin text,
+  hourly_rate numeric(10, 2),
   role text not null default 'Crew'
 );
 
@@ -91,6 +92,44 @@ alter table public.green_grin_employees
 
 alter table public.green_grin_employees
   add column if not exists employee_pin text;
+
+alter table public.green_grin_employees
+  add column if not exists hourly_rate numeric(10, 2);
+
+create table if not exists public.green_grin_time_entries (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  employee_id uuid not null references public.green_grin_employees(id) on delete cascade,
+  employee_code text,
+  employee_name text,
+  clock_in_at timestamptz not null,
+  clock_out_at timestamptz,
+  total_minutes integer,
+  hourly_rate numeric(10, 2),
+  gross_pay numeric(10, 2),
+  notes text
+);
+
+alter table public.green_grin_time_entries
+  add column if not exists employee_code text;
+
+alter table public.green_grin_time_entries
+  add column if not exists employee_name text;
+
+alter table public.green_grin_time_entries
+  add column if not exists clock_out_at timestamptz;
+
+alter table public.green_grin_time_entries
+  add column if not exists total_minutes integer;
+
+alter table public.green_grin_time_entries
+  add column if not exists hourly_rate numeric(10, 2);
+
+alter table public.green_grin_time_entries
+  add column if not exists gross_pay numeric(10, 2);
+
+alter table public.green_grin_time_entries
+  add column if not exists notes text;
 
 alter table public.green_grin_jobs
   add column if not exists assigned_employee_id uuid references public.green_grin_employees(id) on delete set null;
@@ -156,6 +195,31 @@ create index if not exists green_grin_employees_email_idx
 
 create index if not exists green_grin_employees_status_idx
   on public.green_grin_employees(status);
+
+create index if not exists green_grin_time_entries_employee_idx
+  on public.green_grin_time_entries(employee_id);
+
+create index if not exists green_grin_time_entries_clock_in_idx
+  on public.green_grin_time_entries(clock_in_at desc);
+
+create index if not exists green_grin_time_entries_open_idx
+  on public.green_grin_time_entries(employee_id)
+  where clock_out_at is null;
+
+alter table public.green_grin_time_entries enable row level security;
+
+drop policy if exists "Employees can read own time entries" on public.green_grin_time_entries;
+
+create policy "Employees can read own time entries"
+  on public.green_grin_time_entries for select
+  using (
+    exists (
+      select 1
+      from public.green_grin_employees
+      where green_grin_employees.id = green_grin_time_entries.employee_id
+        and green_grin_employees.user_id = auth.uid()
+    )
+  );
 
 create index if not exists green_grin_invoices_customer_user_idx
   on public.green_grin_invoices(customer_user_id);
