@@ -613,6 +613,24 @@
       margin-top: 18px;
     }
 
+    .notification-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+    }
+
+    .notification-bar div {
+      display: grid;
+      gap: 2px;
+    }
+
     .job-head,
     .invoice-head,
     .message-head {
@@ -847,7 +865,8 @@
       body.admin-site .job-head,
       body.employee-site .job-head,
       body.admin-site .message-head,
-      body.employee-site .message-head {
+      body.employee-site .message-head,
+      .notification-bar {
         align-items: flex-start;
         flex-direction: column;
       }
@@ -966,6 +985,13 @@
       <button class="tab employee-only" data-tab="employee-work" type="button">My Jobs</button>
     </div>
     <div class="portal-content">
+      <div class="notification-bar">
+        <div>
+          <strong>App notifications</strong>
+          <span id="push-status" class="muted">Not enabled on this device.</span>
+        </div>
+        <button id="enable-push" class="button small" type="button">Enable Notifications</button>
+      </div>
 
     <section id="dashboard" class="panel active">
       <div class="three">
@@ -1091,8 +1117,8 @@
           <h2>Message preferences</h2>
           <form id="message-preferences-form">
             <div class="checklist">
-              <label class="check"><input id="pref_cleanup_text" type="checkbox" checked /> Text me the morning of scheduled service.</label>
-              <label class="check"><input id="pref_done_text" type="checkbox" checked /> Text me when service is finished.</label>
+              <label class="check"><input id="pref_cleanup_text" type="checkbox" checked /> Notify me the morning of scheduled service.</label>
+              <label class="check"><input id="pref_done_text" type="checkbox" checked /> Notify me when service is finished.</label>
               <label class="check"><input id="pref_email_receipts" type="checkbox" /> Email me monthly receipts.</label>
             </div>
             <div class="row-actions">
@@ -1240,7 +1266,7 @@
                 <input id="owner_job_end_date" type="date" />
               </div>
               <div>
-                <label for="owner_job_reminder_time">Morning text time</label>
+                <label for="owner_job_reminder_time">Morning notification time</label>
                 <input id="owner_job_reminder_time" type="time" value="08:00" />
               </div>
               <div>
@@ -1350,6 +1376,21 @@
     <section id="activity" class="panel">
       <div class="grid">
         <div class="card owner-only">
+          <h2>Customer broadcast</h2>
+          <form id="broadcast-form">
+            <div>
+              <label for="broadcast-title">Notification title</label>
+              <input id="broadcast-title" maxlength="90" value="Green Grin update" />
+            </div>
+            <div>
+              <label for="broadcast-message">Message</label>
+              <textarea id="broadcast-message" maxlength="500" placeholder="Type the message all customers should receive."></textarea>
+            </div>
+            <button class="button" type="submit">Send To All Customers</button>
+          </form>
+          <div id="broadcast-result" aria-live="polite"></div>
+        </div>
+        <div class="card owner-only">
           <h2>Activity log</h2>
           <div class="admin-bar">
             <button id="load-activity" class="button secondary" type="button">Load Activity</button>
@@ -1401,10 +1442,6 @@
               <label for="invoice_notes">Notes</label>
               <textarea id="invoice_notes" placeholder="Monthly mowing, cleanup, landscape project, payment note"></textarea>
             </div>
-            <div>
-              <label for="invoice_payment_url">Pay link</label>
-              <input id="invoice_payment_url" type="url" placeholder="Optional invoice payment link" />
-            </div>
             <div class="row-actions">
               <button id="invoice-submit" class="button ghost" data-invoice-intent="draft" type="submit">Save Draft</button>
               <button id="invoice-send" class="button" data-invoice-intent="send" type="submit">Send Invoice</button>
@@ -1438,6 +1475,7 @@
     let invoiceCustomers = [];
     let employeeDirectory = [];
     let adminSessionPin = "";
+    let portalConfig = {};
 
     function portalMode() {
       const path = window.location.pathname.toLowerCase();
@@ -1487,6 +1525,88 @@
       });
     }
 
+    function pushStatus(message, error = false) {
+      const status = $("#push-status");
+      if (!status) return;
+      status.textContent = message;
+      status.style.color = error ? "#7c2d12" : "";
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; i += 1) outputArray[i] = rawData.charCodeAt(i);
+      return outputArray;
+    }
+
+    function pushRequestHeaders() {
+      if (activeAccount?.id === "owner") return adminHeaders();
+      if (activeAccount?.id === "employee") return employeeTimeHeaders();
+      return {};
+    }
+
+    async function appServiceWorker() {
+      if (!("serviceWorker" in navigator)) throw new Error("This browser does not support app notifications.");
+      const registration = await navigator.serviceWorker.register("/service-worker.js");
+      return await navigator.serviceWorker.ready || registration;
+    }
+
+    async function updatePushStatus() {
+      if (!$("#enable-push")) return;
+      if (!("Notification" in window) || !("PushManager" in window)) {
+        pushStatus("App notifications are not supported on this device.", true);
+        $("#enable-push").disabled = true;
+        return;
+      }
+      if (!portalConfig.vapidPublicKey) {
+        pushStatus("Add notification keys in Netlify to turn this on.", true);
+        return;
+      }
+      if (Notification.permission === "denied") {
+        pushStatus("Notifications are blocked in this browser.", true);
+        return;
+      }
+      if (Notification.permission !== "granted") {
+        pushStatus("Not enabled on this device.");
+        return;
+      }
+      try {
+        const registration = await appServiceWorker();
+        const subscription = await registration.pushManager.getSubscription();
+        pushStatus(subscription ? "Enabled on this device." : "Not enabled on this device.");
+      } catch (_error) {
+        pushStatus("Not enabled on this device.");
+      }
+    }
+
+    async function enablePushNotifications() {
+      try {
+        if (!activeAccount) throw new Error("Sign in first, then enable notifications.");
+        if (!portalConfig.vapidPublicKey) throw new Error("Notification keys are not configured in Netlify yet.");
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") throw new Error("Notifications were not allowed on this device.");
+        pushStatus("Saving this device...");
+        const registration = await appServiceWorker();
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(portalConfig.vapidPublicKey)
+          });
+        }
+        await requestJson("portal-push", {
+          method: "POST",
+          headers: pushRequestHeaders(),
+          body: JSON.stringify({ subscription: subscription.toJSON(), test: true })
+        });
+        pushStatus("Enabled on this device.");
+      } catch (error) {
+        pushStatus(error.message || "Notifications could not be enabled.", true);
+      }
+    }
+
     function setSignedIn(account = {}) {
       activeAccount = account || {};
       document.body.classList.toggle("employee-mode", activeAccount.id === "employee");
@@ -1495,6 +1615,7 @@
       $("#account-pill").textContent = activeAccount.email || "Customer account";
       $("#account-pill").classList.add("active");
       $("#sign-out").hidden = false;
+      updatePushStatus();
       if (activeAccount.id !== "owner" && activeAccount.id !== "employee") loadAccountData();
     }
 
@@ -1531,6 +1652,7 @@
       $("#account-pill").classList.remove("active");
       $("#sign-out").hidden = true;
       accountData = null;
+      updatePushStatus();
     }
 
     async function loadSupabaseAuth() {
@@ -1538,6 +1660,8 @@
         const response = await fetch(api("portal-config"));
         if (!response.ok) return;
         const config = await response.json();
+        portalConfig = config || {};
+        updatePushStatus();
         if (!config.supabaseUrl || !config.supabaseAnonKey || !window.supabase) return;
         supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
         const { data } = await supabaseClient.auth.getSession();
@@ -1594,6 +1718,8 @@
     document.querySelectorAll(".go-tab").forEach((button) => {
       button.addEventListener("click", () => openTab(button.dataset.go));
     });
+
+    $("#enable-push").addEventListener("click", enablePushNotifications);
 
     async function loadCurrentEmployee() {
       try {
@@ -1750,7 +1876,7 @@
 
     function customerMessageCard(log) {
       const sent = log.created_at ? new Date(log.created_at).toLocaleString() : "";
-      const title = log.template === "completed" ? "Service completed" : "Cleanup reminder";
+      const title = log.template === "completed" ? "Service completed" : log.template === "broadcast" ? "Customer broadcast" : "Cleanup reminder";
       return `
         <div class="message">
           <div class="message-head"><strong>${title}</strong><span class="badge">${cleanText(log.actor_type || "Green Grin")}</span></div>
@@ -1803,36 +1929,12 @@
           <p class="muted">${cleanText(amount || "$0.00")} - Due ${cleanText(due)}</p>
           <p class="muted">${cleanText(invoice.customer_code || "")}${invoice.customer_code ? " - " : ""}${cleanText(invoice.customer_name || "Customer")}</p>
           ${invoice.notes ? `<p>${cleanText(invoice.notes)}</p>` : ""}
-          ${status !== "Paid" ? `<div class="row-actions"><button class="button small billing-action" data-invoice-id="${invoice.id}" data-plan="${cleanText(invoice.service_line || invoice.notes || "Invoice")}" data-price="${cleanText(amount || "$0.00")}" type="button">Pay Invoice</button></div>` : ""}
         </div>
       `;
     }
 
     function wireBillingButtons() {
-      document.querySelectorAll(".billing-action").forEach((button) => {
-        if (button.dataset.ready === "1") return;
-        button.dataset.ready = "1";
-        button.addEventListener("click", async () => {
-          const plan = button.dataset.plan;
-          const price = button.dataset.price;
-          const invoice_id = button.dataset.invoiceId || "";
-          $("#billing-result").innerHTML = notice("Checking payment link...");
-          try {
-            const data = await requestJson("portal-payments", {
-              method: "POST",
-              body: JSON.stringify({ invoice_id, plan, price })
-            });
-            if (data.configured && data.paymentUrl) {
-              window.open(data.paymentUrl, "_blank", "noopener");
-              $("#billing-result").innerHTML = notice(`Opening payment link for ${cleanText(plan)}.`);
-            } else {
-              $("#billing-result").innerHTML = notice(data.message || "Payment link is not ready.", true);
-            }
-          } catch (error) {
-            $("#billing-result").innerHTML = notice(error.message, true);
-          }
-        });
-      });
+      return;
     }
 
     function renderInvoiceDrafts() {
@@ -1888,8 +1990,8 @@
 
     function preferenceLine(customer) {
       const prefs = [];
-      prefs.push(customer.text_cleanup_reminders !== false ? "Morning cleanup texts: yes" : "Morning cleanup texts: no");
-      prefs.push(customer.text_done_messages !== false ? "Done texts: yes" : "Done texts: no");
+      prefs.push(customer.text_cleanup_reminders !== false ? "Morning reminders: yes" : "Morning reminders: no");
+      prefs.push(customer.text_done_messages !== false ? "Done notifications: yes" : "Done notifications: no");
       prefs.push(customer.email_monthly_receipts ? "Email receipts: yes" : "Email receipts: no");
       return prefs.join(" | ");
     }
@@ -2100,7 +2202,7 @@
           <div class="${admin ? "job-collapse" : ""}" ${admin ? "hidden" : ""}>
             <p class="muted">Status: ${job.status || "New"}</p>
             <p class="muted">${job.service_type || "Service"} - ${scheduled}</p>
-            <p class="muted">Morning text: ${reminderTime}</p>
+            <p class="muted">Morning notification: ${reminderTime}</p>
             ${admin && monthlyPrice ? `<p class="muted">Customer price: $${monthlyPrice}/month${annualPrice ? ` from $${annualPrice}/year` : ""}</p>` : ""}
             <p>${job.address || ""}</p>
             <p class="muted">${job.notes || ""}</p>
@@ -2125,8 +2227,8 @@
             </div>
             <div class="admin-actions job-collapse" hidden>
               <button class="button small ghost" data-action="schedule" type="button">Save Schedule</button>
-              <button class="button small" data-action="objects" type="button">Text: Pick Up Yard Objects</button>
-              <button class="button small secondary" data-action="completed" type="button">Text: Done</button>
+              <button class="button small" data-action="objects" type="button">Notify: Pick Up Yard Objects</button>
+              <button class="button small secondary" data-action="completed" type="button">Notify: Done</button>
               <button class="button small ghost" data-action="delete-job" type="button">Delete Job</button>
               <button class="button small ghost" data-customer-action="deactivate" type="button">Deactivate Customer</button>
               <button class="button small ghost" data-customer-action="delete" type="button">Delete Customer</button>
@@ -2276,7 +2378,7 @@
       const when = log.created_at ? new Date(log.created_at).toLocaleString() : "";
       const job = log.green_grin_jobs || {};
       const actor = log.actor_name || log.actor_type || "System";
-      const action = log.template === "completed" ? "clicked Done / sent complete text" : `sent ${log.template} text`;
+      const action = log.template === "completed" ? "clicked Done / sent complete notification" : log.template === "broadcast" ? "sent customer broadcast" : `sent ${log.template} notification`;
       return `
         <div class="message">
           <div class="message-head">
@@ -2463,8 +2565,7 @@
         due_date: $("#invoice_due").value || null,
         status: intent === "send" ? "Sent" : "Draft",
         service_line: $("#invoice_custom_service").value || $("#invoice_notes").value || "Monthly service",
-        notes: $("#invoice_notes").value || "Monthly service",
-        payment_url: $("#invoice_payment_url").value || ""
+        notes: $("#invoice_notes").value || "Monthly service"
       };
       $("#invoice-result").innerHTML = notice(intent === "send" ? "Sending invoice..." : "Saving draft...");
       try {
@@ -2546,9 +2647,32 @@
       $("#invoice_status").value = invoice.status;
       $("#invoice_custom_service").value = invoice.service_line || "";
       $("#invoice_notes").value = invoice.notes || "";
-      $("#invoice_payment_url").value = invoice.payment_url || "";
       $("#invoice-submit").textContent = "Save Draft";
       $("#invoice-result").innerHTML = notice("Editing invoice.");
+    });
+
+    $("#broadcast-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const title = $("#broadcast-title").value.trim() || "Green Grin update";
+      const message = $("#broadcast-message").value.trim();
+      if (!message) {
+        $("#broadcast-result").innerHTML = notice("Type a message before sending.", true);
+        return;
+      }
+      if (!confirm("Send this app notification to all customers who enabled notifications?")) return;
+      $("#broadcast-result").innerHTML = notice("Sending customer broadcast...");
+      try {
+        const data = await requestJson("portal-push", {
+          method: "POST",
+          headers: adminHeaders(),
+          body: JSON.stringify({ broadcast: true, title, message })
+        });
+        $("#broadcast-message").value = "";
+        $("#broadcast-result").innerHTML = notice(`Broadcast sent to ${data.push?.sent || 0} device(s).`);
+        await loadActivity();
+      } catch (error) {
+        $("#broadcast-result").innerHTML = notice(error.message, true);
+      }
     });
 
     $("#load-admin").addEventListener("click", loadAdminJobs);
@@ -2620,7 +2744,6 @@
         $("#invoice_status").value = "Draft";
         $("#invoice_custom_service").value = customerPlan || "";
         $("#invoice_notes").value = customerPlan || "Monthly service";
-        $("#invoice_payment_url").value = "";
         $("#invoice-submit").textContent = "Save Draft";
         openTab("invoices");
         return;
@@ -2650,8 +2773,7 @@
               due_date: dueDate,
               status: "Sent",
               service_line: customerPlan,
-              notes: `Monthly service invoice for ${customerPlan}`,
-              payment_url: ""
+              notes: `Monthly service invoice for ${customerPlan}`
             })
           });
           await loadInvoices();

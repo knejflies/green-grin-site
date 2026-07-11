@@ -1,6 +1,7 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PIN = process.env.GREEN_GRIN_ADMIN_PIN;
+const { sendPushToTarget } = require("./push-helper");
 
 const headers = {
   "Content-Type": "application/json",
@@ -53,9 +54,23 @@ function invoicePayload(body) {
     status: body.status || "Draft",
     service_line: body.service_line || "",
     notes: body.notes || "",
-    payment_url: body.payment_url || "",
+    payment_url: "",
     active: true
   };
+}
+
+async function notifyInvoice(invoice) {
+  if (!invoice || invoice.status !== "Sent") return null;
+  return await sendPushToTarget(supabase, {
+    customer_user_id: invoice.customer_user_id || null,
+    customer_code: invoice.customer_code || "",
+    email: invoice.email || ""
+  }, {
+    title: "New Green Grin invoice",
+    body: `${invoice.service_line || invoice.notes || "Monthly service"} - $${Number(invoice.amount || 0).toFixed(2)}`,
+    url: "/portal/",
+    tag: `green-grin-invoice-${invoice.id}`
+  });
 }
 
 exports.handler = async (event) => {
@@ -80,7 +95,9 @@ exports.handler = async (event) => {
         method: "POST",
         body: JSON.stringify(invoicePayload(body))
       });
-      return json(200, { invoice: rows?.[0] || null });
+      const invoice = rows?.[0] || null;
+      const push = await notifyInvoice(invoice);
+      return json(200, { invoice, push });
     }
 
     if (event.httpMethod === "PATCH") {
@@ -89,7 +106,9 @@ exports.handler = async (event) => {
         method: "PATCH",
         body: JSON.stringify(invoicePayload(body))
       });
-      return json(200, { invoice: rows?.[0] || null });
+      const invoice = rows?.[0] || null;
+      const push = await notifyInvoice(invoice);
+      return json(200, { invoice, push });
     }
 
     if (event.httpMethod === "DELETE") {

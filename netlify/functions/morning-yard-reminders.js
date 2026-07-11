@@ -1,9 +1,7 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
 const TIME_ZONE = process.env.GREEN_GRIN_TIMEZONE || "America/Denver";
+const { pushReady, sendPushToTarget } = require("./push-helper");
 
 exports.config = {
   schedule: "*/15 * * * *"
@@ -51,7 +49,7 @@ function localTime(date = new Date()) {
 
 function requireSetup() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return "Supabase is not configured yet.";
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) return "Twilio is not configured yet.";
+  if (!pushReady()) return "App notification keys are not configured yet.";
   return null;
 }
 
@@ -77,24 +75,12 @@ function cleanupMessage(job) {
   return `Hi${name}, Green Grin is scheduled for your ${service} today. Please pick up toys, hoses, pet waste, and yard objects before we arrive.`;
 }
 
-async function sendSms(to, body) {
-  const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
-  const params = new URLSearchParams({
-    To: to,
-    From: TWILIO_FROM_NUMBER,
-    Body: body
-  });
-  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: params.toString()
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(data?.message || "Twilio SMS failed.");
-  return data;
+function customerPushTarget(job) {
+  return {
+    customer_user_id: job.customer_user_id || null,
+    customer_code: job.customer_code || "",
+    email: job.email || ""
+  };
 }
 
 exports.handler = async () => {
@@ -122,18 +108,18 @@ exports.handler = async () => {
       continue;
     }
 
-    if (!job.phone) {
-      skipped += 1;
-      continue;
-    }
-
     if (job.last_cleanup_reminder_sent_at && localDate(new Date(job.last_cleanup_reminder_sent_at)) === today) {
       skipped += 1;
       continue;
     }
 
     const message = cleanupMessage(job);
-    const sms = await sendSms(job.phone, message);
+    const push = await sendPushToTarget(supabase, customerPushTarget(job), {
+      title: "Yard cleanup reminder",
+      body: message,
+      url: "/portal/",
+      tag: `green-grin-${job.id}-morning-reminder-${today}`
+    });
 
     await supabase(`green_grin_jobs?id=eq.${encodeURIComponent(job.id)}`, {
       method: "PATCH",
@@ -152,8 +138,8 @@ exports.handler = async () => {
         template: "objects",
         message,
         actor_type: "System",
-        actor_name: `Morning reminder ${reminderTime}`,
-        twilio_sid: sms.sid || null
+        actor_name: push.sent ? `Morning app reminder ${reminderTime}` : `Morning app reminder attempted ${reminderTime}`,
+        twilio_sid: null
       })
     });
 

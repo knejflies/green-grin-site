@@ -2,9 +2,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PIN = process.env.GREEN_GRIN_ADMIN_PIN;
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
+const { pushReady, sendPushToTarget } = require("./push-helper");
 
 const headers = {
   "Content-Type": "application/json",
@@ -84,11 +82,7 @@ async function employeeDoneActor(event, template) {
 
 function requireSupabaseSetup() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return "Supabase is not configured yet.";
-  return null;
-}
-
-function requireTwilioSetup() {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) return "Twilio is not configured yet.";
+  if (!pushReady()) return "App notification keys are not configured yet.";
   return null;
 }
 
@@ -104,24 +98,18 @@ function messageFor(template, job) {
   return `Hi${name}, Green Grin has an update about your ${service}.`;
 }
 
-async function sendSms(to, body) {
-  const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
-  const params = new URLSearchParams({
-    To: to,
-    From: TWILIO_FROM_NUMBER,
-    Body: body
-  });
-  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: params.toString()
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(data?.message || "Twilio SMS failed.");
-  return data;
+function pushTitle(template) {
+  if (template === "objects") return "Yard cleanup reminder";
+  if (template === "completed") return "Service completed";
+  return "Green Grin update";
+}
+
+function customerPushTarget(job) {
+  return {
+    customer_user_id: job.customer_user_id || null,
+    customer_code: job.customer_code || "",
+    email: job.email || ""
+  };
 }
 
 exports.handler = async (event) => {
@@ -141,8 +129,6 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed." });
-    const twilioError = requireTwilioSetup();
-    if (twilioError) return json(500, { error: twilioError });
 
     const body = JSON.parse(event.body || "{}");
     if (!body.id || !body.template) return json(400, { error: "Job id and template are required." });
@@ -157,8 +143,21 @@ exports.handler = async (event) => {
     if (body.template === "arriving") return json(400, { error: "On-the-way messages are turned off." });
 
     const message = messageFor(body.template, job);
-    const sms = await sendSms(job.phone, message);
     const status = body.template === "completed" && !job.recurring_weekly ? "Completed" : job.status;
+    const push = await sendPushToTarget(supabase, customerPushTarget(job), {
+      title: pushTitle(body.template),
+      body: message,
+      url: "/portal/",
+      tag: `green-grin-${job.id}-${body.template}`
+    });
+    if (body.template === "completed") {
+      await sendPushToTarget(supabase, { owner_type: "admin" }, {
+        title: "Job marked done",
+        body: `${employeeActor ? employeeActor.full_name || employeeActor.email || "Employee" : "Owner"} marked ${job.customer_name || "a customer"} done.`,
+        url: "/admin/",
+        tag: `green-grin-admin-${job.id}-done`
+      });
+    }
 
     await supabase(`green_grin_jobs?id=eq.${id}`, {
       method: "PATCH",
@@ -179,11 +178,11 @@ exports.handler = async (event) => {
         actor_type: employeeActor ? "Employee" : "Owner",
         actor_name: employeeActor ? employeeActor.full_name || employeeActor.email : "Owner",
         actor_employee_id: employeeActor?.id || null,
-        twilio_sid: sms.sid || null
+        twilio_sid: null
       })
     });
 
-    return json(200, { ok: true, sid: sms.sid });
+    return json(200, { ok: true, push });
   } catch (error) {
     return json(500, { error: error.message });
   }

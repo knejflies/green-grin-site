@@ -230,4 +230,65 @@ create index if not exists green_grin_invoices_customer_code_idx
 create index if not exists green_grin_invoices_status_idx
   on public.green_grin_invoices(status);
 
+create table if not exists public.green_grin_push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  owner_type text not null default 'customer',
+  owner_email text,
+  customer_user_id uuid references auth.users(id) on delete cascade,
+  customer_code text,
+  employee_id uuid references public.green_grin_employees(id) on delete cascade,
+  employee_code text,
+  user_agent text,
+  active boolean not null default true
+);
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists owner_type text not null default 'customer';
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists owner_email text;
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists customer_user_id uuid references auth.users(id) on delete cascade;
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists customer_code text;
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists employee_id uuid references public.green_grin_employees(id) on delete cascade;
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists employee_code text;
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists user_agent text;
+
+alter table public.green_grin_push_subscriptions
+  add column if not exists active boolean not null default true;
+
+alter table public.green_grin_push_subscriptions enable row level security;
+
+create index if not exists green_grin_push_subscriptions_owner_type_idx
+  on public.green_grin_push_subscriptions(owner_type);
+
+create index if not exists green_grin_push_subscriptions_customer_user_idx
+  on public.green_grin_push_subscriptions(customer_user_id);
+
+create index if not exists green_grin_push_subscriptions_customer_code_idx
+  on public.green_grin_push_subscriptions(customer_code);
+
+create index if not exists green_grin_push_subscriptions_employee_idx
+  on public.green_grin_push_subscriptions(employee_id);
+
+create index if not exists green_grin_push_subscriptions_active_idx
+  on public.green_grin_push_subscriptions(active);
+
 notify pgrst, 'reload schema';
