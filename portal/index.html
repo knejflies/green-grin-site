@@ -2704,8 +2704,8 @@
         }
       }
       const response = await fetch(api(path), {
-        headers: nextHeaders,
-        ...options
+        ...options,
+        headers: nextHeaders
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Something went wrong.");
