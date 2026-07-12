@@ -110,7 +110,7 @@ exports.handler = async (event) => {
         body: JSON.stringify(invoicePayload(body))
       });
       const invoice = rows?.[0] || null;
-      const push = await notifyInvoice(invoice);
+      const push = body.notify_customer === true ? await notifyInvoice(invoice) : null;
       return json(200, { invoice, push });
     }
 
@@ -121,7 +121,7 @@ exports.handler = async (event) => {
         body: JSON.stringify(invoicePayload(body))
       });
       const invoice = rows?.[0] || null;
-      const push = await notifyInvoice(invoice);
+      const push = body.notify_customer === true ? await notifyInvoice(invoice) : null;
       return json(200, { invoice, push });
     }
 

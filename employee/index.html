@@ -677,6 +677,53 @@
       color: #fff;
     }
 
+    .paid-invoice-archive {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .paid-invoice-archive summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 48px;
+      padding: 12px 14px;
+      color: var(--pine);
+      cursor: pointer;
+      font-weight: 950;
+      list-style: none;
+    }
+
+    .paid-invoice-archive summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .paid-invoice-archive summary::after {
+      content: ">";
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--white);
+      line-height: 1;
+    }
+
+    .paid-invoice-archive[open] summary::after {
+      content: "v";
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    .paid-invoice-tools {
+      padding: 0 14px 14px;
+    }
+
     .admin-bar {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -990,8 +1037,10 @@
       <button class="tab customer-only" data-tab="property" type="button">Property</button>
       <button class="tab owner-only" data-tab="customers" type="button">Customers</button>
       <button class="tab owner-only" data-tab="owner" type="button">Jobs</button>
+      <button class="tab owner-only" data-tab="bids" type="button">Bid Calculator</button>
       <button class="tab owner-only" data-tab="employee-admin" type="button">Employees</button>
       <button class="tab owner-only" data-tab="invoices" type="button">Invoices</button>
+      <button class="tab owner-only" data-tab="expenses" type="button">Expenses</button>
       <button class="tab owner-only" data-tab="activity" type="button">Activity</button>
       <button class="tab employee-only" data-tab="employee-work" type="button">My Jobs</button>
     </div>
@@ -1387,6 +1436,95 @@
       </div>
     </section>
 
+    <section id="bids" class="panel">
+      <div class="grid">
+        <div class="card owner-only">
+          <h2>Bid calculator</h2>
+          <form id="bid-form">
+            <div class="two">
+              <div>
+                <label for="bid_customer_name">Customer</label>
+                <input id="bid_customer_name" placeholder="Customer name" />
+              </div>
+              <div>
+                <label for="bid_plan">Plan</label>
+                <select id="bid_plan">
+                  <option>Fresh Grin Weekly - Mow, Edge, Blow</option>
+                  <option>Sharp Grin Weekly - Mow, Edge, Blow & Weed Spraying</option>
+                  <option>Full Grin Season - Mow, Edge, Blow, Weed Spraying, Spring & Fall Cleanup</option>
+                </select>
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="bid_mow_visits">Mowing visits</label>
+                <input id="bid_mow_visits" type="number" min="0" step="1" value="28" />
+              </div>
+              <div>
+                <label for="bid_mow_rate">Price per mow</label>
+                <input id="bid_mow_rate" type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="bid_weed_spray">Weed spraying total</label>
+                <input id="bid_weed_spray" type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="bid_spring_cleanup">Spring cleanup</label>
+                <input id="bid_spring_cleanup" type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="bid_fall_cleanup">Fall cleanup</label>
+                <input id="bid_fall_cleanup" type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+              <div>
+                <label for="bid_custom_total">Custom services</label>
+                <input id="bid_custom_total" type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="bid_adjustment">Adjustment</label>
+                <input id="bid_adjustment" type="number" step="0.01" placeholder="Optional discount or add-on" />
+              </div>
+              <div>
+                <label for="bid_months">Split across months</label>
+                <input id="bid_months" type="number" min="1" max="12" step="1" value="12" />
+              </div>
+            </div>
+            <div class="row-actions">
+              <button class="button" type="submit">Calculate Bid</button>
+              <button id="bid-copy-job" class="button ghost" type="button">Copy To Job</button>
+              <button id="bid-copy-invoice" class="button ghost" type="button">Copy To Invoice</button>
+            </div>
+          </form>
+          <div id="bid-result" aria-live="polite"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Bid total</h2>
+          <div class="three">
+            <div class="metric">
+              <span>Yearly Quote</span>
+              <strong id="bid-annual-total">$0.00</strong>
+            </div>
+            <div class="metric">
+              <span>Monthly</span>
+              <strong id="bid-monthly-total">$0.00</strong>
+            </div>
+            <div class="metric">
+              <span>Per Mow</span>
+              <strong id="bid-per-mow-total">$0.00</strong>
+            </div>
+          </div>
+          <div id="bid-breakdown" class="status-box"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="activity" class="panel">
       <div class="grid">
         <div class="card owner-only">
@@ -1471,6 +1609,154 @@
               <div class="invoice-head"><strong>No invoices yet</strong><span class="badge warn">Draft</span></div>
             </div>
           </div>
+          <details id="paid-invoice-archive" class="paid-invoice-archive">
+            <summary>
+              <span id="paid-invoice-summary">Paid invoices (0)</span>
+            </summary>
+            <div class="paid-invoice-tools">
+              <label for="paid-invoice-search">Search paid invoices</label>
+              <input id="paid-invoice-search" placeholder="Search by name, customer ID, invoice ID, phone, or amount" />
+            </div>
+            <div id="paid-invoice-list" class="status-box"></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="expenses" class="panel">
+      <div class="grid">
+        <div class="card owner-only">
+          <h2>Expense scanner</h2>
+          <form id="expense-form">
+            <input id="expense_id" type="hidden" />
+            <input id="expense_receipt_filename" type="hidden" />
+            <div>
+              <label for="expense_receipt">Receipt photo</label>
+              <input id="expense_receipt" type="file" accept="image/*" capture="environment" />
+            </div>
+            <div class="row-actions">
+              <button id="expense-scan" class="button secondary" type="button">AI Scan Receipt</button>
+              <button id="expense-clear" class="button ghost" type="button">Clear</button>
+            </div>
+            <div class="two">
+              <div>
+                <label for="expense_vendor">Vendor</label>
+                <input id="expense_vendor" placeholder="Vendor" />
+              </div>
+              <div>
+                <label for="expense_date">Date</label>
+                <input id="expense_date" type="date" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="expense_category">Category</label>
+                <select id="expense_category">
+                  <option>Fuel</option>
+                  <option>Equipment</option>
+                  <option>Repairs</option>
+                  <option>Materials</option>
+                  <option>Office</option>
+                  <option>Vehicle</option>
+                  <option>Insurance</option>
+                  <option>Meals</option>
+                  <option selected>Other</option>
+                </select>
+              </div>
+              <div>
+                <label for="expense_amount">Total</label>
+                <input id="expense_amount" type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="expense_subtotal">Subtotal</label>
+                <input id="expense_subtotal" type="number" min="0" step="0.01" placeholder="Optional" />
+              </div>
+              <div>
+                <label for="expense_tax">Tax</label>
+                <input id="expense_tax" type="number" min="0" step="0.01" placeholder="Optional" />
+              </div>
+            </div>
+            <div>
+              <label for="expense_payment_method">Payment method</label>
+              <input id="expense_payment_method" placeholder="Card, cash, account" />
+            </div>
+            <div>
+              <label for="expense_notes">Notes</label>
+              <textarea id="expense_notes" placeholder="Repairs, fuel, supplies, job notes"></textarea>
+            </div>
+            <button id="expense-save" class="button" type="submit">Save Expense</button>
+          </form>
+          <div id="expense-result" aria-live="polite"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Expense totals</h2>
+          <div class="three">
+            <div class="metric">
+              <span>This Month</span>
+              <strong id="expense-month-total">$0.00</strong>
+            </div>
+            <div class="metric">
+              <span>This Year</span>
+              <strong id="expense-year-total">$0.00</strong>
+            </div>
+            <div class="metric">
+              <span>All Active</span>
+              <strong id="expense-all-total">$0.00</strong>
+            </div>
+          </div>
+          <div id="expense-category-totals" class="status-box"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Mileage log</h2>
+          <form id="mileage-form">
+            <input id="mileage_id" type="hidden" />
+            <div class="two">
+              <div>
+                <label for="mileage_date">Date</label>
+                <input id="mileage_date" type="date" />
+              </div>
+              <div>
+                <label for="mileage_miles">Miles</label>
+                <input id="mileage_miles" type="number" min="0" step="0.1" placeholder="0.0" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="mileage_route">Route / customer</label>
+                <input id="mileage_route" placeholder="Shop to customer, supply run, route name" />
+              </div>
+              <div>
+                <label for="mileage_rate">Rate per mile</label>
+                <input id="mileage_rate" type="number" min="0" step="0.01" value="0.76" />
+              </div>
+            </div>
+            <div>
+              <label for="mileage_purpose">Purpose</label>
+              <textarea id="mileage_purpose" placeholder="Mowing route, estimate, material pickup, dump run"></textarea>
+            </div>
+            <div class="metric">
+              <span>Mileage Expense</span>
+              <strong id="mileage-total">$0.00</strong>
+            </div>
+            <div class="row-actions">
+              <button id="mileage-save" class="button" type="submit">Save Mileage</button>
+              <button id="mileage-clear" class="button ghost" type="button">Clear</button>
+            </div>
+          </form>
+          <div id="mileage-result" aria-live="polite"></div>
+          <div id="mileage-list" class="status-box"></div>
+        </div>
+
+        <div class="card owner-only">
+          <h2>Expense list</h2>
+          <div class="admin-bar">
+            <button id="load-expenses" class="button secondary" type="button">Load Expenses</button>
+          </div>
+          <div id="expense-list" class="status-box"></div>
         </div>
       </div>
     </section>
@@ -1487,6 +1773,8 @@
     let accountData = null;
     let invoiceDrafts = [];
     let invoiceCustomers = [];
+    let latestBid = null;
+    let expenseRows = [];
     let employeeDirectory = [];
     let adminSessionPin = "";
     let portalConfig = {};
@@ -1778,10 +2066,10 @@
         const registration = await appServiceWorker();
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
-          pushStatus("This device has notification permission. Tap Send Test Ding to confirm the phone alert.");
+          pushStatus("Notifications are enabled on this device.");
           setPushButton(true, "Refresh Device");
           setPushTestButton(true);
-          setNotificationBarHidden(false);
+          setNotificationBarHidden(true);
         } else {
           pushStatus("Not enabled on this device.");
           setPushButton(true);
@@ -1800,7 +2088,7 @@
         pushStatus(pushDeliveryText(data.push, "Test ding sent to this phone."));
         setPushButton(true, "Refresh Device");
         setPushTestButton(true);
-        setNotificationBarHidden(false);
+        setNotificationBarHidden(true);
       } catch (error) {
         pushStatus(error.message || "Notifications could not be enabled.", true);
         setPushButton(Boolean(activeAccount && portalConfig.vapidPublicKey));
@@ -1815,10 +2103,12 @@
         pushStatus(pushDeliveryText(data.push, "Test ding sent to this phone."));
         setPushButton(true, "Refresh Device");
         setPushTestButton(true);
+        setNotificationBarHidden(true);
       } catch (error) {
         pushStatus(error.message || "The test ding did not reach this phone.", true);
         setPushButton(true, "Refresh Device");
         setPushTestButton(Boolean(activeAccount && portalConfig.vapidPublicKey && "Notification" in window && Notification.permission === "granted"));
+        setNotificationBarHidden(false);
       }
     }
 
@@ -1856,6 +2146,7 @@
       await loadCustomers();
       await loadInvoiceCustomers();
       await loadInvoices();
+      await loadExpenses();
       await loadActivity();
       await loadTimeClockReport();
     }
@@ -2003,6 +2294,7 @@
           loadInvoiceCustomers();
           loadInvoices();
         }
+        if (button.dataset.tab === "expenses") loadExpenses();
         if (button.dataset.tab === "customers") loadCustomers();
       });
     });
@@ -2124,6 +2416,40 @@
       $("#owner_job_monthly_price").value = monthlyFromAnnual($("#owner_job_annual_price").value);
     });
 
+    $("#bid-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculateBid();
+      $("#bid-result").innerHTML = notice("Bid calculated.");
+    });
+
+    document.querySelectorAll("#bid-form input, #bid-form select").forEach((field) => {
+      field.addEventListener("input", () => calculateBid());
+      field.addEventListener("change", () => calculateBid());
+    });
+
+    $("#bid-copy-job").addEventListener("click", () => {
+      const bid = calculateBid();
+      $("#owner_job_customer_name").value = bid.customer || $("#owner_job_customer_name").value;
+      $("#owner_job_service_type").value = bid.plan;
+      $("#owner_job_annual_price").value = bid.annualTotal.toFixed(2);
+      $("#owner_job_monthly_price").value = bid.monthlyTotal.toFixed(2);
+      $("#owner_job_notes").value = bidNotes(bid);
+      $("#bid-result").innerHTML = notice("Bid copied to the job form.");
+      openTab("owner");
+    });
+
+    $("#bid-copy-invoice").addEventListener("click", () => {
+      const bid = calculateBid();
+      $("#invoice_id").value = "";
+      $("#invoice_amount").value = bid.monthlyTotal.toFixed(2);
+      $("#invoice_status").value = "Draft";
+      $("#invoice_custom_service").value = bid.plan;
+      $("#invoice_notes").value = bidNotes(bid);
+      $("#invoice-submit").textContent = "Save Draft";
+      $("#bid-result").innerHTML = notice("Bid copied to a draft invoice.");
+      openTab("invoices");
+    });
+
     function notice(message, error = false) {
       return `<div class="notice ${error ? "error" : ""}">${message}</div>`;
     }
@@ -2154,6 +2480,79 @@
     function monthlyFromAnnual(value) {
       const number = Number(value);
       return Number.isFinite(number) && number > 0 ? (number / 12).toFixed(2) : "";
+    }
+
+    function fixedMoney(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? `$${number.toFixed(2)}` : "$0.00";
+    }
+
+    function bidValue(selector) {
+      const number = Number($(selector)?.value || 0);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function calculateBid() {
+      const visits = Math.max(0, Math.round(bidValue("#bid_mow_visits")));
+      const mowRate = bidValue("#bid_mow_rate");
+      const mowTotal = visits * mowRate;
+      const weedSpray = bidValue("#bid_weed_spray");
+      const springCleanup = bidValue("#bid_spring_cleanup");
+      const fallCleanup = bidValue("#bid_fall_cleanup");
+      const customTotal = bidValue("#bid_custom_total");
+      const adjustment = bidValue("#bid_adjustment");
+      const months = Math.min(12, Math.max(1, Math.round(bidValue("#bid_months") || 12)));
+      const annualTotal = Math.max(0, mowTotal + weedSpray + springCleanup + fallCleanup + customTotal + adjustment);
+      const monthlyTotal = annualTotal / months;
+      const perMowTotal = visits > 0 ? annualTotal / visits : 0;
+      latestBid = {
+        customer: $("#bid_customer_name").value.trim(),
+        plan: $("#bid_plan").value,
+        visits,
+        mowRate,
+        mowTotal,
+        weedSpray,
+        springCleanup,
+        fallCleanup,
+        customTotal,
+        adjustment,
+        months,
+        annualTotal,
+        monthlyTotal,
+        perMowTotal
+      };
+      renderBid();
+      return latestBid;
+    }
+
+    function renderBid() {
+      const bid = latestBid || calculateBid();
+      $("#bid-annual-total").textContent = fixedMoney(bid.annualTotal);
+      $("#bid-monthly-total").textContent = fixedMoney(bid.monthlyTotal);
+      $("#bid-per-mow-total").textContent = fixedMoney(bid.perMowTotal);
+      $("#bid-breakdown").innerHTML = `
+        <div class="message">
+          <div class="message-head"><strong>${cleanText(bid.plan)}</strong><span class="badge">${cleanText(bid.months)} months</span></div>
+          <p class="muted">Mowing: ${cleanText(String(bid.visits))} visits x ${cleanText(fixedMoney(bid.mowRate))} = ${cleanText(fixedMoney(bid.mowTotal))}</p>
+          <p class="muted">Weed spraying: ${cleanText(fixedMoney(bid.weedSpray))}</p>
+          <p class="muted">Spring cleanup: ${cleanText(fixedMoney(bid.springCleanup))} | Fall cleanup: ${cleanText(fixedMoney(bid.fallCleanup))}</p>
+          <p class="muted">Custom services: ${cleanText(fixedMoney(bid.customTotal))} | Adjustment: ${cleanText(fixedMoney(bid.adjustment))}</p>
+        </div>
+      `;
+    }
+
+    function bidNotes(bid) {
+      return [
+        `${bid.plan}`,
+        `Mowing: ${bid.visits} visits x ${fixedMoney(bid.mowRate)} = ${fixedMoney(bid.mowTotal)}`,
+        `Weed spraying: ${fixedMoney(bid.weedSpray)}`,
+        `Spring cleanup: ${fixedMoney(bid.springCleanup)}`,
+        `Fall cleanup: ${fixedMoney(bid.fallCleanup)}`,
+        `Custom services: ${fixedMoney(bid.customTotal)}`,
+        `Adjustment: ${fixedMoney(bid.adjustment)}`,
+        `Yearly quote: ${fixedMoney(bid.annualTotal)}`,
+        `Monthly payment: ${fixedMoney(bid.monthlyTotal)}`
+      ].join("\n");
     }
 
     function newestJob(jobs) {
@@ -2230,22 +2629,67 @@
       return;
     }
 
-    function renderInvoiceDrafts() {
-      $("#invoice-list").innerHTML = invoiceDrafts.length
-        ? invoiceDrafts.map((invoice) => `
+    function invoiceNumber(invoice) {
+      const raw = String(invoice.id || "").replace(/-/g, "");
+      return raw ? `INV-${raw.slice(0, 8).toUpperCase()}` : "INV-DRAFT";
+    }
+
+    function isPaidInvoice(invoice) {
+      return String(invoice.status || "").toLowerCase() === "paid";
+    }
+
+    function invoiceSearchText(invoice) {
+      return [
+        invoiceNumber(invoice),
+        invoice.id,
+        invoice.customer_code,
+        invoice.customer_name,
+        invoice.phone,
+        invoice.email,
+        invoice.amount,
+        invoice.due_date,
+        invoice.status,
+        invoice.service_line,
+        invoice.notes
+      ].map((item) => String(item || "").toLowerCase()).join(" ");
+    }
+
+    function invoiceListCard(invoice) {
+      return `
           <div class="invoice" data-id="${invoice.id}">
-            <div class="invoice-head"><strong>${cleanText(invoice.customer_code || "")}${invoice.customer_code ? " - " : ""}${cleanText(invoice.customer_name || "Customer")}</strong><span class="badge">${cleanText(invoice.status)}</span></div>
+            <div class="invoice-head"><strong>${cleanText(invoice.customer_code || invoiceNumber(invoice))}${invoice.customer_code ? " - " : ""}${cleanText(invoice.customer_name || "Customer")}</strong><span class="badge">${cleanText(invoice.status)}</span></div>
             <p class="muted">${cleanText(money(invoice.amount) || "$0.00")} - Due ${cleanText(invoice.due_date ? displayScheduleDate(invoice.due_date) : "No due date")}</p>
+            <p class="muted">${cleanText(invoiceNumber(invoice))}</p>
             <p>${cleanText(invoice.service_line || invoice.notes || "")}</p>
             ${invoice.service_line && invoice.notes ? `<p class="muted">${cleanText(invoice.notes)}</p>` : ""}
             <div class="row-actions">
               <button class="button small ghost" data-invoice-action="edit" type="button">Edit</button>
               ${invoice.status === "Draft" ? `<button class="button small" data-invoice-action="send" type="button">Send</button>` : ""}
+              ${isPaidInvoice(invoice) ? `<button class="button small ghost" data-invoice-action="reopen" type="button">Move To Open</button>` : `<button class="button small secondary" data-invoice-action="paid" type="button">Mark Paid</button>`}
               <button class="button small ghost" data-invoice-action="delete" type="button">Delete</button>
             </div>
           </div>
-        `).join("")
+        `;
+    }
+
+    function renderPaidInvoices() {
+      const paidInvoices = invoiceDrafts.filter(isPaidInvoice);
+      const search = ($("#paid-invoice-search")?.value || "").trim().toLowerCase();
+      const filtered = search
+        ? paidInvoices.filter((invoice) => invoiceSearchText(invoice).includes(search))
+        : paidInvoices;
+      $("#paid-invoice-summary").textContent = `Paid invoices (${paidInvoices.length})`;
+      $("#paid-invoice-list").innerHTML = filtered.length
+        ? filtered.map((invoice) => invoiceListCard(invoice)).join("")
+        : notice(search ? "No paid invoices match that search." : "No paid invoices yet.");
+    }
+
+    function renderInvoiceDrafts() {
+      const openInvoices = invoiceDrafts.filter((invoice) => !isPaidInvoice(invoice));
+      $("#invoice-list").innerHTML = openInvoices.length
+        ? openInvoices.map((invoice) => invoiceListCard(invoice)).join("")
         : `<div class="invoice"><div class="invoice-head"><strong>No invoices yet</strong><span class="badge warn">Draft</span></div></div>`;
+      renderPaidInvoices();
     }
 
     function renderInvoiceCustomerOptions() {
@@ -2278,6 +2722,242 @@
         renderInvoiceDrafts();
       } catch (error) {
         $("#invoice-list").innerHTML = notice(error.message, true);
+      }
+    }
+
+    const expenseCategories = ["Fuel", "Equipment", "Repairs", "Materials", "Office", "Vehicle", "Insurance", "Meals", "Other"];
+    const DEFAULT_MILEAGE_RATE = 0.76;
+
+    function todayInputDate() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function expenseNumber(value) {
+      if (value === null || value === undefined || value === "") return "";
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toFixed(2) : "";
+    }
+
+    function setExpenseCategory(value = "Other") {
+      const category = expenseCategories.includes(value) ? value : "Other";
+      $("#expense_category").value = category;
+    }
+
+    function expensePayloadFromForm() {
+      return {
+        id: $("#expense_id").value || "",
+        expense_type: "receipt",
+        expense_date: $("#expense_date").value || todayInputDate(),
+        vendor: $("#expense_vendor").value,
+        category: $("#expense_category").value || "Other",
+        amount: $("#expense_amount").value || 0,
+        subtotal: $("#expense_subtotal").value || null,
+        tax: $("#expense_tax").value || null,
+        payment_method: $("#expense_payment_method").value,
+        notes: $("#expense_notes").value,
+        receipt_filename: $("#expense_receipt_filename").value,
+        ai_confidence: $("#expense-form").dataset.aiConfidence || null,
+        ai_raw: $("#expense-form").dataset.aiRaw ? JSON.parse($("#expense-form").dataset.aiRaw) : null
+      };
+    }
+
+    function fillExpenseForm(expense = {}) {
+      $("#expense_id").value = expense.id || "";
+      $("#expense_vendor").value = expense.vendor || "";
+      $("#expense_date").value = expense.expense_date || todayInputDate();
+      setExpenseCategory(expense.category || "Other");
+      $("#expense_amount").value = expenseNumber(expense.amount);
+      $("#expense_subtotal").value = expenseNumber(expense.subtotal);
+      $("#expense_tax").value = expenseNumber(expense.tax);
+      $("#expense_payment_method").value = expense.payment_method || "";
+      $("#expense_notes").value = expense.notes || "";
+      $("#expense_receipt_filename").value = expense.receipt_filename || "";
+      $("#expense-form").dataset.aiConfidence = expense.ai_confidence || "";
+      $("#expense-form").dataset.aiRaw = expense.ai_raw ? JSON.stringify(expense.ai_raw) : "";
+      $("#expense-save").textContent = expense.id ? "Update Expense" : "Save Expense";
+    }
+
+    function clearExpenseForm() {
+      $("#expense-form").reset();
+      $("#expense_id").value = "";
+      $("#expense_date").value = todayInputDate();
+      $("#expense_receipt_filename").value = "";
+      $("#expense-form").dataset.aiConfidence = "";
+      $("#expense-form").dataset.aiRaw = "";
+      $("#expense-save").textContent = "Save Expense";
+      setExpenseCategory("Other");
+    }
+
+    function mileageRows() {
+      return expenseRows.filter((expense) => expense.expense_type === "mileage" || Number(expense.mileage_miles || 0) > 0);
+    }
+
+    function mileageAmount() {
+      const miles = Number($("#mileage_miles").value || 0);
+      const rate = Number($("#mileage_rate").value || DEFAULT_MILEAGE_RATE);
+      return Number.isFinite(miles) && Number.isFinite(rate) ? Math.max(0, miles * rate) : 0;
+    }
+
+    function updateMileageTotal() {
+      $("#mileage-total").textContent = fixedMoney(mileageAmount());
+    }
+
+    function mileagePayloadFromForm() {
+      return {
+        action: "mileage",
+        id: $("#mileage_id").value || "",
+        expense_type: "mileage",
+        expense_date: $("#mileage_date").value || todayInputDate(),
+        mileage_miles: $("#mileage_miles").value || 0,
+        mileage_rate: $("#mileage_rate").value || DEFAULT_MILEAGE_RATE,
+        route: $("#mileage_route").value,
+        purpose: $("#mileage_purpose").value
+      };
+    }
+
+    function clearMileageForm() {
+      $("#mileage-form").reset();
+      $("#mileage_id").value = "";
+      $("#mileage_date").value = todayInputDate();
+      $("#mileage_rate").value = DEFAULT_MILEAGE_RATE.toFixed(2);
+      $("#mileage-save").textContent = "Save Mileage";
+      updateMileageTotal();
+    }
+
+    function fillMileageForm(expense = {}) {
+      $("#mileage_id").value = expense.id || "";
+      $("#mileage_date").value = expense.expense_date || todayInputDate();
+      $("#mileage_miles").value = expense.mileage_miles || "";
+      $("#mileage_rate").value = expense.mileage_rate || DEFAULT_MILEAGE_RATE.toFixed(2);
+      $("#mileage_route").value = String(expense.vendor || "").replace(/^Mileage\s*-\s*/i, "").replace(/^Mileage$/i, "");
+      $("#mileage_purpose").value = expense.notes || "";
+      $("#mileage-save").textContent = expense.id ? "Update Mileage" : "Save Mileage";
+      updateMileageTotal();
+    }
+
+    function mileageCard(expense) {
+      const date = expense.expense_date ? displayScheduleDate(expense.expense_date) : "No date";
+      const miles = Number(expense.mileage_miles || 0);
+      const rate = Number(expense.mileage_rate || DEFAULT_MILEAGE_RATE);
+      return `
+        <div class="message" data-id="${expense.id}">
+          <div class="message-head">
+            <strong>${cleanText(expense.vendor || "Mileage")}</strong>
+            <span class="badge">${cleanText(money(expense.amount) || "$0.00")}</span>
+          </div>
+          <p class="muted">${cleanText(date)} - ${cleanText(String(miles.toFixed(1)))} miles x ${cleanText(fixedMoney(rate))}</p>
+          ${expense.notes ? `<p>${cleanText(expense.notes)}</p>` : ""}
+          <div class="row-actions">
+            <button class="button small ghost" data-mileage-action="edit" type="button">Edit</button>
+            <button class="button small ghost" data-mileage-action="delete" type="button">Delete</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMileage() {
+      const rows = mileageRows();
+      $("#mileage-list").innerHTML = rows.length
+        ? rows.map((expense) => mileageCard(expense)).join("")
+        : notice("No mileage logged yet.");
+    }
+
+    function expenseCategoryTotalsHtml(totals = {}) {
+      const rows = Object.entries(totals)
+        .filter(([, value]) => Number(value) > 0)
+        .sort((a, b) => Number(b[1]) - Number(a[1]));
+      return rows.length
+        ? rows.map(([category, total]) => `
+          <div class="message">
+            <div class="message-head">
+              <strong>${cleanText(category)}</strong>
+              <span class="badge">${cleanText(money(total) || "$0.00")}</span>
+            </div>
+          </div>
+        `).join("")
+        : notice("No expenses saved yet.");
+    }
+
+    function expenseCard(expense) {
+      const date = expense.expense_date ? displayScheduleDate(expense.expense_date) : "No date";
+      const confidence = Number(expense.ai_confidence);
+      const confidenceLine = Number.isFinite(confidence) && confidence > 0 ? `AI confidence: ${Math.round(confidence * 100)}%` : "";
+      return `
+        <div class="message" data-id="${expense.id}">
+          <div class="message-head">
+            <strong>${cleanText(expense.vendor || "Expense")}</strong>
+            <span class="badge">${cleanText(money(expense.amount) || "$0.00")}</span>
+          </div>
+          <p class="muted">${cleanText(expense.category || "Other")} - ${cleanText(date)}</p>
+          ${expense.payment_method ? `<p class="muted">${cleanText(expense.payment_method)}</p>` : ""}
+          ${expense.notes ? `<p>${cleanText(expense.notes)}</p>` : ""}
+          ${confidenceLine ? `<p class="muted">${cleanText(confidenceLine)}</p>` : ""}
+          <div class="row-actions">
+            <button class="button small ghost" data-expense-action="edit" type="button">Edit</button>
+            <button class="button small ghost" data-expense-action="delete" type="button">Delete</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderExpenses(data = {}) {
+      expenseRows = data.expenses || [];
+      const totals = data.totals || {};
+      $("#expense-month-total").textContent = money(totals.monthTotal) || "$0.00";
+      $("#expense-year-total").textContent = money(totals.yearTotal) || "$0.00";
+      $("#expense-all-total").textContent = money(totals.allTotal) || "$0.00";
+      $("#expense-category-totals").innerHTML = expenseCategoryTotalsHtml(totals.categoryTotals || {});
+      const receiptRows = expenseRows.filter((expense) => expense.expense_type !== "mileage" && !Number(expense.mileage_miles || 0));
+      $("#expense-list").innerHTML = receiptRows.length
+        ? receiptRows.map((expense) => expenseCard(expense)).join("")
+        : notice("No expenses saved yet.");
+      renderMileage();
+    }
+
+    async function loadExpenses() {
+      if (!adminPin()) return;
+      $("#expense-list").innerHTML = notice("Loading expenses...");
+      try {
+        const data = await requestJson("portal-expenses?admin=1", { headers: adminHeaders() });
+        renderExpenses(data);
+      } catch (error) {
+        $("#expense-list").innerHTML = notice(error.message, true);
+      }
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Could not read that receipt photo."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function loadImageForResize(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Could not resize that receipt photo."));
+        image.src = src;
+      });
+    }
+
+    async function receiptFileToDataUrl(file) {
+      const original = await readFileAsDataUrl(file);
+      try {
+        const image = await loadImageForResize(original);
+        const maxSide = 1400;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        if (scale >= 1) return original;
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.82);
+      } catch (_error) {
+        return original;
       }
     }
 
@@ -2530,7 +3210,6 @@
             </div>
             <div class="admin-actions job-collapse" hidden>
               <button class="button small ghost" data-action="schedule" type="button">Save Schedule</button>
-              <button class="button small" data-action="objects" type="button">Notify: Pick Up Yard Objects</button>
               <button class="button small secondary" data-action="completed" type="button">Notify: Done</button>
               <button class="button small ghost" data-action="delete-job" type="button">Delete Job</button>
               <button class="button small ghost" data-customer-action="deactivate" type="button">Deactivate Customer</button>
@@ -2866,9 +3545,10 @@
         email: selectedCustomer.email || "",
         amount: $("#invoice_amount").value || 0,
         due_date: $("#invoice_due").value || null,
-        status: intent === "send" ? "Sent" : "Draft",
+        status: intent === "send" ? "Sent" : ($("#invoice_status").value === "Sent" ? "Draft" : ($("#invoice_status").value || "Draft")),
         service_line: $("#invoice_custom_service").value || $("#invoice_notes").value || "Monthly service",
-        notes: $("#invoice_notes").value || "Monthly service"
+        notes: $("#invoice_notes").value || "Monthly service",
+        notify_customer: intent === "send"
       };
       $("#invoice-result").innerHTML = notice(intent === "send" ? "Sending invoice..." : "Saving draft...");
       try {
@@ -2902,7 +3582,7 @@
       }
     });
 
-    $("#invoice-list").addEventListener("click", async (event) => {
+    async function handleInvoiceAction(event) {
       const button = event.target.closest("button[data-invoice-action]");
       if (!button) return;
       const id = button.closest(".invoice")?.dataset.id;
@@ -2923,13 +3603,29 @@
         }
         return;
       }
+      if (button.dataset.invoiceAction === "paid" || button.dataset.invoiceAction === "reopen") {
+        const nextStatus = button.dataset.invoiceAction === "paid" ? "Paid" : "Draft";
+        try {
+          $("#invoice-result").innerHTML = notice(nextStatus === "Paid" ? "Moving invoice to paid..." : "Moving invoice back to open...");
+          await requestJson("portal-invoices", {
+            method: "PATCH",
+            headers: adminHeaders(),
+            body: JSON.stringify({ ...invoice, status: nextStatus, notify_customer: false })
+          });
+          await loadInvoices();
+          $("#invoice-result").innerHTML = notice(nextStatus === "Paid" ? "Invoice moved to paid." : "Invoice moved back to open invoices.");
+        } catch (error) {
+          $("#invoice-result").innerHTML = notice(error.message, true);
+        }
+        return;
+      }
       if (button.dataset.invoiceAction === "send") {
         try {
           $("#invoice-result").innerHTML = notice("Sending invoice...");
           const data = await requestJson("portal-invoices", {
             method: "PATCH",
             headers: adminHeaders(),
-            body: JSON.stringify({ ...invoice, status: "Sent" })
+            body: JSON.stringify({ ...invoice, status: "Sent", notify_customer: true })
           });
           await loadInvoices();
           $("#invoice-result").innerHTML = notice(pushDeliveryText(data.push, "Invoice sent to that customer account."));
@@ -2952,6 +3648,154 @@
       $("#invoice_notes").value = invoice.notes || "";
       $("#invoice-submit").textContent = "Save Draft";
       $("#invoice-result").innerHTML = notice("Editing invoice.");
+    }
+
+    $("#invoice-list").addEventListener("click", handleInvoiceAction);
+    $("#paid-invoice-list").addEventListener("click", handleInvoiceAction);
+    $("#paid-invoice-search").addEventListener("input", renderPaidInvoices);
+
+    $("#expense-clear").addEventListener("click", () => {
+      clearExpenseForm();
+      $("#expense-result").innerHTML = "";
+    });
+
+    ["#mileage_miles", "#mileage_rate"].forEach((selector) => {
+      $(selector).addEventListener("input", updateMileageTotal);
+    });
+
+    $("#mileage-clear").addEventListener("click", () => {
+      clearMileageForm();
+      $("#mileage-result").innerHTML = "";
+    });
+
+    $("#mileage-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const payload = mileagePayloadFromForm();
+      if (!Number(payload.mileage_miles)) {
+        $("#mileage-result").innerHTML = notice("Enter miles before saving.", true);
+        return;
+      }
+      $("#mileage-result").innerHTML = notice(payload.id ? "Updating mileage..." : "Saving mileage...");
+      try {
+        const data = await requestJson("portal-expenses", {
+          method: payload.id ? "PATCH" : "POST",
+          headers: adminHeaders(),
+          body: JSON.stringify(payload)
+        });
+        renderExpenses(data);
+        clearMileageForm();
+        $("#mileage-result").innerHTML = notice(payload.id ? "Mileage updated." : "Mileage saved as an expense.");
+      } catch (error) {
+        $("#mileage-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#mileage-list").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-mileage-action]");
+      if (!button) return;
+      const id = button.closest(".message")?.dataset.id;
+      const expense = expenseRows.find((item) => item.id === id);
+      if (!expense) return;
+      if (button.dataset.mileageAction === "edit") {
+        fillMileageForm(expense);
+        $("#mileage-result").innerHTML = notice("Editing mileage.");
+        $("#mileage-form").scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (!confirm("Delete this mileage expense forever?")) return;
+      try {
+        button.disabled = true;
+        const data = await requestJson("portal-expenses", {
+          method: "DELETE",
+          headers: adminHeaders(),
+          body: JSON.stringify({ id })
+        });
+        renderExpenses(data);
+        $("#mileage-result").innerHTML = notice("Mileage deleted.");
+      } catch (error) {
+        $("#mileage-result").innerHTML = notice(error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("#expense-scan").addEventListener("click", async () => {
+      const file = $("#expense_receipt").files?.[0];
+      if (!file) {
+        $("#expense-result").innerHTML = notice("Choose a receipt photo first.", true);
+        return;
+      }
+      $("#expense-result").innerHTML = notice("Scanning receipt...");
+      $("#expense-scan").disabled = true;
+      try {
+        const imageDataUrl = await receiptFileToDataUrl(file);
+        const data = await requestJson("portal-expenses", {
+          method: "POST",
+          headers: adminHeaders(),
+          body: JSON.stringify({
+            action: "scan",
+            image_data_url: imageDataUrl,
+            receipt_filename: file.name || "receipt photo"
+          })
+        });
+        fillExpenseForm(data.expense || {});
+        $("#expense-result").innerHTML = notice("Receipt scanned. Review the total, then save it.");
+      } catch (error) {
+        $("#expense-result").innerHTML = notice(error.message, true);
+      } finally {
+        $("#expense-scan").disabled = false;
+      }
+    });
+
+    $("#expense-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const payload = expensePayloadFromForm();
+      if (!payload.vendor || !Number(payload.amount)) {
+        $("#expense-result").innerHTML = notice("Vendor and total are required before saving.", true);
+        return;
+      }
+      $("#expense-result").innerHTML = notice(payload.id ? "Updating expense..." : "Saving expense...");
+      try {
+        const data = await requestJson("portal-expenses", {
+          method: payload.id ? "PATCH" : "POST",
+          headers: adminHeaders(),
+          body: JSON.stringify(payload)
+        });
+        renderExpenses(data);
+        clearExpenseForm();
+        $("#expense-result").innerHTML = notice(payload.id ? "Expense updated." : "Expense saved.");
+      } catch (error) {
+        $("#expense-result").innerHTML = notice(error.message, true);
+      }
+    });
+
+    $("#expense-list").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-expense-action]");
+      if (!button) return;
+      const id = button.closest(".message")?.dataset.id;
+      const expense = expenseRows.find((item) => item.id === id);
+      if (!expense) return;
+      if (button.dataset.expenseAction === "edit") {
+        fillExpenseForm(expense);
+        $("#expense-result").innerHTML = notice("Editing expense.");
+        $("#expense-form").scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (!confirm("Delete this expense forever?")) return;
+      try {
+        button.disabled = true;
+        const data = await requestJson("portal-expenses", {
+          method: "DELETE",
+          headers: adminHeaders(),
+          body: JSON.stringify({ id })
+        });
+        renderExpenses(data);
+        $("#expense-result").innerHTML = notice("Expense deleted.");
+      } catch (error) {
+        $("#expense-result").innerHTML = notice(error.message, true);
+      } finally {
+        button.disabled = false;
+      }
     });
 
     $("#broadcast-form").addEventListener("submit", async (event) => {
@@ -2987,6 +3831,7 @@
     $("#clock-in").addEventListener("click", () => punchTimeClock("clock-in"));
     $("#clock-out").addEventListener("click", () => punchTimeClock("clock-out"));
     $("#load-time-report").addEventListener("click", loadTimeClockReport);
+    $("#load-expenses").addEventListener("click", loadExpenses);
 
     $("#admin-result").addEventListener("input", (event) => {
       if (!event.target.classList.contains("annual-price-input")) return;
@@ -3076,7 +3921,8 @@
               due_date: dueDate,
               status: "Sent",
               service_line: customerPlan,
-              notes: `Monthly service invoice for ${customerPlan}`
+              notes: `Monthly service invoice for ${customerPlan}`,
+              notify_customer: true
             })
           });
           await loadInvoices();
@@ -3402,6 +4248,9 @@
 
     applyPortalMode();
     updateRollingClock();
+    calculateBid();
+    clearExpenseForm();
+    clearMileageForm();
     window.setInterval(updateRollingClock, 1000);
     loadSupabaseAuth();
   </script>

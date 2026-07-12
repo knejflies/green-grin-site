@@ -260,6 +260,71 @@ alter table public.green_grin_invoices
 alter table public.green_grin_invoices
   add column if not exists active boolean not null default true;
 
+create table if not exists public.green_grin_expenses (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  expense_type text not null default 'receipt',
+  expense_date date not null default current_date,
+  vendor text not null default '',
+  category text not null default 'Other',
+  amount numeric(10,2) not null default 0,
+  subtotal numeric(10,2),
+  tax numeric(10,2),
+  payment_method text,
+  notes text,
+  receipt_filename text,
+  mileage_miles numeric(10,2),
+  mileage_rate numeric(10,2),
+  ai_confidence numeric(4,2),
+  ai_raw jsonb,
+  active boolean not null default true
+);
+
+alter table public.green_grin_expenses
+  add column if not exists expense_type text not null default 'receipt';
+
+alter table public.green_grin_expenses
+  add column if not exists expense_date date not null default current_date;
+
+alter table public.green_grin_expenses
+  add column if not exists vendor text not null default '';
+
+alter table public.green_grin_expenses
+  add column if not exists category text not null default 'Other';
+
+alter table public.green_grin_expenses
+  add column if not exists amount numeric(10,2) not null default 0;
+
+alter table public.green_grin_expenses
+  add column if not exists subtotal numeric(10,2);
+
+alter table public.green_grin_expenses
+  add column if not exists tax numeric(10,2);
+
+alter table public.green_grin_expenses
+  add column if not exists payment_method text;
+
+alter table public.green_grin_expenses
+  add column if not exists notes text;
+
+alter table public.green_grin_expenses
+  add column if not exists receipt_filename text;
+
+alter table public.green_grin_expenses
+  add column if not exists mileage_miles numeric(10,2);
+
+alter table public.green_grin_expenses
+  add column if not exists mileage_rate numeric(10,2);
+
+alter table public.green_grin_expenses
+  add column if not exists ai_confidence numeric(4,2);
+
+alter table public.green_grin_expenses
+  add column if not exists ai_raw jsonb;
+
+alter table public.green_grin_expenses
+  add column if not exists active boolean not null default true;
+
 create table if not exists public.green_grin_push_subscriptions (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -310,6 +375,7 @@ alter table public.green_grin_employees enable row level security;
 alter table public.green_grin_invoices enable row level security;
 alter table public.green_grin_time_entries enable row level security;
 alter table public.green_grin_push_subscriptions enable row level security;
+alter table public.green_grin_expenses enable row level security;
 
 drop policy if exists "Customers can read own profile" on public.green_grin_customers;
 drop policy if exists "Customers can insert own profile" on public.green_grin_customers;
@@ -391,6 +457,10 @@ create index if not exists green_grin_push_subscriptions_customer_user_idx on pu
 create index if not exists green_grin_push_subscriptions_customer_code_idx on public.green_grin_push_subscriptions(customer_code);
 create index if not exists green_grin_push_subscriptions_employee_idx on public.green_grin_push_subscriptions(employee_id);
 create index if not exists green_grin_push_subscriptions_active_idx on public.green_grin_push_subscriptions(active);
+create index if not exists green_grin_expenses_date_idx on public.green_grin_expenses(expense_date);
+create index if not exists green_grin_expenses_category_idx on public.green_grin_expenses(category);
+create index if not exists green_grin_expenses_active_idx on public.green_grin_expenses(active);
+create index if not exists green_grin_expenses_type_idx on public.green_grin_expenses(expense_type);
 
 create unique index if not exists green_grin_customers_customer_code_unique
   on public.green_grin_customers(customer_code)

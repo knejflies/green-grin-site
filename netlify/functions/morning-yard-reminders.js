@@ -75,12 +75,40 @@ function cleanupMessage(job) {
   return `Hi${name}, Green Grin is scheduled for your ${service} today. Please pick up toys, hoses, pet waste, and yard objects before we arrive.`;
 }
 
-function customerPushTarget(job) {
-  return {
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+async function customerPushTarget(job) {
+  const target = {
     customer_user_id: job.customer_user_id || null,
     customer_code: job.customer_code || "",
     email: job.email || ""
   };
+  const filters = [];
+  if (job.customer_user_id) filters.push(`id.eq.${encodeURIComponent(job.customer_user_id)}`);
+  if (job.customer_code) filters.push(`customer_code.eq.${encodeURIComponent(job.customer_code)}`);
+  if (job.email) filters.push(`email.eq.${encodeURIComponent(String(job.email).toLowerCase())}`);
+  const rawPhone = String(job.phone || "").trim();
+  const digitsPhone = normalizePhone(rawPhone);
+  if (rawPhone) filters.push(`phone.eq.${encodeURIComponent(rawPhone)}`);
+  if (digitsPhone && digitsPhone !== rawPhone) filters.push(`phone.eq.${encodeURIComponent(digitsPhone)}`);
+
+  if (filters.length) {
+    const rows = await supabase(`green_grin_customers?select=id,customer_code,email,phone&or=(${filters.join(",")})&limit=5`).catch(() => []);
+    const customer = rows?.find((row) => row.id === job.customer_user_id)
+      || rows?.find((row) => row.customer_code && row.customer_code === job.customer_code)
+      || rows?.find((row) => row.email && String(row.email).toLowerCase() === String(job.email || "").toLowerCase())
+      || rows?.find((row) => normalizePhone(row.phone) && normalizePhone(row.phone) === digitsPhone)
+      || rows?.[0];
+    if (customer) {
+      target.customer_user_id = target.customer_user_id || customer.id || null;
+      target.customer_code = target.customer_code || customer.customer_code || "";
+      target.email = target.email || customer.email || "";
+    }
+  }
+
+  return target;
 }
 
 exports.handler = async () => {
@@ -114,7 +142,7 @@ exports.handler = async () => {
     }
 
     const message = cleanupMessage(job);
-    const push = await sendPushToTarget(supabase, customerPushTarget(job), {
+    const push = await sendPushToTarget(supabase, await customerPushTarget(job), {
       title: "Yard cleanup reminder",
       body: message,
       url: "/portal/",

@@ -16,6 +16,10 @@ WHAT WORKS AFTER SETUP
 - Admin can create jobs tied to customers.
 - Admin can set service plan, annual price, and monthly price.
 - Admin can create, save, send, edit, and delete invoices.
+- Admin can mark invoices paid, search paid invoices, and keep paid invoices collapsed below open invoices.
+- Admin can build a starting bid from mowing, spraying, cleanups, and custom service totals.
+- Admin can scan receipt photos with AI, review the result, and save expenses.
+- Admin can log mileage and have it added as a vehicle expense at $0.76 per mile.
 - Sent invoices show in the customer's Billing tab.
 - Admin can send a monthly invoice from the customer's monthly service number.
 - Employees can request access.
@@ -58,9 +62,11 @@ GREEN_GRIN_TIMEZONE=America/Denver
 GREEN_GRIN_VAPID_PUBLIC_KEY=from GGL-1.55-NOTIFICATION-KEYS.txt
 GREEN_GRIN_VAPID_PRIVATE_KEY=from GGL-1.55-NOTIFICATION-KEYS.txt
 GREEN_GRIN_VAPID_SUBJECT=mailto:notifications@greengrinlawns.com
+OPENAI_API_KEY=your OpenAI API key for receipt scanning
+OPENAI_RECEIPT_MODEL=gpt-4o-mini
 
 Do not put the notification keys text file in GitHub.
-Do not share the service_role key, private notification key, or admin PIN.
+Do not share the service_role key, private notification key, OpenAI API key, or admin PIN.
 The SUPABASE_ANON_KEY and GREEN_GRIN_VAPID_PUBLIC_KEY are okay to expose.
 
 APP NOTIFICATION SETUP
@@ -94,3 +100,8 @@ If it looks stuck on an old version, fully close and reopen the app.
 PAYMENTS
 Payments are intentionally turned off in this version.
 Invoices can be created and sent, but customers will not see a pay button.
+
+EXPENSE SCANNER
+Admin -> Expenses can scan receipt photos after OPENAI_API_KEY is added in Netlify.
+The scan fills the form only. Review the vendor, date, category, and total before saving.
+Receipt photos are not saved in Supabase by this version; only the reviewed expense details are saved.
