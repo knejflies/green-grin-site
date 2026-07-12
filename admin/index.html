@@ -3196,6 +3196,7 @@
       const assigned_employee_id = employeeSelect?.value || null;
       const assigned_employee_name = employeeSelect?.selectedOptions?.[0]?.dataset.name || null;
       button.disabled = true;
+      let actionFeedback = "";
       try {
         if (customerAction) {
           const payload = {
@@ -3224,13 +3225,16 @@
             body: JSON.stringify({ id, scheduled_date, schedule_start_date: scheduled_date, schedule_end_date, cleanup_reminder_time, annual_price, monthly_price, status, assigned_employee_id, assigned_employee_name })
           });
         } else {
-          await requestJson("portal-message", {
+          const data = await requestJson("portal-message", {
             method: "POST",
             headers: adminHeaders(),
             body: JSON.stringify({ id, template: action })
           });
+          const label = action === "completed" ? "Done message saved." : "Pickup reminder saved.";
+          actionFeedback = pushDeliveryText(data.push, label);
         }
         await loadAdminJobs();
+        if (actionFeedback) $("#owner-create-result").innerHTML = notice(actionFeedback);
       } catch (error) {
         alert(error.message);
       } finally {
@@ -3247,12 +3251,14 @@
       button.disabled = true;
       try {
         const headers = pin ? { "x-employee-pin": pin } : {};
-        await requestJson("portal-message", {
+        const data = await requestJson("portal-message", {
           method: "POST",
           headers,
           body: JSON.stringify({ id, template: "completed" })
         });
+        const employeeFeedback = pushDeliveryText(data.push, "Done message saved.");
         await loadEmployeeJobs();
+        $("#employee-result").insertAdjacentHTML("afterbegin", notice(employeeFeedback));
       } catch (error) {
         alert(error.message);
       } finally {

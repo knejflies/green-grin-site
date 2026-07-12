@@ -144,18 +144,20 @@ exports.handler = async (event) => {
 
     const message = messageFor(body.template, job);
     const status = body.template === "completed" && !job.recurring_weekly ? "Completed" : job.status;
-    const push = await sendPushToTarget(supabase, customerPushTarget(job), {
+    const notificationTag = `green-grin-${job.id}-${body.template}-${Date.now()}`;
+    const customerPush = await sendPushToTarget(supabase, customerPushTarget(job), {
       title: pushTitle(body.template),
       body: message,
       url: "/portal/",
-      tag: `green-grin-${job.id}-${body.template}`
+      tag: notificationTag
     });
+    let ownerPush = null;
     if (body.template === "completed") {
-      await sendPushToTarget(supabase, { owner_type: "admin" }, {
+      ownerPush = await sendPushToTarget(supabase, { owner_type: "admin" }, {
         title: "Job marked done",
         body: `${employeeActor ? employeeActor.full_name || employeeActor.email || "Employee" : "Owner"} marked ${job.customer_name || "a customer"} done.`,
         url: "/admin/",
-        tag: `green-grin-admin-${job.id}-done`
+        tag: `green-grin-admin-${job.id}-done-${Date.now()}`
       });
     }
 
@@ -182,7 +184,10 @@ exports.handler = async (event) => {
       })
     });
 
-    return json(200, { ok: true, push });
+    return json(200, {
+      ok: true,
+      push: ownerPush ? { customer: customerPush, owner: ownerPush } : customerPush
+    });
   } catch (error) {
     return json(500, { error: error.message });
   }
