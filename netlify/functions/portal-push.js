@@ -2,7 +2,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PIN = process.env.GREEN_GRIN_ADMIN_PIN;
-const { pushReady, sendPushToAllCustomers, sendPushToTarget } = require("./push-helper");
+const { pushReady, sendPushToAllCustomers, sendPushToSubscription, sendPushToTarget } = require("./push-helper");
 
 const headers = {
   "Content-Type": "application/json",
@@ -202,15 +202,15 @@ exports.handler = async (event) => {
 
     let push = null;
     if (body.test) {
-      push = await sendPushToTarget(supabase, context, {
+      push = await sendPushToSubscription(supabase, rows?.[0], {
         title: "Green Grin notifications are on",
         body: "You will get app reminders here when Green Grin updates your service.",
         url: context.owner_type === "admin" ? "/admin/" : context.owner_type === "employee" ? "/employee/" : "/portal/",
-        tag: `green-grin-test-${context.owner_type}`
+        tag: `green-grin-test-${context.owner_type}-${Date.now()}`
       });
     }
 
-    return json(200, { ok: true, subscription: rows?.[0] || null, push });
+    return json(200, { ok: true, subscription: rows?.[0] || null, push, context: { owner_type: context.owner_type, customer_code: context.customer_code, employee_code: context.employee_code } });
   } catch (error) {
     return json(500, { error: error.message });
   }

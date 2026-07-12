@@ -635,6 +635,13 @@
       gap: 2px;
     }
 
+    .notification-actions {
+      display: flex !important;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px !important;
+    }
+
     .job-head,
     .invoice-head,
     .message-head {
@@ -994,7 +1001,10 @@
           <strong>App notifications</strong>
           <span id="push-status" class="muted">Not enabled on this device.</span>
         </div>
-        <button id="enable-push" class="button small" type="button">Enable Notifications</button>
+        <div class="notification-actions">
+          <button id="enable-push" class="button small" type="button">Enable / Refresh</button>
+          <button id="test-push" class="button small ghost" type="button">Send Test Ding</button>
+        </div>
       </div>
 
     <section id="dashboard" class="panel active">
@@ -1584,8 +1594,15 @@
       status.style.color = error ? "#7c2d12" : "";
     }
 
-    function setPushButton(enabled, label = "Enable Notifications") {
+    function setPushButton(enabled, label = "Enable / Refresh") {
       const button = $("#enable-push");
+      if (!button) return;
+      button.disabled = !enabled;
+      button.textContent = label;
+    }
+
+    function setPushTestButton(enabled, label = "Send Test Ding") {
+      const button = $("#test-push");
       if (!button) return;
       button.disabled = !enabled;
       button.textContent = label;
@@ -1644,13 +1661,82 @@
     async function appServiceWorker() {
       if (!("serviceWorker" in navigator)) throw new Error("This browser does not support app notifications.");
       const registration = await navigator.serviceWorker.register("/service-worker.js");
+      await registration.update().catch(() => null);
       return await navigator.serviceWorker.ready || registration;
+    }
+
+    async function createPushSubscription(forceNew = false) {
+      const registration = await appServiceWorker();
+      let subscription = await registration.pushManager.getSubscription();
+      if (subscription && forceNew) {
+        await subscription.unsubscribe().catch(() => null);
+        subscription = null;
+      }
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(portalConfig.vapidPublicKey)
+        });
+      }
+      return subscription;
+    }
+
+    function pushLooksStale(push) {
+      const errors = push?.errors || [];
+      return errors.some((item) => {
+        const status = Number(item.status || 0);
+        const reason = String(item.reason || "").toLowerCase();
+        return [403, 404, 410].includes(status) || reason.includes("expired") || reason.includes("invalid") || reason.includes("not registered");
+      });
+    }
+
+    function pushWorked(push) {
+      return Number(push?.sent || 0) > 0;
+    }
+
+    async function saveAndTestPush(options = {}) {
+      const forceNew = Boolean(options.forceNew);
+      const allowRetry = options.allowRetry !== false;
+      if (!activeAccount) throw new Error("Sign in first, then enable notifications.");
+      if (!("Notification" in window) || !("PushManager" in window)) throw new Error("App notifications are not supported on this device.");
+      if (!portalConfig.vapidPublicKey) throw new Error("Notification keys are not configured in Netlify yet.");
+      if (Notification.permission === "denied") throw new Error(blockedPushMessage());
+      const permission = await Notification.requestPermission();
+      if (permission === "denied") throw new Error(blockedPushMessage());
+      if (permission !== "granted") throw new Error("Notifications were not allowed on this device.");
+
+      if (activeAccount?.id !== "owner" && activeAccount?.id !== "employee") {
+        await loadAccountData().catch(() => null);
+      }
+
+      pushStatus(forceNew ? "Refreshing this phone and sending a test ding..." : "Sending a test ding to this phone...");
+      setPushButton(false, forceNew ? "Refreshing..." : "Testing...");
+      setPushTestButton(false, "Testing...");
+      const subscription = await createPushSubscription(forceNew);
+      const data = await requestJson("portal-push", {
+        method: "POST",
+        headers: pushRequestHeaders(),
+        body: JSON.stringify({ subscription: subscription.toJSON(), test: true })
+      });
+
+      if (!pushWorked(data.push) && allowRetry && pushLooksStale(data.push)) {
+        await subscription.unsubscribe().catch(() => null);
+        return await saveAndTestPush({ forceNew: true, allowRetry: false });
+      }
+
+      if (!pushWorked(data.push)) {
+        const message = pushDeliveryText(data.push, "Device saved, but the test ding did not reach this phone.");
+        throw new Error(message);
+      }
+
+      return data;
     }
 
     async function updatePushStatus() {
       if (!$("#enable-push")) return;
       setNotificationBarHidden(false);
       setPushButton(false, "Sign In First");
+      setPushTestButton(false);
       if (!activeAccount) {
         pushStatus("Sign in to this portal first, then enable notifications.");
         return;
@@ -1666,9 +1752,11 @@
       if (Notification.permission === "denied") {
         pushStatus(blockedPushMessage(), true);
         setPushButton(true, "Check Again");
+        setPushTestButton(false);
         return;
       }
       setPushButton(true);
+      setPushTestButton(Notification.permission === "granted");
       if (Notification.permission !== "granted") {
         pushStatus("Not enabled on this device.");
         setPushButton(true, "Turn On Notifications");
@@ -1678,58 +1766,47 @@
         const registration = await appServiceWorker();
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
-          pushStatus("Enabled on this device.");
-          setPushButton(true, "Notifications Enabled");
-          setNotificationBarHidden(true);
+          pushStatus("This device has notification permission. Tap Send Test Ding to confirm the phone alert.");
+          setPushButton(true, "Refresh Device");
+          setPushTestButton(true);
+          setNotificationBarHidden(false);
         } else {
           pushStatus("Not enabled on this device.");
           setPushButton(true);
+          setPushTestButton(false);
         }
       } catch (_error) {
         pushStatus("Not enabled on this device.");
         setPushButton(true);
+        setPushTestButton(false);
       }
     }
 
     async function enablePushNotifications() {
       try {
-        if (!activeAccount) throw new Error("Sign in first, then enable notifications.");
-        if (!portalConfig.vapidPublicKey) throw new Error("Notification keys are not configured in Netlify yet.");
-        if (Notification.permission === "denied") throw new Error(blockedPushMessage());
-        const permission = await Notification.requestPermission();
-        if (permission === "denied") throw new Error(blockedPushMessage());
-        if (permission !== "granted") throw new Error("Notifications were not allowed on this device. Tap Turn On Notifications when you are ready.");
-        pushStatus("Saving this device...");
-        const registration = await appServiceWorker();
-        let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(portalConfig.vapidPublicKey)
-          });
-        }
-        if (activeAccount?.id !== "owner" && activeAccount?.id !== "employee") {
-          await loadAccountData().catch(() => null);
-        }
-        const data = await requestJson("portal-push", {
-          method: "POST",
-          headers: pushRequestHeaders(),
-          body: JSON.stringify({ subscription: subscription.toJSON(), test: true })
-        });
-        if (data.push?.failed && !data.push?.sent) {
-          const reason = data.push?.errors?.[0]?.reason ? ` ${data.push.errors[0].reason}` : "";
-          pushStatus(`Device saved, but the test notification did not deliver yet.${reason}`, true);
-          setPushButton(true, "Try Notifications Again");
-          setNotificationBarHidden(false);
-          return;
-        }
-        pushStatus("Enabled on this device.");
-        setPushButton(true, "Notifications Enabled");
-        setNotificationBarHidden(true);
+        const data = await saveAndTestPush({ forceNew: true, allowRetry: false });
+        pushStatus(pushDeliveryText(data.push, "Test ding sent to this phone."));
+        setPushButton(true, "Refresh Device");
+        setPushTestButton(true);
+        setNotificationBarHidden(false);
       } catch (error) {
         pushStatus(error.message || "Notifications could not be enabled.", true);
         setPushButton(Boolean(activeAccount && portalConfig.vapidPublicKey));
+        setPushTestButton(Boolean(activeAccount && portalConfig.vapidPublicKey && "Notification" in window && Notification.permission === "granted"));
         setNotificationBarHidden(false);
+      }
+    }
+
+    async function testPushNotifications() {
+      try {
+        const data = await saveAndTestPush({ forceNew: false, allowRetry: true });
+        pushStatus(pushDeliveryText(data.push, "Test ding sent to this phone."));
+        setPushButton(true, "Refresh Device");
+        setPushTestButton(true);
+      } catch (error) {
+        pushStatus(error.message || "The test ding did not reach this phone.", true);
+        setPushButton(true, "Refresh Device");
+        setPushTestButton(Boolean(activeAccount && portalConfig.vapidPublicKey && "Notification" in window && Notification.permission === "granted"));
       }
     }
 
@@ -1923,6 +2000,7 @@
     });
 
     $("#enable-push").addEventListener("click", enablePushNotifications);
+    $("#test-push").addEventListener("click", testPushNotifications);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) updatePushStatus();
     });

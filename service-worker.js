@@ -1,4 +1,4 @@
-const CACHE_NAME = "green-grin-app-v10";
+const CACHE_NAME = "green-grin-app-v11";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -59,6 +59,7 @@ self.addEventListener("push", (event) => {
     badge: "/assets/green-grin-tab-icon.png",
     tag: payload.tag || "green-grin-update",
     renotify: true,
+    silent: false,
     timestamp: Date.now(),
     vibrate: [160, 80, 160],
     data: { url: payload.url || "/portal/" }

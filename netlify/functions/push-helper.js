@@ -108,6 +108,12 @@ async function sendPushToTarget(supabase, target, payload) {
   return await sendRows(supabase, rows, payload);
 }
 
+async function sendPushToSubscription(supabase, subscriptionRow, payload) {
+  if (!pushReady()) return { enabled: false, sent: 0, failed: 0, total: 0, errors: [] };
+  if (!subscriptionRow?.endpoint) return { enabled: true, sent: 0, failed: 0, total: 0, errors: [] };
+  return await sendRows(supabase, [subscriptionRow], payload);
+}
+
 async function sendPushToAllCustomers(supabase, payload) {
   if (!pushReady()) return { enabled: false, sent: 0, failed: 0, total: 0, errors: [] };
   const rows = await supabase("green_grin_push_subscriptions?select=*&active=eq.true&owner_type=eq.customer&limit=1000").catch(() => []);
@@ -121,5 +127,6 @@ async function sendPushToAllCustomers(supabase, payload) {
 module.exports = {
   pushReady,
   sendPushToAllCustomers,
+  sendPushToSubscription,
   sendPushToTarget
 };
