@@ -1,6 +1,6 @@
 {
   "name": "green-grin-netlify-site",
-  "version": "1.67.0",
+  "version": "1.68.0",
   "private": true,
   "description": "Green Grin Lawn & Landscape site and portals for Netlify.",
   "dependencies": {

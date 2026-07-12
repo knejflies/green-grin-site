@@ -63,11 +63,12 @@ GREEN_GRIN_VAPID_PUBLIC_KEY=from GGL-1.55-NOTIFICATION-KEYS.txt
 GREEN_GRIN_VAPID_PRIVATE_KEY=from GGL-1.55-NOTIFICATION-KEYS.txt
 GREEN_GRIN_VAPID_SUBJECT=mailto:notifications@greengrinlawns.com
 OPENAI_API_KEY=your OpenAI API key for receipt scanning
-OPENAI_RECEIPT_MODEL=gpt-4o-mini
 
 Do not put the notification keys text file in GitHub.
 Do not share the service_role key, private notification key, OpenAI API key, or admin PIN.
 The SUPABASE_ANON_KEY and GREEN_GRIN_VAPID_PUBLIC_KEY are okay to expose.
+
+OPENAI_RECEIPT_MODEL is optional. Leave it out unless you are intentionally changing the receipt scanner model.
 
 APP NOTIFICATION SETUP
 1. Upload/deploy this site to Netlify.
