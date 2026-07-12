@@ -68,6 +68,8 @@ function expensePayload(body) {
     payment_method: String(body.payment_method || "").trim().slice(0, 80),
     notes: String(body.notes || "").trim().slice(0, 800),
     receipt_filename: String(body.receipt_filename || "").trim().slice(0, 180),
+    mileage_start: moneyNumber(body.mileage_start),
+    mileage_end: moneyNumber(body.mileage_end),
     mileage_miles: moneyNumber(body.mileage_miles),
     mileage_rate: moneyNumber(body.mileage_rate),
     ai_confidence: moneyNumber(body.ai_confidence ?? body.confidence),
@@ -77,7 +79,14 @@ function expensePayload(body) {
 }
 
 function mileagePayload(body) {
-  const miles = moneyNumber(body.mileage_miles ?? body.miles) || 0;
+  const start = moneyNumber(body.mileage_start);
+  const end = moneyNumber(body.mileage_end);
+  let miles = moneyNumber(body.mileage_miles ?? body.miles) || 0;
+  if (start !== null || end !== null) {
+    if (start === null || end === null) throw new Error("Enter both start mileage and end mileage.");
+    if (end <= start) throw new Error("End mileage must be higher than start mileage.");
+    miles = Math.round((end - start) * 100) / 100;
+  }
   if (miles <= 0) throw new Error("Enter mileage before saving.");
   const rate = moneyNumber(body.mileage_rate ?? body.rate) || DEFAULT_MILEAGE_RATE;
   const route = String(body.route || body.vendor || "").trim();
@@ -94,6 +103,8 @@ function mileagePayload(body) {
     payment_method: "Mileage",
     notes: purpose.slice(0, 800),
     receipt_filename: "",
+    mileage_start: start,
+    mileage_end: end,
     mileage_miles: miles,
     mileage_rate: rate,
     ai_confidence: null,

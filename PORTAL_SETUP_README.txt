@@ -19,7 +19,7 @@ WHAT WORKS AFTER SETUP
 - Admin can mark invoices paid, search paid invoices, and keep paid invoices collapsed below open invoices.
 - Admin can build a starting bid from mowing, spraying, cleanups, and custom service totals.
 - Admin can scan receipt photos with AI, review the result, and save expenses.
-- Admin can log mileage and have it added as a vehicle expense at $0.76 per mile.
+- Admin can log start/end mileage and have the calculated miles added as a vehicle expense at $0.76 per mile.
 - Sent invoices show in the customer's Billing tab.
 - Admin can send a monthly invoice from the customer's monthly service number.
 - Employees can request access.

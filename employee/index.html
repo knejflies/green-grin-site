@@ -724,6 +724,23 @@
       padding: 0 14px 14px;
     }
 
+    .expense-switch {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .expense-switch .button.active {
+      background: var(--pine);
+      color: var(--white);
+      border-color: var(--pine);
+    }
+
+    .expense-view[hidden] {
+      display: none !important;
+    }
+
     .admin-bar {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -1624,8 +1641,12 @@
     </section>
 
     <section id="expenses" class="panel">
+      <div class="expense-switch owner-only" role="tablist" aria-label="Expense tools">
+        <button class="button active" data-expense-view-button="receipts" type="button">Receipts</button>
+        <button class="button ghost" data-expense-view-button="mileage" type="button">Mileage</button>
+      </div>
       <div class="grid">
-        <div class="card owner-only">
+        <div class="card owner-only expense-view" data-expense-view="receipts">
           <h2>Expense scanner</h2>
           <form id="expense-form">
             <input id="expense_id" type="hidden" />
@@ -1710,7 +1731,7 @@
           <div id="expense-category-totals" class="status-box"></div>
         </div>
 
-        <div class="card owner-only">
+        <div class="card owner-only expense-view" data-expense-view="mileage" hidden>
           <h2>Mileage log</h2>
           <form id="mileage-form">
             <input id="mileage_id" type="hidden" />
@@ -1720,14 +1741,24 @@
                 <input id="mileage_date" type="date" />
               </div>
               <div>
-                <label for="mileage_miles">Miles</label>
-                <input id="mileage_miles" type="number" min="0" step="0.1" placeholder="0.0" />
+                <label for="mileage_route">Route / customer</label>
+                <input id="mileage_route" placeholder="Shop to customer, supply run, route name" />
               </div>
             </div>
             <div class="two">
               <div>
-                <label for="mileage_route">Route / customer</label>
-                <input id="mileage_route" placeholder="Shop to customer, supply run, route name" />
+                <label for="mileage_start">Start mileage</label>
+                <input id="mileage_start" type="number" min="0" step="0.1" placeholder="Odometer start" />
+              </div>
+              <div>
+                <label for="mileage_end">End mileage</label>
+                <input id="mileage_end" type="number" min="0" step="0.1" placeholder="Odometer end" />
+              </div>
+            </div>
+            <div class="two">
+              <div>
+                <label for="mileage_miles">Calculated miles</label>
+                <input id="mileage_miles" type="number" min="0" step="0.1" placeholder="0.0" readonly />
               </div>
               <div>
                 <label for="mileage_rate">Rate per mile</label>
@@ -1751,7 +1782,7 @@
           <div id="mileage-list" class="status-box"></div>
         </div>
 
-        <div class="card owner-only">
+        <div class="card owner-only expense-view" data-expense-view="receipts">
           <h2>Expense list</h2>
           <div class="admin-bar">
             <button id="load-expenses" class="button secondary" type="button">Load Expenses</button>
@@ -2792,22 +2823,38 @@
       return expenseRows.filter((expense) => expense.expense_type === "mileage" || Number(expense.mileage_miles || 0) > 0);
     }
 
-    function mileageAmount() {
-      const miles = Number($("#mileage_miles").value || 0);
+    function mileageDistance() {
+      const start = Number($("#mileage_start").value);
+      const end = Number($("#mileage_end").value);
+      if (!Number.isFinite(start) || !Number.isFinite(end)) return 0;
+      return Math.max(0, end - start);
+    }
+
+    function mileageAmount(miles = Number($("#mileage_miles").value || 0)) {
       const rate = Number($("#mileage_rate").value || DEFAULT_MILEAGE_RATE);
       return Number.isFinite(miles) && Number.isFinite(rate) ? Math.max(0, miles * rate) : 0;
     }
 
     function updateMileageTotal() {
-      $("#mileage-total").textContent = fixedMoney(mileageAmount());
+      const startHasValue = $("#mileage_start").value !== "";
+      const endHasValue = $("#mileage_end").value !== "";
+      const distance = mileageDistance();
+      if (distance > 0 || startHasValue || endHasValue) {
+        $("#mileage_miles").value = distance > 0 ? distance.toFixed(1) : "";
+      }
+      const miles = Number($("#mileage_miles").value || 0);
+      $("#mileage-total").textContent = fixedMoney(mileageAmount(miles));
     }
 
     function mileagePayloadFromForm() {
+      updateMileageTotal();
       return {
         action: "mileage",
         id: $("#mileage_id").value || "",
         expense_type: "mileage",
         expense_date: $("#mileage_date").value || todayInputDate(),
+        mileage_start: $("#mileage_start").value || null,
+        mileage_end: $("#mileage_end").value || null,
         mileage_miles: $("#mileage_miles").value || 0,
         mileage_rate: $("#mileage_rate").value || DEFAULT_MILEAGE_RATE,
         route: $("#mileage_route").value,
@@ -2827,6 +2874,8 @@
     function fillMileageForm(expense = {}) {
       $("#mileage_id").value = expense.id || "";
       $("#mileage_date").value = expense.expense_date || todayInputDate();
+      $("#mileage_start").value = expense.mileage_start || "";
+      $("#mileage_end").value = expense.mileage_end || "";
       $("#mileage_miles").value = expense.mileage_miles || "";
       $("#mileage_rate").value = expense.mileage_rate || DEFAULT_MILEAGE_RATE.toFixed(2);
       $("#mileage_route").value = String(expense.vendor || "").replace(/^Mileage\s*-\s*/i, "").replace(/^Mileage$/i, "");
@@ -2839,6 +2888,9 @@
       const date = expense.expense_date ? displayScheduleDate(expense.expense_date) : "No date";
       const miles = Number(expense.mileage_miles || 0);
       const rate = Number(expense.mileage_rate || DEFAULT_MILEAGE_RATE);
+      const odometer = expense.mileage_start !== null && expense.mileage_start !== undefined && expense.mileage_end !== null && expense.mileage_end !== undefined
+        ? `${Number(expense.mileage_start).toFixed(1)} to ${Number(expense.mileage_end).toFixed(1)}`
+        : "";
       return `
         <div class="message" data-id="${expense.id}">
           <div class="message-head">
@@ -2846,6 +2898,7 @@
             <span class="badge">${cleanText(money(expense.amount) || "$0.00")}</span>
           </div>
           <p class="muted">${cleanText(date)} - ${cleanText(String(miles.toFixed(1)))} miles x ${cleanText(fixedMoney(rate))}</p>
+          ${odometer ? `<p class="muted">Odometer: ${cleanText(odometer)}</p>` : ""}
           ${expense.notes ? `<p>${cleanText(expense.notes)}</p>` : ""}
           <div class="row-actions">
             <button class="button small ghost" data-mileage-action="edit" type="button">Edit</button>
@@ -2912,6 +2965,22 @@
         ? receiptRows.map((expense) => expenseCard(expense)).join("")
         : notice("No expenses saved yet.");
       renderMileage();
+    }
+
+    function setExpenseView(view = "receipts") {
+      document.querySelectorAll("[data-expense-view]").forEach((panel) => {
+        panel.hidden = panel.dataset.expenseView !== view;
+      });
+      document.querySelectorAll("[data-expense-view-button]").forEach((button) => {
+        const active = button.dataset.expenseViewButton === view;
+        button.classList.toggle("active", active);
+        button.classList.toggle("ghost", !active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+      if (view === "mileage") {
+        renderMileage();
+        updateMileageTotal();
+      }
     }
 
     async function loadExpenses() {
@@ -3659,7 +3728,11 @@
       $("#expense-result").innerHTML = "";
     });
 
-    ["#mileage_miles", "#mileage_rate"].forEach((selector) => {
+    document.querySelectorAll("[data-expense-view-button]").forEach((button) => {
+      button.addEventListener("click", () => setExpenseView(button.dataset.expenseViewButton));
+    });
+
+    ["#mileage_start", "#mileage_end", "#mileage_rate"].forEach((selector) => {
       $(selector).addEventListener("input", updateMileageTotal);
     });
 
@@ -4251,6 +4324,7 @@
     calculateBid();
     clearExpenseForm();
     clearMileageForm();
+    setExpenseView("receipts");
     window.setInterval(updateRollingClock, 1000);
     loadSupabaseAuth();
   </script>

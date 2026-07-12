@@ -188,6 +188,8 @@ create table if not exists public.green_grin_expenses (
   payment_method text,
   notes text,
   receipt_filename text,
+  mileage_start numeric(12, 2),
+  mileage_end numeric(12, 2),
   mileage_miles numeric(10, 2),
   mileage_rate numeric(10, 2),
   ai_confidence numeric(4, 2),
@@ -224,6 +226,12 @@ alter table public.green_grin_expenses
 
 alter table public.green_grin_expenses
   add column if not exists receipt_filename text;
+
+alter table public.green_grin_expenses
+  add column if not exists mileage_start numeric(12, 2);
+
+alter table public.green_grin_expenses
+  add column if not exists mileage_end numeric(12, 2);
 
 alter table public.green_grin_expenses
   add column if not exists mileage_miles numeric(10, 2);
