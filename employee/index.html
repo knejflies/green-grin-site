@@ -1694,10 +1694,22 @@
       return Number(push?.sent || 0) > 0;
     }
 
+    async function ensureSignedInForPush() {
+      if (activeAccount) return;
+      if (supabaseClient) {
+        const { data } = await supabaseClient.auth.getSession().catch(() => ({ data: null }));
+        if (data?.session?.user) await handleAuthSession(data.session);
+      }
+      if (!activeAccount) await restoreSavedPortalSession().catch(() => false);
+      if (!activeAccount) {
+        throw new Error("Sign in to this portal first. Customer phones must enable notifications from the Customer Portal, and owner phones from the Admin Portal.");
+      }
+    }
+
     async function saveAndTestPush(options = {}) {
       const forceNew = Boolean(options.forceNew);
       const allowRetry = options.allowRetry !== false;
-      if (!activeAccount) throw new Error("Sign in first, then enable notifications.");
+      await ensureSignedInForPush();
       if (!("Notification" in window) || !("PushManager" in window)) throw new Error("App notifications are not supported on this device.");
       if (!portalConfig.vapidPublicKey) throw new Error("Notification keys are not configured in Netlify yet.");
       if (Notification.permission === "denied") throw new Error(blockedPushMessage());
@@ -1738,7 +1750,7 @@
       setPushButton(false, "Sign In First");
       setPushTestButton(false);
       if (!activeAccount) {
-        pushStatus("Sign in to this portal first, then enable notifications.");
+        pushStatus("Sign in to this portal first. Use Customer Portal for customer phone alerts.");
         return;
       }
       if (!("Notification" in window) || !("PushManager" in window)) {

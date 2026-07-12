@@ -89,6 +89,10 @@ function codeNumber(code) {
   return match ? Number(match[1]) : 0;
 }
 
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
 async function nextCustomerCode() {
   const customers = await supabase("green_grin_customers?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
   const jobs = await supabase("green_grin_jobs?select=customer_code&customer_code=not.is.null&order=customer_code.desc&limit=1");
@@ -114,7 +118,7 @@ async function nextCustomerCode() {
 
 async function matchingCustomer(body) {
   const email = (body.email || "").toLowerCase().trim();
-  const phone = (body.phone || "").trim();
+  const phone = normalizePhone(body.phone);
   if (email) {
     const rows = await supabase(`green_grin_customers?select=*&email=eq.${encodeURIComponent(email)}&limit=1`);
     if (rows?.[0]) return rows[0];
@@ -129,7 +133,7 @@ async function matchingCustomer(body) {
 async function matchingCustomerCode(body, customer) {
   if (customer?.customer_code) return customer.customer_code;
   const email = (body.email || "").toLowerCase().trim();
-  const phone = (body.phone || "").trim();
+  const phone = normalizePhone(body.phone);
   if (email) {
     const rows = await supabase(`green_grin_jobs?select=customer_code&email=eq.${encodeURIComponent(email)}&customer_code=not.is.null&order=created_at.desc&limit=1`);
     if (rows?.[0]?.customer_code) return rows[0].customer_code;
@@ -171,6 +175,7 @@ exports.handler = async (event) => {
       const adminError = adminCreate ? requireAdmin(event) : null;
       if (adminError) return json(401, { error: adminError });
       const user = adminCreate ? null : await optionalUser(event);
+      const normalizedPhone = normalizePhone(body.phone);
       const customer = adminCreate ? await matchingCustomer(body) : null;
       const customerCode = adminCreate ? await matchingCustomerCode(body, customer) : null;
       const scheduleStartDate = adminCreate ? body.schedule_start_date || body.scheduled_date || null : null;
@@ -180,7 +185,7 @@ exports.handler = async (event) => {
         customer_user_id: customer?.id || user?.id || null,
         customer_code: customerCode,
         customer_name: body.customer_name || "",
-        phone: body.phone || "",
+        phone: normalizedPhone,
         email: body.email || user?.email || "",
         address: body.address || "",
         service_type: body.service_type || "Service request",
