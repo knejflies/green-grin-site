@@ -1,13 +1,26 @@
-﻿const CACHE_NAME = "green-grin-public-v1";
-const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/assets/green-grin-logo.png", "/assets/green-grin-tab-icon.png", "/assets/green-grin-pwa-192.png", "/assets/green-grin-pwa-512.png"];
+const CACHE_NAME = "green-grin-public-v3";
+const APP_SHELL = [
+  "/",
+  "/index.html",
+  "/work/",
+  "/manifest.webmanifest",
+  "/assets/slides-data.js",
+  "/assets/green-grin-logo.png",
+  "/assets/green-grin-tab-icon.png",
+  "/assets/green-grin-pwa-192.png",
+  "/assets/green-grin-pwa-512.png"
+];
+
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).catch(() => null));
   self.skipWaiting();
 });
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))));
   self.clients.claim();
 });
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(fetch(event.request).then((response) => {

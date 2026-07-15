@@ -1,0 +1,70 @@
+{
+  "work": [
+    {
+      "src": "/assets/green-grin-caldwell-golf-course-lawn-care.jpg",
+      "title": "Golf Course Lawn Finish",
+      "alt": "Striped residential lawn overlooking a Caldwell Idaho golf course maintained by Green Grin"
+    },
+    {
+      "src": "/assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg",
+      "title": "Caldwell Lawn Striping",
+      "alt": "Fresh striped lawn mowing completed by Green Grin in Caldwell Idaho"
+    },
+    {
+      "src": "/assets/green-grin-commercial-landscape-maintenance-flower-beds.jpg",
+      "title": "Commercial Landscape Beds",
+      "alt": "Commercial flowerbed and rock landscape maintenance by Green Grin"
+    },
+    {
+      "src": "/assets/green-grin-concrete-curb-edging-lawn-care.jpg",
+      "title": "Crisp Concrete Curb Edging",
+      "alt": "Clean lawn edging along concrete landscape curbing by Green Grin"
+    },
+    {
+      "src": "/assets/green-grin-fire-pit-landscape-project-caldwell.jpg",
+      "title": "Backyard Fire Pit Project",
+      "alt": "Finished fire pit and backyard landscape project in Caldwell Idaho"
+    },
+    {
+      "src": "/assets/green-grin-residential-landscape-curbing-yard-maintenance.jpg",
+      "title": "Residential Landscape Care",
+      "alt": "Maintained residential lawn and landscape curbing in the Treasure Valley"
+    },
+    {
+      "src": "/assets/green-grin-residential-lawn-mowing-caldwell-idaho.jpg",
+      "title": "Neighborhood Lawn Mowing",
+      "alt": "Fresh neighborhood lawn mowing lines in Caldwell Idaho by Green Grin"
+    },
+    {
+      "src": "/assets/green-grin-treasure-valley-lawn-striping.jpg",
+      "title": "Treasure Valley Lawn Striping",
+      "alt": "Wide striped lawn maintained by Green Grin in the Treasure Valley"
+    }
+  ],
+  "reviews": [
+    {
+      "type": "promise",
+      "title": "Clean every visit",
+      "text": "Edges, walkways, driveways, and visible details are cleaned up before the job is finished.",
+      "author": "Green Grin service standard",
+      "location": "",
+      "rating": 0
+    },
+    {
+      "type": "promise",
+      "title": "Easy communication",
+      "text": "Straightforward follow-up keeps customers informed about their property and scheduled service.",
+      "author": "Green Grin service standard",
+      "location": "",
+      "rating": 0
+    },
+    {
+      "type": "promise",
+      "title": "Built for the Valley",
+      "text": "Local lawn and landscape service for Caldwell and communities across the Treasure Valley.",
+      "author": "Green Grin service standard",
+      "location": "",
+      "rating": 0
+    }
+  ]
+}

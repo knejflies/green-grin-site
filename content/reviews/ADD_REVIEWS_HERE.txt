@@ -1,0 +1,11 @@
+Drop review screenshots into this folder as JPG, JPEG, PNG, WEBP, or AVIF files.
+
+For a text review, add a JSON file like this:
+{
+  "author": "Customer first name",
+  "location": "Caldwell, Idaho",
+  "rating": 5,
+  "text": "The exact customer review text."
+}
+
+Commit the file to GitHub. Netlify rebuilds the review slides automatically.

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="See real Green Grin lawn mowing, striping, edging, landscape maintenance, and outdoor projects completed across Caldwell and the Treasure Valley." />
+  <title>Our Work | Green Grin Lawn & Landscape</title>
+  <meta name="theme-color" content="#0d2418" />
+  <link rel="icon" href="/assets/green-grin-tab-icon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/assets/green-grin-pwa-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <style>
+    :root {
+      --pine: #0d2418;
+      --forest: #173d29;
+      --leaf: #76c94f;
+      --lime: #9bd442;
+      --mist: #e8f1e6;
+      --paper: #f5f7f0;
+      --white: #ffffff;
+      --ink: #17221b;
+      --muted: #657067;
+      --line: #d6e0d4;
+      --page: min(1180px, calc(100% - 40px));
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+    }
+
+    body,
+    button,
+    a {
+      letter-spacing: 0;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(13, 36, 24, 0.97);
+      color: var(--white);
+    }
+
+    .topbar-inner {
+      width: var(--page);
+      min-height: 76px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: min(270px, 50vw);
+      max-height: 58px;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .button,
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-weight: 900;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    .button {
+      min-height: 42px;
+      padding: 9px 14px;
+      background: var(--lime);
+      color: var(--pine);
+    }
+
+    .button.secondary {
+      border-color: rgba(255, 255, 255, 0.35);
+      background: transparent;
+      color: var(--white);
+    }
+
+    .button:hover,
+    .icon-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .showcase {
+      position: relative;
+      min-height: clamp(590px, 78svh, 820px);
+      overflow: hidden;
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    .showcase-photo,
+    .showcase-photo img,
+    .showcase-shade {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .showcase-photo img {
+      object-fit: cover;
+      object-position: center;
+      opacity: 0;
+      transform: scale(1.025);
+      transition:
+        opacity 950ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 7s ease-out;
+      will-change: opacity, transform;
+    }
+
+    .showcase-photo img.is-active {
+      z-index: 1;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .showcase-shade {
+      z-index: 1;
+      background:
+        linear-gradient(90deg, rgba(3, 18, 10, 0.68) 0%, rgba(3, 18, 10, 0.28) 55%, rgba(3, 18, 10, 0.12) 100%),
+        linear-gradient(0deg, rgba(3, 18, 10, 0.62) 0%, transparent 58%);
+      pointer-events: none;
+    }
+
+    .showcase-content {
+      position: relative;
+      z-index: 2;
+      width: var(--page);
+      min-height: clamp(590px, 78svh, 820px);
+      margin: 0 auto;
+      padding: clamp(55px, 9vw, 110px) 0 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: var(--lime);
+      font-size: 0.78rem;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .showcase h1 {
+      max-width: 840px;
+      font-size: clamp(2.25rem, 7vw, 5.25rem);
+      line-height: 1.02;
+      text-wrap: balance;
+    }
+
+    .showcase h1,
+    .slide-caption,
+    .eyebrow {
+      transition: opacity 280ms ease, transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .showcase-content.is-changing h1,
+    .showcase-content.is-changing .slide-caption,
+    .showcase-content.is-changing .eyebrow {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .slide-caption {
+      max-width: 680px;
+      margin-top: 12px;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .showcase-controls {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 26px;
+    }
+
+    .icon-button {
+      width: 46px;
+      height: 46px;
+      border-color: rgba(255, 255, 255, 0.42);
+      background: rgba(13, 36, 24, 0.74);
+      color: var(--white);
+      font-size: 1.7rem;
+      line-height: 1;
+    }
+
+    .slide-count {
+      min-width: 82px;
+      text-align: center;
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .filmstrip {
+      background: var(--forest);
+      border-top: 3px solid var(--lime);
+    }
+
+    .filmstrip-inner {
+      width: var(--page);
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-color: var(--leaf) var(--forest);
+    }
+
+    .thumbnail {
+      flex: 0 0 108px;
+      width: 108px;
+      height: 72px;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      background: var(--pine);
+      opacity: 0.64;
+    }
+
+    .thumbnail[aria-current="true"] {
+      border-color: var(--lime);
+      opacity: 1;
+    }
+
+    .thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .reviews {
+      padding: clamp(68px, 10vw, 120px) 0;
+      background: var(--white);
+    }
+
+    .reviews-inner {
+      width: var(--page);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(190px, 0.38fr) minmax(0, 1fr);
+      gap: clamp(35px, 7vw, 90px);
+      align-items: center;
+    }
+
+    .reviews h2 {
+      color: var(--pine);
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.06;
+    }
+
+    .review-display {
+      min-height: 275px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-left: 5px solid var(--leaf);
+      padding-left: clamp(24px, 5vw, 58px);
+    }
+
+    .review-kind {
+      color: var(--forest);
+      font-size: 0.78rem;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .review-stars {
+      min-height: 25px;
+      margin: 10px 0;
+      color: var(--leaf);
+      font-size: 1.15rem;
+    }
+
+    .review-quote {
+      max-width: 760px;
+      color: var(--ink);
+      font-size: clamp(1.45rem, 3vw, 2.25rem);
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .review-byline {
+      margin-top: 19px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .review-image {
+      width: 100%;
+      max-height: 440px;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .review-controls {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 25px;
+    }
+
+    .review-controls .icon-button {
+      border-color: var(--line);
+      background: var(--paper);
+      color: var(--pine);
+    }
+
+    .cta {
+      border-top: 1px solid var(--line);
+      background: var(--mist);
+      color: var(--pine);
+    }
+
+    .cta-inner {
+      width: var(--page);
+      margin: 0 auto;
+      padding: 42px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 25px;
+    }
+
+    .cta h2 {
+      font-size: clamp(1.65rem, 3vw, 2.55rem);
+      line-height: 1.1;
+    }
+
+    .cta .button {
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    .cta .button:hover {
+      background: var(--forest);
+    }
+
+    footer {
+      padding: 28px 0;
+      background: var(--pine);
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    footer div {
+      width: var(--page);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    footer strong {
+      color: var(--white);
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --page: min(100% - 28px, 1180px);
+      }
+
+      .topbar-inner {
+        min-height: 68px;
+      }
+
+      .brand img {
+        width: min(205px, 52vw);
+      }
+
+      .nav-actions .button.secondary {
+        display: none;
+      }
+
+      .showcase,
+      .showcase-content {
+        min-height: 70svh;
+      }
+
+      .showcase-content {
+        padding-bottom: 26px;
+      }
+
+      .showcase-shade {
+        background:
+          linear-gradient(90deg, rgba(3, 18, 10, 0.5), rgba(3, 18, 10, 0.12)),
+          linear-gradient(0deg, rgba(3, 18, 10, 0.78) 0%, rgba(3, 18, 10, 0.15) 72%);
+      }
+
+      .reviews-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .review-display {
+        min-height: 320px;
+      }
+
+      .cta-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .button {
+        min-height: 40px;
+        padding: 8px 10px;
+        font-size: 0.86rem;
+      }
+
+      .showcase h1 {
+        font-size: clamp(2rem, 12vw, 3.4rem);
+      }
+
+      .thumbnail {
+        flex-basis: 88px;
+        width: 88px;
+        height: 62px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+      }
+
+      .showcase-photo img {
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/" aria-label="Green Grin Lawn and Landscape home">
+        <img src="/assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
+      </a>
+      <nav class="nav-actions" aria-label="Work page navigation">
+        <a class="button secondary" href="/">Main Site</a>
+        <a class="button" href="/#contact">Get an Estimate</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="work-showcase" class="showcase" aria-labelledby="work-title">
+      <div class="showcase-photo">
+        <img id="work-image-a" class="is-active" src="" alt="" fetchpriority="high" />
+        <img id="work-image-b" src="" alt="" />
+      </div>
+      <div class="showcase-shade" aria-hidden="true"></div>
+      <div class="showcase-content">
+        <p class="eyebrow">Real Green Grin Work</p>
+        <h1 id="work-title">Green Grin Lawn & Landscape</h1>
+        <p id="work-caption" class="slide-caption"></p>
+        <div class="showcase-controls" aria-label="Work slideshow controls">
+          <button id="work-prev" class="icon-button" type="button" aria-label="Previous project" title="Previous project">&lsaquo;</button>
+          <span id="work-count" class="slide-count" aria-live="polite"></span>
+          <button id="work-next" class="icon-button" type="button" aria-label="Next project" title="Next project">&rsaquo;</button>
+          <button id="work-play" class="icon-button" type="button" aria-label="Pause slideshow" title="Pause slideshow">II</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="filmstrip" aria-label="Project thumbnails">
+      <div id="work-thumbnails" class="filmstrip-inner"></div>
+    </div>
+
+    <section id="reviews" class="reviews" aria-labelledby="review-heading">
+      <div class="reviews-inner">
+        <div>
+          <p class="eyebrow">Reviews & Standards</p>
+          <h2 id="review-heading">The grin after the work.</h2>
+        </div>
+        <div>
+          <article id="review-display" class="review-display" aria-live="polite">
+            <p id="review-kind" class="review-kind"></p>
+            <p id="review-stars" class="review-stars" aria-label=""></p>
+            <p id="review-quote" class="review-quote"></p>
+            <p id="review-byline" class="review-byline"></p>
+            <img id="review-image" class="review-image" src="" alt="" hidden />
+          </article>
+          <div class="review-controls" aria-label="Review slideshow controls">
+            <button id="review-prev" class="icon-button" type="button" aria-label="Previous review" title="Previous review">&lsaquo;</button>
+            <span id="review-count" class="slide-count" aria-live="polite"></span>
+            <button id="review-next" class="icon-button" type="button" aria-label="Next review" title="Next review">&rsaquo;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="cta-inner">
+        <h2 id="cta-title">Ready for a yard worth showing off?</h2>
+        <a class="button" href="/#contact">Request Service</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <p><strong>Green Grin Lawn & Landscape</strong> &copy; 2026</p>
+      <a href="/">Caldwell, Idaho &middot; Treasure Valley Lawn Care</a>
+    </div>
+  </footer>
+
+  <script src="/assets/slides-data.js"></script>
+  <script>
+    const data = window.GREEN_GRIN_SLIDES || { work: [], reviews: [] };
+    const workSlides = data.work || [];
+    const reviewSlides = data.reviews || [];
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let workIndex = 0;
+    let reviewIndex = 0;
+    let workTimer = null;
+    let workPlaying = !reducedMotion;
+    let touchStartX = 0;
+    let activeWorkImage = 0;
+    let workTransitionToken = 0;
+
+    const $ = (selector) => document.querySelector(selector);
+    const wrapIndex = (index, length) => length ? (index + length) % length : 0;
+
+    function renderWorkThumbnails() {
+      const strip = $("#work-thumbnails");
+      strip.replaceChildren();
+      workSlides.forEach((slide, index) => {
+        const button = document.createElement("button");
+        button.className = "thumbnail";
+        button.type = "button";
+        button.setAttribute("aria-label", `Show ${slide.title}`);
+        button.setAttribute("aria-current", index === workIndex ? "true" : "false");
+        const image = document.createElement("img");
+        image.src = slide.src;
+        image.alt = "";
+        image.loading = "lazy";
+        button.append(image);
+        button.addEventListener("click", () => showWork(index, true));
+        strip.append(button);
+      });
+    }
+
+    function showWork(index, userAction = false) {
+      if (!workSlides.length) return;
+      workIndex = wrapIndex(index, workSlides.length);
+      const slide = workSlides[workIndex];
+      const token = ++workTransitionToken;
+      const currentImage = activeWorkImage === 0 ? $("#work-image-a") : $("#work-image-b");
+      const incomingImage = activeWorkImage === 0 ? $("#work-image-b") : $("#work-image-a");
+      const content = document.querySelector(".showcase-content");
+      let committed = false;
+
+      const commitSlide = () => {
+        if (committed || token !== workTransitionToken) return;
+        committed = true;
+        incomingImage.alt = slide.alt;
+        incomingImage.classList.add("is-active");
+        currentImage.classList.remove("is-active");
+        activeWorkImage = activeWorkImage === 0 ? 1 : 0;
+        $("#work-title").textContent = slide.title;
+        $("#work-caption").textContent = "Real lawn and landscape work completed by Green Grin across Caldwell and the Treasure Valley.";
+        $("#work-count").textContent = `${String(workIndex + 1).padStart(2, "0")} / ${String(workSlides.length).padStart(2, "0")}`;
+        content.classList.remove("is-changing");
+        renderWorkThumbnails();
+        const activeThumb = $("#work-thumbnails [aria-current='true']");
+        if (userAction && activeThumb) {
+          const strip = $("#work-thumbnails");
+          strip.scrollTo({
+            left: activeThumb.offsetLeft - ((strip.clientWidth - activeThumb.clientWidth) / 2),
+            behavior: reducedMotion ? "auto" : "smooth"
+          });
+        }
+      };
+
+      content.classList.add("is-changing");
+      incomingImage.onload = commitSlide;
+      incomingImage.onerror = () => content.classList.remove("is-changing");
+      incomingImage.src = slide.src;
+      if (incomingImage.complete && incomingImage.naturalWidth) commitSlide();
+
+      const next = workSlides[wrapIndex(workIndex + 1, workSlides.length)];
+      if (next) new Image().src = next.src;
+      restartWorkTimer();
+    }
+
+    function restartWorkTimer() {
+      window.clearInterval(workTimer);
+      if (workPlaying && workSlides.length > 1) {
+        workTimer = window.setInterval(() => showWork(workIndex + 1), 6000);
+      }
+    }
+
+    function updateWorkPlayButton() {
+      const button = $("#work-play");
+      button.textContent = workPlaying ? "II" : "\u25b6";
+      button.setAttribute("aria-label", workPlaying ? "Pause slideshow" : "Play slideshow");
+      button.title = workPlaying ? "Pause slideshow" : "Play slideshow";
+    }
+
+    function toggleWorkPlay() {
+      workPlaying = !workPlaying;
+      updateWorkPlayButton();
+      restartWorkTimer();
+    }
+
+    function showReview(index) {
+      if (!reviewSlides.length) {
+        $("#reviews").hidden = true;
+        return;
+      }
+      reviewIndex = wrapIndex(index, reviewSlides.length);
+      const review = reviewSlides[reviewIndex];
+      const image = $("#review-image");
+      const isImage = review.type === "image";
+      image.hidden = !isImage;
+      $("#review-kind").hidden = isImage;
+      $("#review-stars").hidden = isImage;
+      $("#review-quote").hidden = isImage;
+      $("#review-byline").hidden = isImage;
+      if (isImage) {
+        image.src = review.src;
+        image.alt = review.alt;
+      } else {
+        const isPromise = review.type === "promise";
+        $("#review-kind").textContent = isPromise ? "Green Grin Promise" : review.title || "Customer Review";
+        const rating = Math.round(Number(review.rating || 0));
+        $("#review-stars").textContent = rating ? "\u2605".repeat(rating) : "";
+        $("#review-stars").setAttribute("aria-label", rating ? `${rating} out of 5 stars` : "");
+        $("#review-quote").textContent = review.text;
+        $("#review-byline").textContent = [review.author, review.location].filter(Boolean).join(" \u00b7 ");
+      }
+      $("#review-count").textContent = `${String(reviewIndex + 1).padStart(2, "0")} / ${String(reviewSlides.length).padStart(2, "0")}`;
+    }
+
+    $("#work-prev").addEventListener("click", () => showWork(workIndex - 1, true));
+    $("#work-next").addEventListener("click", () => showWork(workIndex + 1, true));
+    $("#work-play").addEventListener("click", toggleWorkPlay);
+    $("#review-prev").addEventListener("click", () => showReview(reviewIndex - 1));
+    $("#review-next").addEventListener("click", () => showReview(reviewIndex + 1));
+
+    $("#work-showcase").addEventListener("touchstart", (event) => {
+      touchStartX = event.changedTouches[0]?.clientX || 0;
+    }, { passive: true });
+    $("#work-showcase").addEventListener("touchend", (event) => {
+      const distance = (event.changedTouches[0]?.clientX || 0) - touchStartX;
+      if (Math.abs(distance) > 55) showWork(workIndex + (distance < 0 ? 1 : -1), true);
+    }, { passive: true });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") showWork(workIndex - 1, true);
+      if (event.key === "ArrowRight") showWork(workIndex + 1, true);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) window.clearInterval(workTimer);
+      else restartWorkTimer();
+    });
+
+    if (workSlides.length) showWork(0);
+    else $("#work-caption").textContent = "Project photos are being updated.";
+    updateWorkPlayButton();
+    showReview(0);
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker.js").catch(() => null));
+    }
+  </script>
+</body>
+</html>

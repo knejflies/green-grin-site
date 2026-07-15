@@ -1,0 +1,10 @@
+{
+  "name": "green-grin-public-site",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Green Grin Lawn & Landscape public website.",
+  "scripts": {
+    "build": "node scripts/build-slides.cjs",
+    "test": "node tests/slides.test.cjs && node tests/html-syntax.test.cjs"
+  }
+}

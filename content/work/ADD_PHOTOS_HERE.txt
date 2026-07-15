@@ -1,0 +1,6 @@
+Drop JPG, JPEG, PNG, WEBP, or AVIF project photos into this folder.
+
+Use a clear filename because it becomes the slide title and image description.
+Example: caldwell-idaho-spring-lawn-cleanup.jpg
+
+Commit the photo to GitHub. Netlify rebuilds the slide list automatically.
