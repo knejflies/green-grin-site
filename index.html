@@ -634,6 +634,54 @@
       font-weight: 950;
     }
 
+    .meet-grin {
+      padding: 0;
+      background: var(--mint);
+      overflow: hidden;
+    }
+
+    .meet-grin-grid {
+      min-height: 430px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+      gap: 48px;
+      align-items: center;
+    }
+
+    .meet-grin-copy {
+      padding: 70px 0;
+    }
+
+    .meet-grin-copy h2 {
+      margin-bottom: 16px;
+      color: var(--pine);
+      font-size: clamp(2.1rem, 5vw, 4rem);
+      line-height: 1;
+    }
+
+    .meet-grin-copy p {
+      max-width: 650px;
+      color: var(--ink);
+      font-size: clamp(1.12rem, 2vw, 1.4rem);
+      font-weight: 650;
+    }
+
+    .meet-grin-portrait {
+      align-self: end;
+      min-height: 430px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .meet-grin-portrait img {
+      width: min(100%, 470px);
+      max-height: 430px;
+      object-fit: contain;
+      object-position: center bottom;
+      mix-blend-mode: multiply;
+    }
+
     .gallery {
       background: #edf5e9;
     }
@@ -926,6 +974,11 @@
       .gallery-grid {
         grid-template-columns: 1fr 1fr;
       }
+
+      .meet-grin-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.65fr);
+        gap: 28px;
+      }
     }
 
     @media (max-width: 680px) {
@@ -989,6 +1042,25 @@
 
       .gallery-item.large {
         grid-row: span 1;
+      }
+
+      .meet-grin-grid {
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .meet-grin-copy {
+        padding: 64px 0 18px;
+      }
+
+      .meet-grin-portrait {
+        min-height: 0;
+      }
+
+      .meet-grin-portrait img {
+        width: min(92%, 390px);
+        max-height: 390px;
       }
 
       footer .wrap {
@@ -1122,6 +1194,19 @@
             <li>Service built around Caldwell, Nampa, Meridian, Boise, and the wider Treasure Valley.</li>
           </ul>
           <a class="button" href="#contact">Book Your Spot</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="meet-grin" aria-labelledby="meet-grin-title">
+      <div class="wrap meet-grin-grid">
+        <div class="meet-grin-copy">
+          <span class="section-kicker">The Smile Behind The Stripes</span>
+          <h2 id="meet-grin-title">Meet Grin.</h2>
+          <p>He's the face of Green Grin Lawn &amp; Landscape. If you see that smile, you know your lawn is in good hands.</p>
+        </div>
+        <div class="meet-grin-portrait">
+          <img src="assets/green-grin-lawn-care-mascot-caldwell-idaho.png" alt="Grin, the smiling Green Grin Lawn and Landscape mascot giving a thumbs up" loading="lazy" />
         </div>
       </div>
     </section>
