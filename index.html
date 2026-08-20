@@ -1414,6 +1414,17 @@
     </div>
   </footer>
   <script>
+    const contactForm = document.querySelector(".contact-form");
+    if (contactForm) {
+      contactForm.addEventListener("submit", () => {
+        if (typeof window.gtag === "function") {
+          window.gtag("event", "conversion", {
+            send_to: "AW-18314911349/WMlfCK_k7eMcEPW8nZ1E"
+          });
+        }
+      });
+    }
+
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/service-worker.js").catch(() => null);
