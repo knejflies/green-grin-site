@@ -681,6 +681,24 @@
       margin-top: 4px;
     }
 
+    .estimate-form button:disabled {
+      cursor: wait;
+      opacity: 0.72;
+      transform: none;
+    }
+
+    .form-status {
+      min-height: 24px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 750;
+    }
+
+    .form-status.error {
+      color: #9b301e;
+    }
+
     .faq-grid {
       display: grid;
       grid-template-columns: 0.7fr 1.3fr;
@@ -1160,6 +1178,7 @@
           </div>
 
           <button class="button dark" type="submit">Request Project Estimate</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
           <p class="form-note">Submitting this form sends your project details to Green Grin Lawn & Landscape. It does not create a contract or obligation.</p>
         </form>
       </div>
@@ -1198,11 +1217,35 @@
   <script>
     const estimateForm = document.querySelector(".estimate-form");
     if (estimateForm) {
-      estimateForm.addEventListener("submit", () => {
-        if (typeof window.gtag === "function") {
-          window.gtag("event", "conversion", {
-            send_to: "AW-18314911349/CsvvCOf2yOUcEPW8nZ1E"
+      estimateForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitButton = estimateForm.querySelector('[type="submit"]');
+        const formStatus = estimateForm.querySelector(".form-status");
+        const originalButtonText = submitButton.textContent;
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending...";
+        formStatus.classList.remove("error");
+        formStatus.textContent = "Sending your project request...";
+
+        try {
+          const response = await fetch(estimateForm.action, {
+            method: estimateForm.method,
+            body: new FormData(estimateForm),
+            headers: { Accept: "application/json" }
           });
+
+          if (!response.ok) {
+            throw new Error(response.status === 429 ? "Please wait a minute and try again." : "Your project request could not be sent.");
+          }
+
+          sessionStorage.setItem("greenGrinLeadSubmitted", "1");
+          window.location.assign("/thank-you/");
+        } catch (error) {
+          formStatus.classList.add("error");
+          formStatus.textContent = error.message || "Your project request could not be sent. Please call or text us instead.";
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
         }
       });
     }

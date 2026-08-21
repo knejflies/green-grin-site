@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Your Green Grin Lawn & Landscape request was received." />
+  <title>Request Received | Green Grin Lawn & Landscape</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18314911349"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18314911349');
+
+    if (sessionStorage.getItem('greenGrinLeadSubmitted') === '1') {
+      sessionStorage.removeItem('greenGrinLeadSubmitted');
+      gtag('event', 'conversion', {'send_to': 'AW-18314911349/CsvvCOf2yOUcEPW8nZ1E'});
+    }
+  </script>
+  <meta name="theme-color" content="#0d2b1d" />
+  <link rel="icon" href="/assets/green-grin-tab-icon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/assets/green-grin-pwa-192.png" />
+  <style>
+    :root {
+      --pine: #0d2b1d;
+      --leaf: #75c84e;
+      --paper: #f7faf4;
+      --white: #ffffff;
+      --ink: #17231b;
+      --muted: #647168;
+      --line: #d8e2d5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    header,
+    footer {
+      background: var(--pine);
+      color: var(--white);
+    }
+
+    header {
+      padding: 14px 20px;
+    }
+
+    header a {
+      width: min(260px, 64vw);
+      display: block;
+      margin: 0 auto;
+    }
+
+    header img {
+      width: 100%;
+      display: block;
+    }
+
+    main {
+      width: min(720px, calc(100% - 32px));
+      display: grid;
+      place-items: center;
+      margin: 0 auto;
+      padding: 72px 0;
+    }
+
+    .confirmation {
+      width: 100%;
+      padding: clamp(30px, 6vw, 56px);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 22px 55px rgba(13, 43, 29, 0.14);
+      text-align: center;
+    }
+
+    .check {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      background: var(--leaf);
+      color: var(--pine);
+      font-size: 1.9rem;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      color: var(--pine);
+      font-size: clamp(2.1rem, 7vw, 3.7rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    p {
+      max-width: 540px;
+      margin: 0 auto 28px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border: 1px solid var(--pine);
+      border-radius: 6px;
+      background: var(--pine);
+      color: var(--white);
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .button.secondary {
+      background: var(--white);
+      color: var(--pine);
+    }
+
+    footer {
+      padding: 22px 16px;
+      text-align: center;
+    }
+
+    footer p {
+      margin: 0 auto;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 520px) {
+      main {
+        padding: 48px 0;
+      }
+
+      .actions .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" aria-label="Green Grin Lawn and Landscape home">
+      <img src="/assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
+    </a>
+  </header>
+
+  <main>
+    <section class="confirmation" aria-labelledby="confirmation-title">
+      <div class="check" aria-hidden="true">&#10003;</div>
+      <h1 id="confirmation-title">Thanks. Your request is in.</h1>
+      <p>Green Grin received your information and will follow up using the phone number or email you provided.</p>
+      <div class="actions">
+        <a class="button" href="/">Return to Main Site</a>
+        <a class="button secondary" href="tel:12086142515">Call or Text (208) 614-2515</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Green Grin Lawn & Landscape</strong> &copy; 2026 &middot; Caldwell, Idaho</p>
+  </footer>
+</body>
+</html>

@@ -873,6 +873,24 @@
       resize: vertical;
     }
 
+    .contact-form button:disabled {
+      cursor: wait;
+      opacity: 0.72;
+      transform: none;
+    }
+
+    .form-status {
+      min-height: 24px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 750;
+    }
+
+    .form-status.error {
+      color: #9b301e;
+    }
+
     .areas {
       display: flex;
       flex-wrap: wrap;
@@ -1396,6 +1414,7 @@
             <textarea id="message" name="message" placeholder="Tell us the lawn size, current condition, gate access, pets, or anything else useful."></textarea>
           </div>
           <button class="button" type="submit">Send Request</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
         </form>
       </div>
     </section>
@@ -1416,11 +1435,35 @@
   <script>
     const contactForm = document.querySelector(".contact-form");
     if (contactForm) {
-      contactForm.addEventListener("submit", () => {
-        if (typeof window.gtag === "function") {
-          window.gtag("event", "conversion", {
-            send_to: "AW-18314911349/CsvvCOf2yOUcEPW8nZ1E"
+      contactForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitButton = contactForm.querySelector('[type="submit"]');
+        const formStatus = contactForm.querySelector(".form-status");
+        const originalButtonText = submitButton.textContent;
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending...";
+        formStatus.classList.remove("error");
+        formStatus.textContent = "Sending your request...";
+
+        try {
+          const response = await fetch(contactForm.action, {
+            method: contactForm.method,
+            body: new FormData(contactForm),
+            headers: { Accept: "application/json" }
           });
+
+          if (!response.ok) {
+            throw new Error(response.status === 429 ? "Please wait a minute and try again." : "Your request could not be sent.");
+          }
+
+          sessionStorage.setItem("greenGrinLeadSubmitted", "1");
+          window.location.assign("/thank-you/");
+        } catch (error) {
+          formStatus.classList.add("error");
+          formStatus.textContent = error.message || "Your request could not be sent. Please call or text us instead.";
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
         }
       });
     }
