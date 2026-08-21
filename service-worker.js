@@ -1,4 +1,4 @@
-const CACHE_NAME = "green-grin-public-v6";
+const CACHE_NAME = "green-grin-public-v7";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,8 +6,9 @@ const APP_SHELL = [
   "/work/",
   "/manifest.webmanifest",
   "/assets/slides-data.js",
-  "/assets/green-grin-logo.png",
-  "/assets/green-grin-tab-icon.png",
+  "/assets/green-grin-logo.webp",
+  "/assets/green-grin-favicon-96.png",
+  "/assets/green-grin-caldwell-idaho-striped-lawn-mowing.webp",
   "/assets/green-grin-pwa-192.png",
   "/assets/green-grin-pwa-512.png"
 ];

@@ -5,6 +5,8 @@ const root = path.resolve(__dirname, "..");
 const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
 const excludedAssetNames = new Set([
   "green-grin-logo.png",
+  "green-grin-logo.webp",
+  "green-grin-favicon-96.png",
   "green-grin-pwa-192.png",
   "green-grin-pwa-512.png",
   "green-grin-tab-icon.png"
@@ -44,7 +46,8 @@ function titleFromFilename(filename) {
 }
 
 function workSlide(file) {
-  const metadata = legacyMetadata[path.basename(file)];
+  const basename = path.basename(file);
+  const metadata = legacyMetadata[basename] || legacyMetadata[`${path.basename(file, path.extname(file))}.jpg`];
   const title = metadata?.[0] || titleFromFilename(file);
   return {
     src: publicPath(file),
@@ -62,8 +65,15 @@ const folderWork = listFiles(path.join(root, "content", "work"))
 
 const seenWork = new Set();
 const work = [...legacyWork, ...folderWork]
+  .sort((a, b) => {
+    const extensionPriority = { ".avif": 0, ".webp": 1, ".jpg": 2, ".jpeg": 2, ".png": 3 };
+    return (extensionPriority[path.extname(a).toLowerCase()] ?? 9) - (extensionPriority[path.extname(b).toLowerCase()] ?? 9);
+  })
   .map(workSlide)
-  .filter((slide) => !seenWork.has(slide.src) && seenWork.add(slide.src));
+  .filter((slide) => {
+    const imageKey = slide.src.replace(/\.(avif|webp|jpe?g|png)$/i, "");
+    return !seenWork.has(imageKey) && seenWork.add(imageKey);
+  });
 
 const reviews = [];
 for (const file of listFiles(path.join(root, "content", "reviews"))) {

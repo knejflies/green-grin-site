@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Green Grin Lawn & Landscape provides mowing, edging, cleanups, mulch, shrub trimming, and commercial property care across Caldwell and the Treasure Valley." />
   <title>Green Grin Lawn & Landscape | Caldwell & Treasure Valley Lawn Care</title>
+  <link rel="canonical" href="https://greengrinlawns.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Green Grin Lawn & Landscape" />
+  <meta property="og:title" content="Green Grin Lawn & Landscape | Caldwell Lawn Care" />
+  <meta property="og:description" content="Dependable mowing, edging, cleanups, landscaping, and commercial property care throughout Caldwell and the Treasure Valley." />
+  <meta property="og:url" content="https://greengrinlawns.com/" />
+  <meta property="og:image" content="https://greengrinlawns.com/assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg" />
+  <meta property="og:image:alt" content="Freshly striped Caldwell Idaho lawn maintained by Green Grin Lawn & Landscape" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Green Grin Lawn & Landscape | Caldwell Lawn Care" />
+  <meta name="twitter:description" content="Dependable mowing, edging, cleanups, landscaping, and commercial property care throughout the Treasure Valley." />
+  <meta name="twitter:image" content="https://greengrinlawns.com/assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg" />
+  <link rel="preload" as="image" href="/assets/green-grin-caldwell-idaho-striped-lawn-mowing.webp" type="image/webp" fetchpriority="high" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18314911349"></script>
   <script>
@@ -16,9 +29,30 @@
   <meta name="theme-color" content="#123324" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Green Grin" />
-  <link rel="icon" href="assets/green-grin-tab-icon.png" type="image/png" />
+  <link rel="icon" href="/assets/green-grin-favicon-96.png" type="image/png" sizes="96x96" />
   <link rel="apple-touch-icon" href="/assets/green-grin-pwa-192.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LandscapingBusiness",
+      "name": "Green Grin Lawn & Landscape",
+      "url": "https://greengrinlawns.com/",
+      "logo": "https://greengrinlawns.com/assets/green-grin-logo.png",
+      "image": "https://greengrinlawns.com/assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg",
+      "telephone": "+1-208-614-2515",
+      "email": "ken@greengrinlawns.com",
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Caldwell",
+        "addressRegion": "ID",
+        "addressCountry": "US"
+      },
+      "areaServed": ["Caldwell", "Nampa", "Meridian", "Boise", "Eagle", "Kuna", "Star", "Middleton"],
+      "serviceType": ["Lawn mowing", "Lawn edging", "Seasonal cleanup", "Landscaping", "Shrub trimming", "Commercial landscape maintenance"]
+    }
+  </script>
   <style>
     :root {
       --pine: #123324;
@@ -99,6 +133,9 @@
     }
 
     .topbar a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
       color: var(--mint);
       font-weight: 800;
       text-decoration: none;
@@ -228,21 +265,21 @@
 
     .hero {
       position: relative;
-      min-height: 760px;
+      min-height: clamp(520px, calc(100svh - 150px), 650px);
+      padding: 0;
       display: grid;
-      align-items: end;
+      align-items: center;
       overflow: hidden;
       color: var(--white);
       background:
         linear-gradient(90deg, rgba(13, 36, 24, 0.93), rgba(13, 36, 24, 0.68) 47%, rgba(13, 36, 24, 0.22)),
-        url("assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg") center / cover no-repeat;
-      background-attachment: fixed;
+        url("assets/green-grin-caldwell-idaho-striped-lawn-mowing.webp") center / cover no-repeat;
     }
 
     .hero .wrap {
       position: relative;
       z-index: 1;
-      padding: 108px 0 42px;
+      padding: 56px 0;
     }
 
     .hero-grid {
@@ -274,15 +311,15 @@
 
     h1 {
       max-width: 760px;
-      font-size: clamp(3.1rem, 7vw, 6.8rem);
-      line-height: 0.95;
+      font-size: clamp(3rem, 5.4vw, 5.7rem);
+      line-height: 0.98;
       letter-spacing: 0;
       font-weight: 950;
     }
 
     .hero-copy {
       max-width: 620px;
-      margin-top: 24px;
+      margin-top: 20px;
       color: rgba(255, 255, 255, 0.88);
       font-size: clamp(1.05rem, 2vw, 1.26rem);
     }
@@ -291,7 +328,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
-      margin-top: 32px;
+      margin-top: 24px;
     }
 
     .quote-panel {
@@ -398,7 +435,7 @@
     }
 
     .stats {
-      transform: translateY(50%);
+      transform: translateY(-50%);
       position: relative;
       z-index: 2;
     }
@@ -442,9 +479,8 @@
       background-position: center;
       background-size: cover;
       background-repeat: no-repeat;
-      background-attachment: fixed;
       color: var(--white);
-      min-height: 72vh;
+      min-height: 58vh;
       display: grid;
       align-items: end;
       border-top: 10px solid var(--paper);
@@ -481,19 +517,19 @@
     }
 
     .image-break.striped {
-      background-image: url("assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg");
+      background-image: url("assets/green-grin-caldwell-idaho-striped-lawn-mowing.webp");
     }
 
     .image-break.residential {
-      background-image: url("assets/green-grin-caldwell-golf-course-lawn-care.jpg");
+      background-image: url("assets/green-grin-caldwell-golf-course-lawn-care.webp");
     }
 
     .image-break.commercial {
-      background-image: url("assets/green-grin-commercial-landscape-maintenance-flower-beds.jpg");
+      background-image: url("assets/green-grin-commercial-landscape-maintenance-flower-beds.webp");
     }
 
     .image-break.edging {
-      background-image: url("assets/green-grin-concrete-curb-edging-lawn-care.jpg");
+      background-image: url("assets/green-grin-concrete-curb-edging-lawn-care.webp");
       background-position: center 58%;
     }
 
@@ -955,11 +991,6 @@
 
       .hero {
         min-height: auto;
-        background-attachment: scroll;
-      }
-
-      .image-break {
-        background-attachment: scroll;
       }
 
       .hero-grid,
@@ -1013,11 +1044,13 @@
       }
 
       .topbar .wrap {
-        min-height: 58px;
-        align-items: flex-start;
-        flex-direction: column;
+        min-height: 46px;
         justify-content: center;
-        gap: 2px;
+        gap: 0;
+      }
+
+      .topbar span {
+        display: none;
       }
 
       .nav .wrap {
@@ -1035,15 +1068,38 @@
       }
 
       .hero .wrap {
-        padding-top: 78px;
+        padding: 48px 0 38px;
       }
 
       h1 {
-        font-size: 3rem;
+        font-size: 2.65rem;
+        line-height: 1;
       }
 
       section {
-        padding: 74px 0;
+        padding: 60px 0;
+      }
+
+      .hero {
+        min-height: calc(100svh - 150px);
+      }
+
+      .hero-copy {
+        font-size: 1rem;
+      }
+
+      .image-break {
+        min-height: 46svh;
+        border-top-width: 6px;
+        border-bottom-width: 6px;
+      }
+
+      .image-break > .wrap {
+        padding-bottom: 30px;
+      }
+
+      .image-break h2 {
+        font-size: 2.35rem;
       }
 
       .stats-grid,
@@ -1063,11 +1119,21 @@
       }
 
       .gallery-grid {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: 84%;
         grid-auto-rows: 260px;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: inline mandatory;
+        scrollbar-width: thin;
+        padding-bottom: 10px;
       }
 
+      .gallery-item,
       .gallery-item.large {
         grid-row: span 1;
+        scroll-snap-align: start;
       }
 
       .meet-grin-grid {
@@ -1109,7 +1175,7 @@
   <nav class="nav" aria-label="Main navigation">
     <div class="wrap">
       <a class="brand" href="#top" aria-label="Green Grin Lawn and Landscape home">
-        <img class="brand-logo" src="assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
+        <img class="brand-logo" src="assets/green-grin-logo.webp" alt="Green Grin Lawn & Landscape" width="1142" height="248" decoding="async" />
       </a>
       <ul class="nav-links">
         <li><a href="#services">Services</a></li>
@@ -1120,7 +1186,7 @@
         <li><a href="https://portal.greengrinlawns.com/">Portal</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
-      <a class="button" href="https://portal.greengrinlawns.com/">Customer Portal</a>
+      <a class="button" href="#contact">Free Estimate</a>
     </div>
   </nav>
 
@@ -1132,8 +1198,8 @@
             <h1>Sharp cuts. Clean edges. Lawns that grin back.</h1>
             <p class="hero-copy">Green Grin Lawn & Landscape keeps Caldwell and Treasure Valley properties crisp with dependable mowing, trimming, seasonal cleanups, mulch, and commercial maintenance.</p>
             <div class="hero-actions">
-              <a class="button" href="tel:12086142515">Call or Text Now</a>
-              <a class="button secondary" href="https://portal.greengrinlawns.com/">Customer Portal</a>
+              <a class="button" href="#contact">Get a Free Estimate</a>
+              <a class="button secondary" href="tel:12086142515">Call or Text</a>
             </div>
           </div>
 
@@ -1205,8 +1271,8 @@
     <section class="split" id="about">
       <div class="wrap split-grid">
         <div class="photo-stack" aria-label="Lawn care photography">
-          <img src="assets/green-grin-caldwell-golf-course-lawn-care.jpg" alt="Green Grin maintained lawn with clean stripes near a pond" />
-          <img src="assets/green-grin-concrete-curb-edging-lawn-care.jpg" alt="Clean edging detail along concrete curb and landscape rock" />
+          <img src="assets/green-grin-caldwell-golf-course-lawn-care.webp" alt="Green Grin maintained lawn with clean stripes near a pond" width="1050" height="1400" loading="lazy" decoding="async" />
+          <img src="assets/green-grin-concrete-curb-edging-lawn-care.webp" alt="Clean edging detail along concrete curb and landscape rock" width="1050" height="1400" loading="lazy" decoding="async" />
         </div>
         <div>
           <div class="section-head">
@@ -1232,7 +1298,7 @@
           <p>He's the face of Green Grin Lawn &amp; Landscape. If you see that smile, you know your lawn is in good hands.</p>
         </div>
         <div class="meet-grin-portrait">
-          <img src="brand/green-grin-lawn-care-mascot-caldwell-idaho.png" alt="Grin, the smiling Green Grin Lawn and Landscape mascot giving a thumbs up" loading="lazy" />
+          <img src="brand/green-grin-lawn-care-mascot-caldwell-idaho.webp" alt="Grin, the smiling Green Grin Lawn and Landscape mascot giving a thumbs up" width="1000" height="1000" loading="lazy" decoding="async" />
         </div>
       </div>
     </section>
@@ -1247,7 +1313,7 @@
     <section class="projects" id="projects">
       <div class="wrap project-grid">
         <div class="project-photo">
-          <img src="assets/green-grin-fire-pit-landscape-project-caldwell.jpg" alt="Landscape project with fire pit, stonework, beds, and lawn maintained by Green Grin" />
+          <img src="assets/green-grin-fire-pit-landscape-project-caldwell.webp" alt="Landscape project with fire pit, stonework, beds, and lawn maintained by Green Grin" width="1732" height="1000" loading="lazy" decoding="async" />
         </div>
         <div class="project-panel">
           <div class="section-head">
@@ -1276,40 +1342,33 @@
 
         <div class="gallery-grid">
           <figure class="gallery-item large">
-            <img src="assets/green-grin-treasure-valley-lawn-striping.jpg" alt="Large striped green lawn maintained by Green Grin" />
+            <img src="assets/green-grin-treasure-valley-lawn-striping.webp" alt="Large striped green lawn maintained by Green Grin" width="1800" height="1350" loading="lazy" decoding="async" />
             <figcaption class="gallery-label">Wide lawn striping</figcaption>
           </figure>
           <figure class="gallery-item">
-            <img src="assets/green-grin-caldwell-golf-course-lawn-care.jpg" alt="Residential lawn with stripes and landscape bed maintained by Green Grin" />
+            <img src="assets/green-grin-caldwell-golf-course-lawn-care.webp" alt="Residential lawn with stripes and landscape bed maintained by Green Grin" width="1050" height="1400" loading="lazy" decoding="async" />
             <figcaption class="gallery-label">Residential finish</figcaption>
           </figure>
           <figure class="gallery-item">
-            <img src="assets/green-grin-concrete-curb-edging-lawn-care.jpg" alt="Fresh edging detail beside grass and concrete curbing" />
+            <img src="assets/green-grin-concrete-curb-edging-lawn-care.webp" alt="Fresh edging detail beside grass and concrete curbing" width="1050" height="1400" loading="lazy" decoding="async" />
             <figcaption class="gallery-label">Crisp edging</figcaption>
           </figure>
           <figure class="gallery-item">
-            <img src="assets/green-grin-residential-lawn-mowing-caldwell-idaho.jpg" alt="Neighborhood front lawn with fresh mowing lines by Green Grin" />
+            <img src="assets/green-grin-residential-lawn-mowing-caldwell-idaho.webp" alt="Neighborhood front lawn with fresh mowing lines by Green Grin" width="1050" height="1400" loading="lazy" decoding="async" />
             <figcaption class="gallery-label">Neighborhood mowing</figcaption>
           </figure>
           <figure class="gallery-item">
-            <img src="assets/green-grin-fire-pit-landscape-project-caldwell.jpg" alt="Fire pit landscape project with lawn and planting beds" />
+            <img src="assets/green-grin-fire-pit-landscape-project-caldwell.webp" alt="Fire pit landscape project with lawn and planting beds" width="1732" height="1000" loading="lazy" decoding="async" />
             <figcaption class="gallery-label">Landscape projects</figcaption>
           </figure>
           <figure class="gallery-item">
-            <img src="assets/green-grin-commercial-landscape-maintenance-flower-beds.jpg" alt="Commercial flower and rock beds maintained by Green Grin" />
+            <img src="assets/green-grin-commercial-landscape-maintenance-flower-beds.webp" alt="Commercial flower and rock beds maintained by Green Grin" width="1600" height="1200" loading="lazy" decoding="async" />
             <figcaption class="gallery-label">Commercial yard maintenance</figcaption>
           </figure>
         </div>
         <div class="gallery-actions">
           <a class="button" href="/work/">View All Work</a>
         </div>
-      </div>
-    </section>
-
-    <section class="image-break striped" aria-label="Striped mowing photo">
-      <div class="wrap">
-        <h2>Stripe work that stands out.</h2>
-        <p>Big open lawns, sharp passes, and a professional finish.</p>
       </div>
     </section>
 
@@ -1348,7 +1407,7 @@
     <section class="contact" id="contact">
       <div class="wrap contact-grid">
         <aside class="contact-card">
-          <img src="assets/green-grin-residential-lawn-mowing-caldwell-idaho.jpg" alt="Freshly maintained neighborhood lawn by Green Grin" />
+          <img src="assets/green-grin-residential-lawn-mowing-caldwell-idaho.webp" alt="Freshly maintained neighborhood lawn by Green Grin" width="1050" height="1400" loading="lazy" decoding="async" />
           <div class="contact-info">
             <div class="section-head">
               <span class="section-kicker">Let's Talk</span>
@@ -1426,7 +1485,8 @@
         <p><strong>Green Grin Lawn & Landscape</strong> &copy; 2026</p>
         <p>Caldwell, Idaho - Treasure Valley Lawn Care</p>
       </div>
-      <div class="footer-actions" aria-label="Team sign in links">
+      <div class="footer-actions" aria-label="Portal sign in links">
+        <a class="footer-link" href="https://portal.greengrinlawns.com/">Customer Portal</a>
         <a class="footer-link" href="https://portal.greengrinlawns.com/admin/">Admin Sign In</a>
         <a class="footer-link" href="https://portal.greengrinlawns.com/employee/">Employee Sign In</a>
       </div>

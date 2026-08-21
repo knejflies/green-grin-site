@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="See real Green Grin lawn mowing, striping, edging, landscape maintenance, and outdoor projects completed across Caldwell and the Treasure Valley." />
   <title>Our Work | Green Grin Lawn & Landscape</title>
+  <link rel="canonical" href="https://greengrinlawns.com/work/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Green Grin Lawn & Landscape" />
+  <meta property="og:title" content="Our Work | Green Grin Lawn & Landscape" />
+  <meta property="og:description" content="Real Green Grin mowing, edging, landscape maintenance, and outdoor projects from Caldwell and the Treasure Valley." />
+  <meta property="og:url" content="https://greengrinlawns.com/work/" />
+  <meta property="og:image" content="https://greengrinlawns.com/assets/green-grin-treasure-valley-lawn-striping.jpg" />
+  <meta property="og:image:alt" content="Wide striped Treasure Valley lawn maintained by Green Grin" />
+  <meta name="twitter:card" content="summary_large_image" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18314911349"></script>
   <script>
@@ -14,7 +23,7 @@
     gtag('config', 'AW-18314911349');
   </script>
   <meta name="theme-color" content="#0d2418" />
-  <link rel="icon" href="/assets/green-grin-tab-icon.png" type="image/png" />
+  <link rel="icon" href="/assets/green-grin-favicon-96.png" type="image/png" sizes="96x96" />
   <link rel="apple-touch-icon" href="/assets/green-grin-pwa-192.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <style>
@@ -504,7 +513,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="/" aria-label="Green Grin Lawn and Landscape home">
-        <img src="/assets/green-grin-logo.png" alt="Green Grin Lawn & Landscape" />
+        <img src="/assets/green-grin-logo.webp" alt="Green Grin Lawn & Landscape" width="1142" height="248" decoding="async" />
       </a>
       <nav class="nav-actions" aria-label="Work page navigation">
         <a class="button secondary" href="/">Main Site</a>
@@ -517,8 +526,8 @@
   <main>
     <section id="work-showcase" class="showcase" aria-labelledby="work-title">
       <div class="showcase-photo">
-        <img id="work-image-a" class="is-active" src="" alt="" fetchpriority="high" />
-        <img id="work-image-b" src="" alt="" />
+        <img id="work-image-a" class="is-active" alt="" fetchpriority="high" />
+        <img id="work-image-b" alt="" />
       </div>
       <div class="showcase-shade" aria-hidden="true"></div>
       <div class="showcase-content">
@@ -550,7 +559,7 @@
             <p id="review-stars" class="review-stars" aria-label=""></p>
             <p id="review-quote" class="review-quote"></p>
             <p id="review-byline" class="review-byline"></p>
-            <img id="review-image" class="review-image" src="" alt="" hidden />
+            <img id="review-image" class="review-image" alt="" hidden />
           </article>
           <div class="review-controls" aria-label="Review slideshow controls">
             <button id="review-prev" class="icon-button" type="button" aria-label="Previous review" title="Previous review">&lsaquo;</button>
@@ -604,7 +613,7 @@
         button.setAttribute("aria-current", index === workIndex ? "true" : "false");
         const image = document.createElement("img");
         image.src = slide.src;
-        image.alt = "";
+        image.alt = slide.alt;
         image.loading = "lazy";
         button.append(image);
         button.addEventListener("click", () => showWork(index, true));
@@ -628,6 +637,7 @@
         incomingImage.alt = slide.alt;
         incomingImage.classList.add("is-active");
         currentImage.classList.remove("is-active");
+        currentImage.alt = "";
         activeWorkImage = activeWorkImage === 0 ? 1 : 0;
         $("#work-title").textContent = slide.title;
         $("#work-caption").textContent = "Real lawn and landscape work completed by Green Grin across Caldwell and the Treasure Valley.";
