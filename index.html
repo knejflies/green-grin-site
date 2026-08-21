@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Green Grin Lawn & Landscape provides mowing, edging, cleanups, mulch, shrub trimming, and commercial property care across Caldwell and the Treasure Valley." />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <title>Green Grin Lawn & Landscape | Caldwell & Treasure Valley Lawn Care</title>
   <link rel="canonical" href="https://greengrinlawns.com/" />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:site_name" content="Green Grin Lawn & Landscape" />
   <meta property="og:title" content="Green Grin Lawn & Landscape | Caldwell Lawn Care" />
   <meta property="og:description" content="Dependable mowing, edging, cleanups, landscaping, and commercial property care throughout Caldwell and the Treasure Valley." />
@@ -36,8 +38,10 @@
     {
       "@context": "https://schema.org",
       "@type": "LandscapingBusiness",
+      "@id": "https://greengrinlawns.com/#business",
       "name": "Green Grin Lawn & Landscape",
       "url": "https://greengrinlawns.com/",
+      "description": "Caldwell-based lawn mowing, edging, seasonal cleanup, landscaping, shrub trimming, and commercial property maintenance serving the Treasure Valley.",
       "logo": "https://greengrinlawns.com/assets/green-grin-logo.png",
       "image": "https://greengrinlawns.com/assets/green-grin-caldwell-idaho-striped-lawn-mowing.jpg",
       "telephone": "+1-208-614-2515",
@@ -50,7 +54,37 @@
         "addressCountry": "US"
       },
       "areaServed": ["Caldwell", "Nampa", "Meridian", "Boise", "Eagle", "Kuna", "Star", "Middleton"],
-      "serviceType": ["Lawn mowing", "Lawn edging", "Seasonal cleanup", "Landscaping", "Shrub trimming", "Commercial landscape maintenance"]
+      "serviceType": ["Lawn mowing", "Lawn edging", "Seasonal cleanup", "Landscaping", "Shrub trimming", "Commercial landscape maintenance"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Lawn and landscape services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Weekly lawn mowing and lawn care",
+              "url": "https://greengrinlawns.com/lawn-care/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Landscape installation and outdoor projects",
+              "url": "https://greengrinlawns.com/landscaping/"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Commercial landscape maintenance",
+              "url": "https://greengrinlawns.com/lawn-care/#commercial"
+            }
+          }
+        ]
+      }
     }
   </script>
   <style>
@@ -81,6 +115,7 @@
     }
 
     body {
+      overflow-x: clip;
       background: var(--paper);
       color: var(--ink);
       font-family: "Segoe UI", Arial, Helvetica, sans-serif;
@@ -617,6 +652,30 @@
 
     .service-card p {
       color: var(--muted);
+    }
+
+    .service-card.has-link {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .service-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 44px;
+      margin-top: auto;
+      padding-top: 16px;
+      color: var(--pine);
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .service-link:hover,
+    .service-link:focus {
+      color: var(--leaf-dark, #4e9a31);
+      text-decoration: underline;
+      text-underline-offset: 4px;
     }
 
     .split {
@@ -1179,6 +1238,7 @@
       </a>
       <ul class="nav-links">
         <li><a href="#services">Services</a></li>
+        <li><a href="/lawn-care/">Lawn Care</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="/landscaping/">Landscaping</a></li>
         <li><a href="/work/">Our Work</a></li>
@@ -1227,10 +1287,11 @@
         </div>
 
         <div class="services-grid">
-          <article class="service-card">
+          <article class="service-card has-link">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17h16M5 17l2-7h7l2 7M8 10V7h3v3M17 17l-1-5h3l1 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <h3>Lawn Mowing</h3>
             <p>Consistent cuts, stripe-friendly passes, clean trimming, and hard-surface blowoff after every visit.</p>
+            <a class="service-link" href="/lawn-care/">Explore lawn care <span aria-hidden="true">&rarr;</span></a>
           </article>
           <article class="service-card">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 19c7-1 11.7-5.7 14-14-8.3 2.3-13 7-14 14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 19c3.8-.2 7.1-1.5 10-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
@@ -1242,10 +1303,11 @@
             <h3>Weed Control</h3>
             <p>Bed and border attention that keeps weeds from taking over the clean work you already paid for.</p>
           </article>
-          <article class="service-card">
+          <article class="service-card has-link">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M6 18c0-4 2.5-7 6-7s6 3 6 7M9 11V6h6v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <h3>Landscaping & Mulch</h3>
             <p>Rock, mulch, edging, sod, irrigation, fire pits, and practical landscape upgrades built around your property.</p>
+            <a class="service-link" href="/landscaping/">Explore landscaping <span aria-hidden="true">&rarr;</span></a>
           </article>
           <article class="service-card">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 6 16 12M20 6 4 18M7 8a2 2 0 1 0-3 2.6M17 8a2 2 0 1 1 3 2.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>

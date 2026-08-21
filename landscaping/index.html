@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Green Grin Lawn & Landscape builds rock, mulch, edging, sod, irrigation, fire pit, retaining wall, and landscape renovation projects in Caldwell and the Treasure Valley." />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <title>Landscaping Projects in Caldwell, Idaho | Green Grin</title>
   <link rel="canonical" href="https://greengrinlawns.com/landscaping/" />
   <meta property="og:title" content="Landscaping Projects | Green Grin Lawn & Landscape" />
@@ -11,20 +12,32 @@
   <meta property="og:image" content="https://greengrinlawns.com/assets/green-grin-fire-pit-landscape-project-caldwell.jpg" />
   <meta property="og:url" content="https://greengrinlawns.com/landscaping/" />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Completed Caldwell Idaho fire pit and landscape project by Green Grin" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="preload" as="image" href="/assets/green-grin-fire-pit-landscape-project-caldwell.webp" type="image/webp" fetchpriority="high" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "LandscapingBusiness",
-      "name": "Green Grin Lawn & Landscape",
-      "url": "https://greengrinlawns.com/landscaping/",
-      "telephone": "+1-208-614-2515",
-      "email": "ken@greengrinlawns.com",
-      "image": "https://greengrinlawns.com/assets/green-grin-fire-pit-landscape-project-caldwell.jpg",
-      "description": "Landscape project installation including rock, mulch, edging, sod, irrigation, fire pits, decorative walls, and site preparation.",
-      "areaServed": ["Caldwell", "Nampa", "Meridian", "Boise", "Eagle", "Kuna", "Star", "Middleton"]
+      "@graph": [
+        {
+          "@type": "Service",
+          "@id": "https://greengrinlawns.com/landscaping/#service",
+          "name": "Landscape Installation and Outdoor Projects",
+          "url": "https://greengrinlawns.com/landscaping/",
+          "provider": { "@id": "https://greengrinlawns.com/#business" },
+          "serviceType": ["Rock installation", "Mulch installation", "Landscape edging", "Sod installation", "Irrigation updates", "Fire pits", "Decorative retaining walls", "Landscape renovation"],
+          "areaServed": ["Caldwell", "Nampa", "Meridian", "Boise", "Eagle", "Kuna", "Star", "Middleton"],
+          "description": "Landscape project installation including rock, mulch, edging, sod, irrigation, fire pits, decorative walls, and site preparation in Caldwell and the Treasure Valley."
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://greengrinlawns.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Landscaping Projects", "item": "https://greengrinlawns.com/landscaping/" }
+          ]
+        }
+      ]
     }
   </script>
   <!-- Google tag (gtag.js) -->
@@ -982,6 +995,7 @@
       <nav aria-label="Landscaping page navigation">
         <ul class="nav-links">
           <li><a href="#services">Projects</a></li>
+          <li><a href="/lawn-care/">Lawn Care</a></li>
           <li><a href="#process">Process</a></li>
           <li><a href="#work">Our Work</a></li>
           <li><a href="/work/">Gallery</a></li>
@@ -1211,6 +1225,7 @@
       </div>
       <div class="footer-links">
         <a href="/">Main Site</a>
+        <a href="/lawn-care/">Lawn Care</a>
         <a href="/work/">Our Work</a>
         <a href="https://portal.greengrinlawns.com/">Customer Portal</a>
       </div>

@@ -1,18 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://greengrinlawns.com/</loc>
     <lastmod>2026-08-21</lastmod>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-caldwell-idaho-striped-lawn-mowing.webp</image:loc>
+      <image:title>Green Grin lawn mowing in Caldwell, Idaho</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/brand/green-grin-lawn-care-mascot-caldwell-idaho.webp</image:loc>
+      <image:title>Green Grin Lawn and Landscape mascot</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://greengrinlawns.com/lawn-care/</loc>
+    <lastmod>2026-08-21</lastmod>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-treasure-valley-lawn-striping.webp</image:loc>
+      <image:title>Striped Treasure Valley lawn maintained by Green Grin</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-caldwell-golf-course-lawn-care.webp</image:loc>
+      <image:title>Residential lawn care near a Caldwell golf course</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-commercial-landscape-maintenance-flower-beds.webp</image:loc>
+      <image:title>Commercial landscape maintenance in the Treasure Valley</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://greengrinlawns.com/landscaping/</loc>
     <lastmod>2026-08-21</lastmod>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-fire-pit-landscape-project-caldwell.webp</image:loc>
+      <image:title>Custom fire pit landscaping project in Caldwell, Idaho</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-commercial-landscape-maintenance-flower-beds.webp</image:loc>
+      <image:title>Commercial flower-bed maintenance by Green Grin</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://greengrinlawns.com/work/</loc>
     <lastmod>2026-08-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-residential-lawn-mowing-caldwell-idaho.webp</image:loc>
+      <image:title>Residential lawn mowing work in Caldwell, Idaho</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-concrete-curb-edging-lawn-care.webp</image:loc>
+      <image:title>Clean lawn edging beside concrete curbing</image:title>
+    </image:image>
   </url>
 </urlset>

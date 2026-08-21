@@ -1,7 +1,8 @@
-const CACHE_NAME = "green-grin-public-v7";
+const CACHE_NAME = "green-grin-public-v8";
 const APP_SHELL = [
   "/",
   "/index.html",
+  "/lawn-care/",
   "/landscaping/",
   "/work/",
   "/manifest.webmanifest",
