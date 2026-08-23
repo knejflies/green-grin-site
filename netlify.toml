@@ -1,3 +1,45 @@
 [build]
   command = "node scripts/build-slides.cjs"
   publish = "."
+
+[[redirects]]
+  from = "/portal.html"
+  to = "https://portal.greengrinlawns.com/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/portal"
+  to = "https://portal.greengrinlawns.com/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/portal/*"
+  to = "https://portal.greengrinlawns.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/admin"
+  to = "https://portal.greengrinlawns.com/admin/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/admin/*"
+  to = "https://portal.greengrinlawns.com/admin/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/employee"
+  to = "https://portal.greengrinlawns.com/employee/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/employee/*"
+  to = "https://portal.greengrinlawns.com/employee/:splat"
+  status = 301
+  force = true
