@@ -1,16 +1,34 @@
 const fs = require("fs");
 
-for (const file of ["index.html", "work/index.html"]) {
-  const html = fs.readFileSync(file, "utf8");
-  const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
-    .map((match) => match[1])
-    .filter((code) => code.trim());
-  for (const code of scripts) new Function(code);
+const pages = [
+  "index.html",
+  "lawn-care/index.html",
+  "landscaping/index.html",
+  "work/index.html",
+  "thank-you/index.html"
+];
 
-  const markup = html.slice(0, html.indexOf("<script"));
-  const ids = [...markup.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
+for (const file of pages) {
+  const html = fs.readFileSync(file, "utf8");
+  let executableScripts = 0;
+  let structuredDataBlocks = 0;
+
+  for (const match of html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi)) {
+    const attributes = match[1];
+    const code = match[2].trim();
+    if (/\bsrc\s*=/.test(attributes) || !code) continue;
+    if (/\btype\s*=\s*["']application\/ld\+json["']/i.test(attributes)) {
+      JSON.parse(code);
+      structuredDataBlocks += 1;
+      continue;
+    }
+    new Function(code);
+    executableScripts += 1;
+  }
+
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
   assertUnique(ids, file);
-  console.log(`${file}: scripts and ${ids.length} static IDs passed validation.`);
+  console.log(`${file}: ${executableScripts} scripts, ${structuredDataBlocks} schema blocks, and ${ids.length} unique IDs passed validation.`);
 }
 
 function assertUnique(ids, file) {
