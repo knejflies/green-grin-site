@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Green Grin Lawn & Landscape builds rock, mulch, edging, sod, irrigation, fire pit, retaining wall, and landscape renovation projects in Caldwell and the Treasure Valley." />
+  <meta name="description" content="Call Green Grin for landscaping in Caldwell, Nampa, and the Treasure Valley. Rock, mulch, edging, sod, irrigation, fire pits, retaining walls, and yard renovations." />
   <meta name="robots" content="index, follow, max-image-preview:large" />
-  <title>Landscaping Projects in Caldwell, Idaho | Green Grin</title>
+  <title>Landscaping in Caldwell, Idaho | Green Grin Lawn & Landscape</title>
   <link rel="canonical" href="https://greengrinlawns.com/landscaping/" />
-  <meta property="og:title" content="Landscaping Projects | Green Grin Lawn & Landscape" />
-  <meta property="og:description" content="Practical outdoor upgrades planned around your property, priorities, and budget." />
+  <meta property="og:title" content="Landscaping in Caldwell, Idaho | Green Grin" />
+  <meta property="og:description" content="See real local projects and call Green Grin for rock, mulch, edging, sod, irrigation, fire pits, and yard renovations." />
   <meta property="og:image" content="https://greengrinlawns.com/assets/green-grin-fire-pit-landscape-project-caldwell.jpg" />
   <meta property="og:url" content="https://greengrinlawns.com/landscaping/" />
   <meta property="og:type" content="website" />
@@ -174,6 +174,10 @@
       object-position: left center;
     }
 
+    .mobile-call-label {
+      display: none;
+    }
+
     .nav-links {
       display: flex;
       align-items: center;
@@ -234,7 +238,7 @@
     }
 
     .hero {
-      min-height: min(780px, calc(100vh - 112px));
+      min-height: min(720px, calc(100vh - 112px));
       display: flex;
       align-items: flex-end;
       position: relative;
@@ -261,7 +265,7 @@
     }
 
     .hero-inner {
-      padding: 100px 0 84px;
+      padding: 72px 0 56px;
     }
 
     .hero-copy {
@@ -297,7 +301,7 @@
     h1 {
       max-width: 780px;
       margin-bottom: 22px;
-      font-size: clamp(2.65rem, 7vw, 5.8rem);
+      font-size: clamp(2.65rem, 6vw, 5rem);
       line-height: 0.98;
       letter-spacing: 0;
     }
@@ -329,6 +333,52 @@
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
+    }
+
+    .hero-call {
+      min-height: 58px;
+      padding-inline: 24px;
+      font-size: 1.04rem;
+    }
+
+    .hero-call svg,
+    .mobile-action-bar svg {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.2;
+    }
+
+    .hero-trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 22px;
+      margin: 24px 0 0;
+      padding: 0;
+      color: #f4faef;
+      font-size: 0.9rem;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    .hero-trust li {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-trust li::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border: 2px solid #d9ffbe;
+      border-radius: 50%;
+      background: var(--leaf);
+      box-shadow: 0 0 0 3px rgba(117, 200, 78, 0.18);
     }
 
     .project-strip {
@@ -715,6 +765,10 @@
       color: #9b301e;
     }
 
+    .mobile-action-bar {
+      display: none;
+    }
+
     .faq-grid {
       display: grid;
       grid-template-columns: 0.7fr 1.3fr;
@@ -830,13 +884,7 @@
         --wrap: min(100% - 28px, 1160px);
       }
 
-      .utility .wrap {
-        min-height: 40px;
-        justify-content: center;
-        text-align: center;
-      }
-
-      .utility span {
+      .utility {
         display: none;
       }
 
@@ -855,13 +903,25 @@
         font-size: 0.84rem;
       }
 
+      .header-inner > nav {
+        display: none;
+      }
+
+      .desktop-call-label {
+        display: none;
+      }
+
+      .mobile-call-label {
+        display: inline;
+      }
+
       .nav-links {
         gap: 18px;
         font-size: 0.9rem;
       }
 
       .hero {
-        min-height: 660px;
+        min-height: min(660px, calc(100svh - 118px));
       }
 
       .hero::before {
@@ -873,11 +933,20 @@
       }
 
       .hero-inner {
-        padding: 80px 0 52px;
+        padding: 44px 0 36px;
       }
 
       h1 {
-        font-size: clamp(2.75rem, 14vw, 4.2rem);
+        font-size: clamp(2.45rem, 11vw, 3.2rem);
+      }
+
+      .hero-copy > p:not(.eyebrow) {
+        margin-bottom: 22px;
+        font-size: 1.04rem;
+      }
+
+      .hero-trust {
+        display: none;
       }
 
       section.content-section {
@@ -954,6 +1023,50 @@
         width: 100%;
       }
 
+      .hero-actions .button.ghost {
+        display: none;
+      }
+
+      body {
+        padding-bottom: 72px;
+      }
+
+      .mobile-action-bar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 80;
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 8px;
+        padding: 9px max(12px, env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(6, 29, 18, 0.98);
+        box-shadow: 0 -12px 30px rgba(4, 24, 14, 0.22);
+        backdrop-filter: blur(12px);
+      }
+
+      .mobile-action-bar a {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid var(--leaf);
+        border-radius: 6px;
+        background: var(--leaf);
+        color: #092316;
+        font-weight: 900;
+        text-decoration: none;
+      }
+
+      .mobile-action-bar a:last-child {
+        border-color: rgba(255, 255, 255, 0.42);
+        background: transparent;
+        color: var(--white);
+      }
+
       footer .wrap {
         align-items: flex-start;
         flex-direction: column;
@@ -982,8 +1095,8 @@
 
   <div class="utility">
     <div class="wrap">
-      <span>Landscaping projects across Caldwell and the Treasure Valley</span>
-      <a href="tel:12086142515">Call or text (208) 614-2515</a>
+      <span>Local landscaping projects across Caldwell and the Treasure Valley</span>
+      <a class="phone-link" href="tel:12086142515">Call Green Grin: (208) 614-2515</a>
     </div>
   </div>
 
@@ -1002,7 +1115,7 @@
           <li><a href="https://portal.greengrinlawns.com/">Portal</a></li>
         </ul>
       </nav>
-      <a class="button dark" href="#estimate">Get an Estimate</a>
+      <a class="button dark phone-link" href="tel:12086142515" aria-label="Call Green Grin at 208 614 2515"><span class="desktop-call-label">Call (208) 614-2515</span><span class="mobile-call-label">Call Now</span></a>
     </div>
   </header>
 
@@ -1010,23 +1123,31 @@
     <section class="hero">
       <div class="wrap hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow">Green Grin Landscape Projects</p>
-          <h1>Build a yard that feels finished.</h1>
-          <p>From rock and mulch to edging, irrigation, sod, fire pits, and practical outdoor upgrades, Green Grin plans each project around your property and the way you want to use it.</p>
+          <p class="eyebrow">Caldwell, Idaho &amp; the Treasure Valley</p>
+          <h1>Caldwell landscaping for a finished yard.</h1>
+          <p>Rock, mulch, edging, sod, irrigation, fire pits, and complete yard upgrades. Call now to talk through your project and schedule a walkthrough.</p>
           <div class="hero-actions">
-            <a class="button" href="#estimate">Request a Project Estimate</a>
-            <a class="button ghost" href="/work/">See Our Work</a>
+            <a class="button hero-call phone-link" href="tel:12086142515" aria-label="Call Green Grin at 208 614 2515">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.28-1.28a2 2 0 0 1 2.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0 1 22 16.92z"/></svg>
+              Call (208) 614-2515
+            </a>
+            <a class="button ghost" href="#estimate">Request an Estimate</a>
           </div>
+          <ul class="hero-trust" aria-label="Why choose Green Grin">
+            <li>Real local project photos</li>
+            <li>Clear written proposals</li>
+            <li>One point of contact from walkthrough to finish</li>
+          </ul>
         </div>
       </div>
     </section>
 
     <div class="project-strip" aria-label="Landscape project highlights">
       <div class="wrap">
-        <div class="strip-item"><span class="strip-number">01</span><span>Clear project scope</span></div>
-        <div class="strip-item"><span class="strip-number">02</span><span>Material planning</span></div>
-        <div class="strip-item"><span class="strip-number">03</span><span>Professional installation</span></div>
-        <div class="strip-item"><span class="strip-number">04</span><span>Clean final walkthrough</span></div>
+        <div class="strip-item"><span class="strip-number">01</span><span>Walk the property</span></div>
+        <div class="strip-item"><span class="strip-number">02</span><span>Choose the materials</span></div>
+        <div class="strip-item"><span class="strip-number">03</span><span>Approve one clear proposal</span></div>
+        <div class="strip-item"><span class="strip-number">04</span><span>Enjoy the finished yard</span></div>
       </div>
     </div>
 
@@ -1119,10 +1240,10 @@
       <div class="wrap estimate-grid">
         <div class="estimate-copy">
           <p class="eyebrow">Start Your Project</p>
-          <h2>Tell us what you want to change.</h2>
-          <p>Give us the basics and we will follow up about a property walkthrough. You can also text photos directly after submitting the form.</p>
+          <h2>Let’s take a look at your project.</h2>
+          <p>Call now for the fastest response, or send the project basics here. We will follow up about a property walkthrough, measurements, and material choices.</p>
           <ul class="contact-list">
-            <li><a href="tel:12086142515">Call or text: (208) 614-2515</a></li>
+            <li><a class="phone-link" href="tel:12086142515">Call Green Grin: (208) 614-2515</a></li>
             <li><a href="mailto:ken@greengrinlawns.com">ken@greengrinlawns.com</a></li>
             <li>Caldwell, Idaho and the Treasure Valley</li>
           </ul>
@@ -1132,8 +1253,8 @@
           <input type="hidden" name="form_source" value="Landscaping project page" />
           <input type="hidden" name="_subject" value="New Green Grin landscaping project request" />
           <div class="form-intro">
-            <h3>Project estimate request</h3>
-            <p>Fields marked required help us follow up quickly.</p>
+            <h3>Request a project walkthrough</h3>
+            <p>Tell us where the project is and the best number to reach you.</p>
           </div>
 
           <div class="field-grid">
@@ -1194,7 +1315,7 @@
             </div>
           </div>
 
-          <button class="button dark" type="submit">Request Project Estimate</button>
+          <button class="button dark" type="submit">Send My Project Request</button>
           <p class="form-status" role="status" aria-live="polite"></p>
           <p class="form-note">Submitting this form sends your project details to Green Grin Lawn & Landscape. It does not create a contract or obligation.</p>
         </form>
@@ -1232,7 +1353,25 @@
     </div>
   </footer>
 
+  <div class="mobile-action-bar" aria-label="Contact Green Grin">
+    <a class="phone-link" href="tel:12086142515" aria-label="Call Green Grin at 208 614 2515">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.28-1.28a2 2 0 0 1 2.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0 1 22 16.92z"/></svg>
+      Call Now
+    </a>
+    <a href="#estimate">Estimate</a>
+  </div>
+
   <script>
+    document.querySelectorAll(".phone-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (typeof window.gtag === "function") {
+          window.gtag("event", "conversion", {
+            send_to: "AW-18314911349/WMlfCK_k7eMcEPW8nZ1E"
+          });
+        }
+      });
+    });
+
     const estimateForm = document.querySelector(".estimate-form");
     if (estimateForm) {
       estimateForm.addEventListener("submit", async (event) => {
