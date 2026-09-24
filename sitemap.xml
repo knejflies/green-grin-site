@@ -45,6 +45,19 @@
     </image:image>
   </url>
   <url>
+    <loc>https://greengrinlawns.com/aeration-fall-cleanup/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-aeration-machine.png</image:loc>
+      <image:title>Core aeration machine working on a Treasure Valley lawn</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://greengrinlawns.com/assets/green-grin-fall-cleanup.png</image:loc>
+      <image:title>Fall leaf and shrub cleanup by Green Grin</image:title>
+    </image:image>
+  </url>
+  <url>
     <loc>https://greengrinlawns.com/work/</loc>
     <lastmod>2026-08-21</lastmod>
     <priority>0.8</priority>
