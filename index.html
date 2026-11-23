@@ -1223,6 +1223,44 @@
       }
     }
   </style>
+  <style>
+    /* Public-site drawer navigation and lighting service sections */
+    .site-menu-toggle { display:inline-flex; align-items:center; gap:9px; min-height:46px; padding:10px 14px; border:1px solid var(--line); border-radius:var(--radius); background:var(--white); color:var(--pine); cursor:pointer; font:inherit; font-weight:900; }
+    .site-menu-toggle:hover,.site-menu-toggle:focus { background:var(--mint); }
+    .site-drawer { position:fixed; left:0; top:0; bottom:0; z-index:30; width:min(330px,88vw); padding:26px 22px; background:var(--pine); color:var(--white); box-shadow:18px 0 48px rgba(0,0,0,.24); transform:translateX(-105%); transition:transform .2s ease; overflow:auto; }
+    .site-drawer.is-open { transform:translateX(0); }
+    .site-drawer-head { display:flex; align-items:center; justify-content:space-between; padding-bottom:22px; border-bottom:1px solid rgba(255,255,255,.18); color:var(--sun); font-size:1.3rem; }
+    .site-drawer-close { border:0; background:transparent; color:var(--white); font-size:2rem; line-height:1; cursor:pointer; }
+    .site-drawer nav { display:grid; gap:4px; padding:20px 0; }
+    .site-drawer nav a { display:block; padding:12px 10px; border-radius:9px; color:var(--white); font-weight:800; text-decoration:none; }
+    .site-drawer nav a:hover,.site-drawer nav a:focus { background:rgba(255,255,255,.12); color:var(--sun); }
+    .site-drawer-cta { width:100%; margin-top:8px; background:var(--leaf); color:#0b2114; }
+    .site-drawer-scrim { position:fixed; inset:0; z-index:29; background:rgba(4,14,8,.54); backdrop-filter:blur(2px); }
+    .site-drawer-scrim[hidden] { display:none; }
+    .lighting-showcase { padding:86px 0; background:linear-gradient(135deg,#123324,#1f4d35); color:var(--white); }
+    .lighting-showcase.permanent { background:linear-gradient(135deg,#0b2114,#735f3c); }
+    .lighting-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,380px); gap:40px; align-items:center; }
+    .lighting-copy h2 { max-width:680px; margin:8px 0 14px; color:var(--white); font-size:clamp(2rem,4vw,3.7rem); line-height:1.04; }
+    .lighting-copy p { max-width:680px; color:rgba(255,255,255,.84); font-size:1.08rem; }
+    .lighting-copy .checks { margin:22px 0 28px; color:rgba(255,255,255,.88); }
+    .lighting-panel { display:grid; gap:12px; padding:30px; border:1px solid rgba(255,255,255,.2); border-radius:18px; background:rgba(255,255,255,.1); box-shadow:0 20px 50px rgba(0,0,0,.18); }
+    .lighting-panel strong { font-size:1.5rem; color:var(--sun); }
+    .lighting-panel span { color:rgba(255,255,255,.8); }
+    .lighting-panel a { color:var(--white); font-size:1.15rem; font-weight:900; text-decoration:none; }
+    @media (min-width:800px) {
+      .nav .wrap { justify-content:flex-start; }
+      .nav-links { display:none; }
+      .site-menu-toggle { margin-left:auto; order:2; }
+      .nav .wrap > .button { order:3; }
+    }
+    @media (max-width:799px) {
+      .nav .wrap { flex-wrap:wrap; padding:12px 0; }
+      .brand-logo { width:min(220px,62vw); }
+      .site-menu-toggle { margin-left:auto; }
+      .nav .wrap > .button { order:4; width:100%; }
+      .lighting-grid { grid-template-columns:1fr; gap:24px; }
+    }
+  </style>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -1249,9 +1287,34 @@
         <li><a href="https://portal.greengrinlawns.com/">Portal</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
+      <button id="site-menu-toggle" class="site-menu-toggle" type="button" aria-expanded="false" aria-controls="site-drawer">
+        <span aria-hidden="true">☰</span><span>Menu</span>
+      </button>
       <a class="button" href="#contact">Free Estimate</a>
     </div>
   </nav>
+
+  <aside id="site-drawer" class="site-drawer" aria-label="Site navigation" aria-hidden="true">
+    <div class="site-drawer-head">
+      <strong>Green Grin</strong>
+      <button id="site-drawer-close" class="site-drawer-close" type="button" aria-label="Close menu">&times;</button>
+    </div>
+    <nav>
+      <a href="#top">Home</a>
+      <a href="#services">Services</a>
+      <a href="/lawn-care/">Lawn Care</a>
+      <a href="/landscaping/">Landscaping</a>
+      <a href="#christmas-lights">Christmas Lights</a>
+      <a href="#permanent-lighting">Permanent Lighting</a>
+      <a href="/work/">Our Work</a>
+      <a href="/work/#reviews">Reviews</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a href="https://portal.greengrinlawns.com/">Customer Portal</a>
+    </nav>
+    <a class="button site-drawer-cta" href="#contact">Get a free estimate</a>
+  </aside>
+  <div id="site-drawer-scrim" class="site-drawer-scrim" hidden></div>
 
   <main id="main">
     <section class="hero" id="top">
@@ -1322,7 +1385,53 @@
             <h3>Commercial Yard Maintenance</h3>
             <p>Reliable property presentation for storefronts, offices, rental homes, HOAs, and high-visibility corners.</p>
           </article>
+          <article class="service-card has-link">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3v4M16 3v4M5 9h14M6 6h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span>
+            <h3>Christmas Lights</h3>
+            <p>Professional holiday lighting design, installation, maintenance, takedown, and storage planning.</p>
+            <a class="service-link" href="#christmas-lights">Explore Christmas lights <span aria-hidden="true">&rarr;</span></a>
+          </article>
+          <article class="service-card has-link">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 18h18M5 18V8h14v10M8 8V5h8v3M8 12h8M8 15h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 5v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <h3>Permanent Lighting</h3>
+            <p>Low-profile, programmable lighting for holidays, parties, game days, and year-round curb appeal.</p>
+            <a class="service-link" href="#permanent-lighting">Explore permanent lighting <span aria-hidden="true">&rarr;</span></a>
+          </article>
         </div>
+      </div>
+    </section>
+
+    <section class="lighting-showcase" id="christmas-lights">
+      <div class="wrap lighting-grid">
+        <div class="lighting-copy">
+          <span class="section-kicker">Seasonal lighting</span>
+          <h2>Christmas lights without the ladder work.</h2>
+          <p>We design clean rooflines, entryways, trees, and commercial displays, then handle installation, timers, maintenance, and takedown.</p>
+          <ul class="checks">
+            <li>Professional layout and installation</li>
+            <li>Mid-season service when a bulb or timer needs attention</li>
+            <li>Removal and storage options available</li>
+          </ul>
+          <a class="button" href="#contact">Request a Christmas light quote</a>
+        </div>
+        <div class="lighting-panel"><strong>Make the season shine.</strong><span>Tell us what you want lit and we’ll build a property-specific estimate.</span><a href="tel:12086142515">(208) 614-2515</a></div>
+      </div>
+    </section>
+
+    <section class="lighting-showcase permanent" id="permanent-lighting">
+      <div class="wrap lighting-grid">
+        <div class="lighting-copy">
+          <span class="section-kicker">Year-round curb appeal</span>
+          <h2>Permanent lighting that disappears by day.</h2>
+          <p>Low-profile track lighting gives you programmable scenes for holidays, parties, game days, and everyday style while blending into your roofline when it’s off.</p>
+          <ul class="checks">
+            <li>Clean, low-profile daytime appearance</li>
+            <li>Programmable colors and schedules</li>
+            <li>Installation planning for homes and businesses</li>
+          </ul>
+          <a class="button" href="#contact">Request a permanent-lighting quote</a>
+        </div>
+        <div class="lighting-panel"><strong>One install. Every season.</strong><span>We’ll help you plan placement, controls, and the look you want.</span><a href="tel:12086142515">(208) 614-2515</a></div>
       </div>
     </section>
 
@@ -1600,6 +1709,21 @@
       });
     }
   </script>
+<script>
+(() => {
+  const toggle=document.getElementById("site-menu-toggle");
+  const drawer=document.getElementById("site-drawer");
+  const close=document.getElementById("site-drawer-close");
+  const scrim=document.getElementById("site-drawer-scrim");
+  const setOpen=(open)=>{ drawer?.classList.toggle("is-open",open); drawer?.setAttribute("aria-hidden",String(!open)); toggle?.setAttribute("aria-expanded",String(open)); if(scrim) scrim.hidden=!open; document.body.classList.toggle("drawer-open",open); };
+  toggle?.addEventListener("click",()=>setOpen(!drawer?.classList.contains("is-open")));
+  close?.addEventListener("click",()=>setOpen(false));
+  scrim?.addEventListener("click",()=>setOpen(false));
+  drawer?.addEventListener("click",(event)=>{ if(event.target.closest("a")) setOpen(false); });
+  document.addEventListener("keydown",(event)=>{ if(event.key==="Escape") setOpen(false); });
+})();
+</script>
+
 </body>
 </html>
 
